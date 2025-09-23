@@ -82,17 +82,17 @@ class AnimeManager {
             }
             
             // Verificar tipo de archivo
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/x-icon', 'image/vnd.microsoft.icon'];
             if (!allowedTypes.includes(input.files[0].type)) {
-                this.mostrarAlerta('⚠️ Tipo de archivo no permitido. Solo JPG y PNG.', 'error');
+                this.mostrarAlerta('⚠️ Tipo de archivo no permitido. Solo JPG, PNG e ICO.', 'error');
                 input.value = '';
-                label.textContent = '📎 Seleccionar imagen (JPG, PNG - máx. 1MB)';
+                label.textContent = '📎 Seleccionar imagen (JPG, PNG, ICO - máx. 1MB)';
                 return false;
             }
             
             label.innerHTML = `📎 ${input.files[0].name} <span style="color: #00ff88;">✓</span>`;
         } else {
-            label.textContent = '📎 Seleccionar imagen (JPG, PNG - máx. 1MB)';
+            label.textContent = '📎 Seleccionar imagen (JPG, PNG, ICO - máx. 1MB)';
         }
         
         return true;
@@ -146,36 +146,29 @@ class AnimeManager {
     // Abrir modal de edición
     async abrirModalEditar(animeId) {
         try {
-            // Obtener datos del anime desde el DOM
-            const animeCard = document.querySelector(`[data-anime-id="${animeId}"]`).closest('.anime-card');
-            const animeNombre = animeCard.querySelector('.anime-name').textContent.trim();
-            const progressText = animeCard.querySelector('.progress-text').textContent.trim();
-            const estadoBadge = animeCard.querySelector('.estado-badge').textContent.trim();
+            this.mostrarCargando(true);
             
-            // Extraer episodios del texto "X / Y episodios"
-            const episodiosMatch = progressText.match(/(\d+)\s*\/\s*(\d+|\?)/);
-            const episodiosVistos = episodiosMatch ? episodiosMatch[1] : '0';
-            const totalEpisodios = episodiosMatch && episodiosMatch[2] !== '?' ? episodiosMatch[2] : '';
+            // Obtener datos del anime desde el servidor
+            const response = await fetch(`../backend/api/obtener_anime.php?anime_id=${animeId}`);
+            const result = await response.json();
             
-            // Llenar formulario de edición
-            document.getElementById('edit_anime_id').value = animeId;
-            document.getElementById('edit_nombre').value = animeNombre;
-            document.getElementById('edit_total_episodios').value = totalEpisodios;
-            document.getElementById('edit_capitulos_vistos').value = episodiosVistos;
-            
-            // Seleccionar estado correcto
-            const estadoSelect = document.getElementById('edit_estado');
-            const estadoMap = {
-                'Viendo': 'viendo',
-                'Completado': 'completado',
-                'En Pausa': 'en pausa',
-                'Plan de Ver': 'plan de ver',
-                'Abandonado': 'abandonado'
-            };
-            
-            if (estadoMap[estadoBadge]) {
-                estadoSelect.value = estadoMap[estadoBadge];
+            if (!result.exito) {
+                throw new Error(result.error || 'Error al obtener datos del anime');
             }
+            
+            const anime = result.anime;
+            
+            // Llenar formulario de edición con todos los campos
+            document.getElementById('edit_anime_id').value = animeId;
+            document.getElementById('edit_nombre').value = anime.titulo || '';
+            document.getElementById('edit_titulo_original').value = anime.titulo_original || '';
+            document.getElementById('edit_titulo_ingles').value = anime.titulo_ingles || '';
+            document.getElementById('edit_tipo').value = anime.tipo || 'TV';
+            document.getElementById('edit_estado_anime').value = anime.estado || 'Finalizado';
+            document.getElementById('edit_total_episodios').value = anime.episodios_total || '';
+            document.getElementById('edit_capitulos_vistos').value = anime.episodios_vistos || '0';
+            document.getElementById('edit_estado').value = anime.estado || 'Plan de Ver';
+            document.getElementById('edit_puntuacion').value = anime.puntuacion || '';
             
             // Mostrar modal
             document.getElementById('editAnimeModal').style.display = 'block';
@@ -183,7 +176,9 @@ class AnimeManager {
             
         } catch (error) {
             console.error('Error al abrir modal de edición:', error);
-            this.mostrarAlerta('❌ Error al cargar datos del anime', 'error');
+            this.mostrarAlerta('❌ Error al cargar datos del anime: ' + error.message, 'error');
+        } finally {
+            this.mostrarCargando(false);
         }
     }
 

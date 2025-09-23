@@ -31,8 +31,13 @@ function actualizarAnime($usuario_id, $anime_id, $datos, $imagen_ruta = null) {
         
         // Actualizar información del anime en la tabla animes si es necesario
         if (isset($datos['nombre']) && !empty($datos['nombre'])) {
-            $query_anime = "UPDATE animes SET titulo = ?, episodios_total = ?";
-            $params_anime = [$datos['nombre'], $datos['total_episodios'] ?: null];
+            $query_anime = "UPDATE animes SET titulo = ?, titulo_original = ?, titulo_ingles = ?, episodios_total = ?";
+            $params_anime = [
+                $datos['nombre'], 
+                $datos['titulo_original'] ?: null,
+                $datos['titulo_ingles'] ?: null,
+                $datos['total_episodios'] ?: null
+            ];
             
             if ($imagen_ruta) {
                 $query_anime .= ", imagen_portada = ?";
@@ -51,7 +56,7 @@ function actualizarAnime($usuario_id, $anime_id, $datos, $imagen_ruta = null) {
         $stmt_lista = $conexion->prepare($query_lista);
         $stmt_lista->execute([
             $datos['episodios_vistos'] ?: 0,
-            ucfirst($datos['estado']),
+            $datos['estado'],
             $usuario_id,
             $anime_id
         ]);
@@ -106,13 +111,13 @@ function subirNuevaImagen($archivo) {
     }
     
     // Verificar tipo de archivo
-    $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png'];
+    $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/x-icon', 'image/vnd.microsoft.icon'];
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $tipo_archivo = finfo_file($finfo, $archivo['tmp_name']);
     finfo_close($finfo);
     
     if (!in_array($tipo_archivo, $tipos_permitidos)) {
-        $resultado['mensaje'] = 'Tipo de archivo no permitido. Solo JPG y PNG.';
+        $resultado['mensaje'] = 'Tipo de archivo no permitido. Solo JPG, PNG e ICO.';
         return $resultado;
     }
     
@@ -159,9 +164,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validar datos
     $datos = [
         'nombre' => trim($_POST['nombre'] ?? ''),
+        'titulo_original' => trim($_POST['titulo_original'] ?? ''),
+        'titulo_ingles' => trim($_POST['titulo_ingles'] ?? ''),
         'total_episodios' => intval($_POST['total_episodios'] ?? 0),
         'episodios_vistos' => intval($_POST['episodios_vistos'] ?? 0),
-        'estado' => $_POST['estado'] ?? 'plan de ver'
+        'estado' => $_POST['estado'] ?? 'Plan de Ver'
     ];
     
     // Validaciones
@@ -185,8 +192,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $respuesta['errores'][] = 'Los episodios vistos no pueden ser más que el total';
     }
     
-    $estados_validos = ['plan de ver', 'viendo', 'completado', 'en pausa', 'abandonado'];
-    if (!in_array(strtolower($datos['estado']), $estados_validos)) {
+    $estados_validos = ['Plan de Ver', 'Viendo', 'Completado', 'En Pausa', 'Abandonado'];
+    if (!in_array($datos['estado'], $estados_validos)) {
         $respuesta['errores'][] = 'Estado no válido';
     }
     

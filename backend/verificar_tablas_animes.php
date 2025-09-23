@@ -18,6 +18,8 @@ $tablas_necesarias = [
     'animes' => "CREATE TABLE IF NOT EXISTS animes (
         id INT AUTO_INCREMENT PRIMARY KEY,
         titulo VARCHAR(255) NOT NULL,
+        titulo_original VARCHAR(255) DEFAULT NULL,
+        titulo_ingles VARCHAR(255) DEFAULT NULL,
         episodios_total INT DEFAULT NULL,
         imagen_portada VARCHAR(255),
         tipo ENUM('TV', 'OVA', 'Película', 'Especial', 'ONA') DEFAULT 'TV',
@@ -32,11 +34,21 @@ $tablas_necesarias = [
         estado ENUM('Viendo', 'Completado', 'En Pausa', 'Abandonado', 'Plan de Ver') NOT NULL,
         episodios_vistos INT DEFAULT 0,
         puntuacion DECIMAL(3,1) DEFAULT NULL CHECK (puntuacion >= 0 AND puntuacion <= 10),
-        favorito BOOLEAN DEFAULT FALSE,
         fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY unique_usuario_anime (usuario_id, anime_id),
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
         FOREIGN KEY (anime_id) REFERENCES animes(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB",
+    
+    'favoritos' => "CREATE TABLE IF NOT EXISTS favoritos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario_id INT NOT NULL,
+        anime_id INT NOT NULL,
+        fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_favorito (usuario_id, anime_id),
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+        FOREIGN KEY (anime_id) REFERENCES animes(id) ON DELETE CASCADE,
+        INDEX idx_usuario_fecha (usuario_id, fecha_agregado)
     ) ENGINE=InnoDB"
 ];
 
@@ -55,6 +67,31 @@ try {
         
         if ($existe) {
             echo "<span style='color: green;'>✅ La tabla '$nombre_tabla' ya existe.</span><br>";
+            
+            // Si es la tabla animes, verificar si tiene los nuevos campos
+            if ($nombre_tabla === 'animes') {
+                echo "<p><strong>Verificando campos adicionales en tabla animes...</strong></p>";
+                
+                // Verificar si existen los campos titulo_original y titulo_ingles
+                $campos_adicionales = ['titulo_original', 'titulo_ingles'];
+                foreach ($campos_adicionales as $campo) {
+                    $stmt_campo = $conexion->prepare("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'animes' AND COLUMN_NAME = ?");
+                    $stmt_campo->execute([$campo]);
+                    $campo_existe = $stmt_campo->fetchColumn() > 0;
+                    
+                    if (!$campo_existe) {
+                        echo "<span style='color: orange;'>⚠️ Agregando campo '$campo' a la tabla animes...</span><br>";
+                        try {
+                            $conexion->exec("ALTER TABLE animes ADD COLUMN $campo VARCHAR(255) DEFAULT NULL");
+                            echo "<span style='color: green;'>✅ Campo '$campo' agregado exitosamente.</span><br>";
+                        } catch (Exception $e) {
+                            echo "<span style='color: red;'>❌ Error al agregar campo '$campo': " . $e->getMessage() . "</span><br>";
+                        }
+                    } else {
+                        echo "<span style='color: green;'>✅ Campo '$campo' ya existe.</span><br>";
+                    }
+                }
+            }
         } else {
             echo "<span style='color: orange;'>⚠️ La tabla '$nombre_tabla' no existe. Creando...</span><br>";
             

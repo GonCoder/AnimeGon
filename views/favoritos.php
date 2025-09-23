@@ -16,13 +16,14 @@ function obtenerAnimesFavoritos($usuario_id) {
     try {
         $conexion = obtenerConexion();
         
-        $query = "SELECT lu.*, a.titulo as anime_nombre, a.imagen_portada, a.episodios_total,
-                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, lu.favorito, a.id as anime_id,
-                         a.tipo, a.estado as estado_anime
-                  FROM lista_usuario lu 
-                  LEFT JOIN animes a ON lu.anime_id = a.id 
-                  WHERE lu.usuario_id = ? AND lu.favorito = TRUE
-                  ORDER BY lu.fecha_agregado DESC";
+        $query = "SELECT lu.*, a.titulo as anime_nombre, a.titulo_original, a.titulo_ingles, a.imagen_portada, a.episodios_total,
+                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, a.id as anime_id,
+                         a.tipo, a.estado as estado_anime, 1 as favorito
+                  FROM favoritos f
+                  INNER JOIN lista_usuario lu ON f.usuario_id = lu.usuario_id AND f.anime_id = lu.anime_id
+                  LEFT JOIN animes a ON f.anime_id = a.id 
+                  WHERE f.usuario_id = ?
+                  ORDER BY f.fecha_agregado DESC";
         
         $stmt = $conexion->prepare($query);
         $stmt->execute([$usuario_id]);
@@ -516,8 +517,8 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
                             ⭐
                         </button>
                         
-                        <?php if (!empty($anime['imagen_url'])): ?>
-                            <img src="<?= htmlspecialchars($anime['imagen_url']) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
+                        <?php if (!empty($anime['imagen_portada'])): ?>
+                            <img src="<?= htmlspecialchars($anime['imagen_portada']) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
                         <?php else: ?>
                             <div class="anime-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3rem;">
                                 🎭
@@ -531,6 +532,21 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
                                     <span class="tipo-badge"><?= htmlspecialchars($anime['tipo']) ?></span>
                                 <?php endif; ?>
                             </h3>
+                            
+                            <?php if (!empty($anime['titulo_original']) || !empty($anime['titulo_ingles'])): ?>
+                                <div style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.8;">
+                                    <?php if (!empty($anime['titulo_original'])): ?>
+                                        <div style="color: #ffd700; margin-bottom: 3px;">
+                                            🇯🇵 <?= htmlspecialchars($anime['titulo_original']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($anime['titulo_ingles'])): ?>
+                                        <div style="color: #00ffff;">
+                                            🇺🇸 <?= htmlspecialchars($anime['titulo_ingles']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                             
                             <div class="anime-progress">
                                 <span class="progress-text">

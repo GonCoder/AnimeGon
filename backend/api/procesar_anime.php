@@ -40,13 +40,13 @@ function subirImagen($archivo) {
     }
     
     // Verificar tipo de archivo
-    $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png'];
+    $tipos_permitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/x-icon', 'image/vnd.microsoft.icon'];
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $tipo_archivo = finfo_file($finfo, $archivo['tmp_name']);
     finfo_close($finfo);
     
     if (!in_array($tipo_archivo, $tipos_permitidos)) {
-        $resultado['mensaje'] = 'Tipo de archivo no permitido. Solo JPG y PNG.';
+        $resultado['mensaje'] = 'Tipo de archivo no permitido. Solo JPG, PNG e ICO.';
         return $resultado;
     }
     
@@ -64,7 +64,7 @@ function subirImagen($archivo) {
     if (move_uploaded_file($archivo['tmp_name'], $ruta_destino)) {
         $resultado['exito'] = true;
         $resultado['mensaje'] = 'Imagen subida correctamente';
-        $resultado['ruta'] = $ruta_destino;
+        $resultado['ruta'] = 'uploads/animes/' . $nombre_archivo; // Ruta relativa desde la raíz del proyecto
     } else {
         $resultado['mensaje'] = 'Error al mover el archivo al destino';
     }
@@ -99,10 +99,12 @@ function agregarAnime($usuario_id, $datos, $imagen_ruta = null) {
             }
         } else {
             // Crear nuevo anime en la tabla animes
-            $query_anime = "INSERT INTO animes (titulo, episodios_total, imagen_portada, tipo, estado) VALUES (?, ?, ?, ?, ?)";
+            $query_anime = "INSERT INTO animes (titulo, titulo_original, titulo_ingles, episodios_total, imagen_portada, tipo, estado) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt_anime = $conexion->prepare($query_anime);
             $stmt_anime->execute([
                 $datos['nombre'],
+                $datos['titulo_original'] ?: null,
+                $datos['titulo_ingles'] ?: null,
                 $datos['total_episodios'] ?: null,
                 $imagen_ruta,
                 $datos['tipo'] ?: 'TV',
@@ -118,7 +120,7 @@ function agregarAnime($usuario_id, $datos, $imagen_ruta = null) {
             $usuario_id,
             $anime_id,
             $datos['capitulos_vistos'] ?: 0,
-            ucfirst($datos['estado']),
+            $datos['estado'],
             !empty($datos['puntuacion']) ? $datos['puntuacion'] : null
         ]);
         
@@ -154,9 +156,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validar datos requeridos
     $datos = [
         'nombre' => trim($_POST['nombre'] ?? ''),
+        'titulo_original' => trim($_POST['titulo_original'] ?? ''),
+        'titulo_ingles' => trim($_POST['titulo_ingles'] ?? ''),
         'total_episodios' => intval($_POST['total_episodios'] ?? 0),
         'capitulos_vistos' => intval($_POST['capitulos_vistos'] ?? 0),
-        'estado' => $_POST['estado'] ?? 'plan de ver',
+        'estado' => $_POST['estado'] ?? 'Plan de Ver',
         'tipo' => $_POST['tipo'] ?? 'TV',
         'estado_anime' => $_POST['estado_anime'] ?? 'Finalizado',
         'puntuacion' => !empty($_POST['puntuacion']) ? floatval($_POST['puntuacion']) : null
@@ -184,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     $estados_validos = ['Plan de Ver', 'Viendo', 'Completado', 'En Pausa', 'Abandonado'];
-    if (!in_array(ucfirst($datos['estado']), $estados_validos)) {
+    if (!in_array($datos['estado'], $estados_validos)) {
         $respuesta['errores'][] = 'Estado no válido';
     }
     

@@ -16,11 +16,13 @@ function obtenerAnimesUsuario($usuario_id) {
     try {
         $conexion = obtenerConexion();
         
-        $query = "SELECT lu.*, a.titulo as anime_nombre, a.imagen_portada, a.episodios_total,
-                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, lu.favorito, a.id as anime_id,
-                         a.tipo, a.estado as estado_anime
+        $query = "SELECT lu.*, a.titulo as anime_nombre, a.titulo_original, a.titulo_ingles, a.imagen_portada, a.episodios_total,
+                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, a.id as anime_id,
+                         a.tipo, a.estado as estado_anime,
+                         (CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END) as favorito
                   FROM lista_usuario lu 
                   LEFT JOIN animes a ON lu.anime_id = a.id 
+                  LEFT JOIN favoritos f ON lu.usuario_id = f.usuario_id AND lu.anime_id = f.anime_id
                   WHERE lu.usuario_id = ? 
                   ORDER BY lu.fecha_agregado DESC";
         
@@ -757,8 +759,8 @@ $animes = obtenerAnimesUsuario($usuario_id);
                             ⭐
                         </button>
                         
-                        <?php if (!empty($anime['imagen_url'])): ?>
-                            <img src="<?= htmlspecialchars($anime['imagen_url']) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
+                        <?php if (!empty($anime['imagen_portada'])): ?>
+                            <img src="<?= htmlspecialchars($anime['imagen_portada']) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
                         <?php else: ?>
                             <div class="anime-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3rem;">
                                 🎭
@@ -772,6 +774,21 @@ $animes = obtenerAnimesUsuario($usuario_id);
                                     <span class="tipo-badge"><?= htmlspecialchars($anime['tipo']) ?></span>
                                 <?php endif; ?>
                             </h3>
+                            
+                            <?php if (!empty($anime['titulo_original']) || !empty($anime['titulo_ingles'])): ?>
+                                <div style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.8;">
+                                    <?php if (!empty($anime['titulo_original'])): ?>
+                                        <div style="color: #ffd700; margin-bottom: 3px;">
+                                            🇯🇵 <?= htmlspecialchars($anime['titulo_original']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($anime['titulo_ingles'])): ?>
+                                        <div style="color: #00ffff;">
+                                            🇺🇸 <?= htmlspecialchars($anime['titulo_ingles']) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                             
                             <div class="anime-progress">
                                 <span class="progress-text">
@@ -818,8 +835,20 @@ $animes = obtenerAnimesUsuario($usuario_id);
             <div class="modal-body">
                 <form id="animeForm" action="../backend/api/procesar_anime.php" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
-                        <label for="nombre">📝 Nombre del Anime</label>
-                        <input type="text" id="nombre" name="nombre" required placeholder="Ej: Attack on Titan">
+                        <label for="nombre">📝 Nombre del Anime (Español)</label>
+                        <input type="text" id="nombre" name="nombre" required placeholder="Ej: Ataque a los Titanes">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="titulo_original">🏮 Título Original (Japonés)</label>
+                        <input type="text" id="titulo_original" name="titulo_original" placeholder="Ej: 進撃の巨人">
+                        <div class="file-info">Opcional: Título en idioma original</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="titulo_ingles">🇺🇸 Título en Inglés</label>
+                        <input type="text" id="titulo_ingles" name="titulo_ingles" placeholder="Ej: Attack on Titan">
+                        <div class="file-info">Opcional: Título oficial en inglés</div>
                     </div>
                     
                     <div class="form-group">
@@ -857,11 +886,11 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     <div class="form-group">
                         <label for="estado">🎯 Mi Estado</label>
                         <select id="estado" name="estado" required>
-                            <option value="plan de ver">⏳ Plan de Ver</option>
-                            <option value="viendo">👀 Viendo</option>
-                            <option value="completado">✅ Completado</option>
-                            <option value="en pausa">⏸️ En Pausa</option>
-                            <option value="abandonado">❌ Abandonado</option>
+                            <option value="Plan de Ver">⏳ Plan de Ver</option>
+                            <option value="Viendo">👀 Viendo</option>
+                            <option value="Completado">✅ Completado</option>
+                            <option value="En Pausa">⏸️ En Pausa</option>
+                            <option value="Abandonado">❌ Abandonado</option>
                         </select>
                     </div>
                     
@@ -886,12 +915,12 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     <div class="form-group">
                         <label for="imagen">🖼️ Imagen del Anime</label>
                         <div class="file-input-wrapper">
-                            <input type="file" id="imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png">
+                            <input type="file" id="imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
                             <label for="imagen" class="file-input-label">
-                                📎 Seleccionar imagen (JPG, PNG - máx. 1MB)
+                                📎 Seleccionar imagen (JPG, PNG, ICO - máx. 1MB)
                             </label>
                         </div>
-                        <div class="file-info">Formatos: JPG, PNG | Tamaño máximo: 1MB</div>
+                        <div class="file-info">Formatos: JPG, PNG, ICO | Tamaño máximo: 1MB</div>
                     </div>
                     
                     <div class="form-buttons">
@@ -915,8 +944,20 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     <input type="hidden" id="edit_anime_id" name="anime_id">
                     
                     <div class="form-group">
-                        <label for="edit_nombre">📝 Nombre del Anime</label>
-                        <input type="text" id="edit_nombre" name="nombre" required placeholder="Ej: Attack on Titan">
+                        <label for="edit_nombre">📝 Nombre del Anime (Español)</label>
+                        <input type="text" id="edit_nombre" name="nombre" required placeholder="Ej: Ataque a los Titanes">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_titulo_original">🏮 Título Original (Japonés)</label>
+                        <input type="text" id="edit_titulo_original" name="titulo_original" placeholder="Ej: 進撃の巨人">
+                        <div class="file-info">Opcional: Título en idioma original</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_titulo_ingles">🇺🇸 Título en Inglés</label>
+                        <input type="text" id="edit_titulo_ingles" name="titulo_ingles" placeholder="Ej: Attack on Titan">
+                        <div class="file-info">Opcional: Título oficial en inglés</div>
                     </div>
                     
                     <div class="form-group">
@@ -954,11 +995,11 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     <div class="form-group">
                         <label for="edit_estado">🎯 Mi Estado</label>
                         <select id="edit_estado" name="estado" required>
-                            <option value="plan de ver">⏳ Plan de Ver</option>
-                            <option value="viendo">👀 Viendo</option>
-                            <option value="completado">✅ Completado</option>
-                            <option value="en pausa">⏸️ En Pausa</option>
-                            <option value="abandonado">❌ Abandonado</option>
+                            <option value="Plan de Ver">⏳ Plan de Ver</option>
+                            <option value="Viendo">👀 Viendo</option>
+                            <option value="Completado">✅ Completado</option>
+                            <option value="En Pausa">⏸️ En Pausa</option>
+                            <option value="Abandonado">❌ Abandonado</option>
                         </select>
                     </div>
                     
@@ -983,12 +1024,12 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     <div class="form-group">
                         <label for="edit_imagen">🖼️ Nueva Imagen (opcional)</label>
                         <div class="file-input-wrapper">
-                            <input type="file" id="edit_imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png">
+                            <input type="file" id="edit_imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
                             <label for="edit_imagen" class="file-input-label">
-                                📎 Cambiar imagen (JPG, PNG - máx. 1MB)
+                                📎 Cambiar imagen (JPG, PNG, ICO - máx. 1MB)
                             </label>
                         </div>
-                        <div class="file-info">Formatos: JPG, PNG | Tamaño máximo: 1MB | Deja vacío para mantener la actual</div>
+                        <div class="file-info">Formatos: JPG, PNG, ICO | Tamaño máximo: 1MB | Deja vacío para mantener la actual</div>
                     </div>
                     
                     <div class="form-buttons">
