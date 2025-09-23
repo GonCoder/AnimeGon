@@ -1,7 +1,7 @@
 <?php
 // test_conexion.php - Archivo para probar la conexión a Alwaysdata
 
-require_once 'config.php';
+require_once 'config/config.php';
 
 ?>
 <!DOCTYPE html>

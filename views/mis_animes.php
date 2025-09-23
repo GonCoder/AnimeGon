@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once 'config.php';
-require_once 'funciones.php';
+require_once '../backend/config/config.php';
+require_once '../backend/config/funciones.php';
 
 // Verificar si el usuario está logueado
 if (!isset($_SESSION['usuario_id'])) {
@@ -17,7 +17,8 @@ function obtenerAnimesUsuario($usuario_id) {
         $conexion = obtenerConexion();
         
         $query = "SELECT lu.*, a.titulo as anime_nombre, a.imagen_portada, a.episodios_total,
-                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion
+                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, lu.favorito, a.id as anime_id,
+                         a.tipo, a.estado as estado_anime
                   FROM lista_usuario lu 
                   LEFT JOIN animes a ON lu.anime_id = a.id 
                   WHERE lu.usuario_id = ? 
@@ -41,8 +42,76 @@ $animes = obtenerAnimesUsuario($usuario_id);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnimeGon - Mis Animes</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../frontend/assets/css/style.css">
     <style>
+        /* Reset y estilos base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        /* Navbar Styles */
+        .navbar {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .nav-logo h2 {
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            font-size: 1.8rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .nav-link:hover {
+            color: #00ffff;
+            border-color: rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, #ff007f, #bf00ff);
+            color: white;
+            border-color: transparent;
+        }
+        
         /* Estilos específicos para la página de animes */
         .animes-container {
             max-width: 1400px;
@@ -130,6 +199,41 @@ $animes = obtenerAnimesUsuario($usuario_id);
             position: relative;
         }
         
+        .favorite-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            z-index: 10;
+        }
+        
+        .favorite-btn.favorito {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+        
+        .favorite-btn:not(.favorito) {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .favorite-btn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+        
         .anime-card:hover {
             transform: translateY(-5px);
             border-color: rgba(0, 255, 255, 0.6);
@@ -153,6 +257,20 @@ $animes = obtenerAnimesUsuario($usuario_id);
             font-weight: bold;
             margin-bottom: 10px;
             text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .tipo-badge {
+            background: rgba(0, 255, 255, 0.2);
+            color: #00ffff;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: normal;
+            border: 1px solid rgba(0, 255, 255, 0.4);
         }
         
         .anime-progress {
@@ -165,6 +283,16 @@ $animes = obtenerAnimesUsuario($usuario_id);
         .progress-text {
             color: #ff007f;
             font-weight: bold;
+        }
+        
+        .puntuacion-badge {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
         }
         
         .progress-bar {
@@ -189,6 +317,46 @@ $animes = obtenerAnimesUsuario($usuario_id);
             align-items: center;
             font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 15px;
+        }
+        
+        .anime-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn-action {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-editar {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            color: white;
+        }
+        
+        .btn-editar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+        }
+        
+        .btn-eliminar {
+            background: linear-gradient(135deg, #ff4757, #ff3742);
+            color: white;
+        }
+        
+        .btn-eliminar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.6);
         }
         
         .estado-badge {
@@ -218,6 +386,11 @@ $animes = obtenerAnimesUsuario($usuario_id);
             color: white;
         }
         
+        .estado-abandonado {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+        }
+        
         .no-animes {
             text-align: center;
             padding: 60px 20px;
@@ -241,18 +414,25 @@ $animes = obtenerAnimesUsuario($usuario_id);
             height: 100%;
             background-color: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(5px);
+            overflow-y: auto;
+            padding: 20px 0;
         }
         
         .modal-content {
             background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            margin: 5% auto;
+            margin: 20px auto;
             padding: 0;
             border: 2px solid rgba(0, 255, 255, 0.3);
             border-radius: 20px;
             width: 90%;
             max-width: 500px;
+            max-height: calc(100vh - 40px);
             box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
             animation: modalShow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
         @keyframes modalShow {
@@ -265,6 +445,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
             padding: 20px;
             border-radius: 18px 18px 0 0;
             position: relative;
+            flex-shrink: 0;
         }
         
         .modal-title {
@@ -272,6 +453,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
             margin: 0;
             font-size: 1.5rem;
             text-align: center;
+            padding-right: 40px;
         }
         
         .close {
@@ -289,14 +471,19 @@ $animes = obtenerAnimesUsuario($usuario_id);
             justify-content: center;
             border-radius: 50%;
             transition: all 0.3s ease;
+            z-index: 1001;
         }
         
         .close:hover {
             background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
         }
         
         .modal-body {
             padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+            max-height: calc(100vh - 180px);
         }
         
         .form-group {
@@ -320,6 +507,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
             color: white;
             font-size: 16px;
             transition: all 0.3s ease;
+            box-sizing: border-box;
         }
         
         .form-group input:focus,
@@ -327,6 +515,15 @@ $animes = obtenerAnimesUsuario($usuario_id);
             outline: none;
             border-color: #00ffff;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+        
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .form-group select option {
+            background: #2a2a2a;
+            color: white;
         }
         
         .file-input-wrapper {
@@ -423,9 +620,45 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 grid-template-columns: 1fr;
             }
             
+            .modal {
+                padding: 10px 0;
+            }
+            
             .modal-content {
                 width: 95%;
-                margin: 10% auto;
+                margin: 10px auto;
+                max-height: calc(100vh - 20px);
+            }
+            
+            .modal-body {
+                padding: 20px;
+                max-height: calc(100vh - 140px);
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-submit,
+            .btn-cancel {
+                width: 100%;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .modal-content {
+                margin: 10px auto;
+                max-height: calc(100vh - 20px);
+            }
+            
+            .modal-body {
+                max-height: calc(100vh - 120px);
+                padding: 20px;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
             }
         }
     </style>
@@ -439,6 +672,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
             <div class="nav-menu">
                 <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
                 <a href="mis_animes.php" class="nav-link active">📺 Mis Animes</a>
+                <a href="favoritos.php" class="nav-link">⭐ Favoritos</a>
                 <a href="logout.php" class="nav-link">🚪 Cerrar Sesión</a>
             </div>
         </div>
@@ -487,7 +721,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     }
                     
                     $estado_class = 'estado-pendiente';
-                    $estado_text = 'Pendiente';
+                    $estado_text = 'Plan de Ver';
                     
                     if (isset($anime['estado'])) {
                         switch ($anime['estado']) {
@@ -508,7 +742,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
                                 $estado_text = 'Plan de Ver';
                                 break;
                             case 'Abandonado':
-                                $estado_class = 'estado-pausado';
+                                $estado_class = 'estado-abandonado';
                                 $estado_text = 'Abandonado';
                                 break;
                         }
@@ -516,6 +750,13 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     ?>
                     
                     <div class="anime-card" data-anime-name="<?= htmlspecialchars(strtolower($anime['anime_nombre'] ?? $anime['titulo'] ?? 'Sin nombre')) ?>">
+                        <button class="favorite-btn <?= $anime['favorito'] ? 'favorito' : '' ?>" 
+                                data-anime-id="<?= $anime['anime_id'] ?>" 
+                                onclick="toggleFavorito(<?= $anime['anime_id'] ?>, this)"
+                                title="<?= $anime['favorito'] ? 'Quitar de favoritos' : 'Agregar a favoritos' ?>">
+                            ⭐
+                        </button>
+                        
                         <?php if (!empty($anime['imagen_url'])): ?>
                             <img src="<?= htmlspecialchars($anime['imagen_url']) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
                         <?php else: ?>
@@ -525,12 +766,22 @@ $animes = obtenerAnimesUsuario($usuario_id);
                         <?php endif; ?>
                         
                         <div class="anime-info">
-                            <h3 class="anime-name"><?= htmlspecialchars($anime['anime_nombre'] ?? $anime['titulo'] ?? 'Sin nombre') ?></h3>
+                            <h3 class="anime-name">
+                                <?= htmlspecialchars($anime['anime_nombre'] ?? $anime['titulo'] ?? 'Sin nombre') ?>
+                                <?php if (!empty($anime['tipo'])): ?>
+                                    <span class="tipo-badge"><?= htmlspecialchars($anime['tipo']) ?></span>
+                                <?php endif; ?>
+                            </h3>
                             
                             <div class="anime-progress">
                                 <span class="progress-text">
                                     <?= $anime['episodios_vistos'] ?> / <?= $anime['episodios_total'] ?: '?' ?> episodios
                                 </span>
+                                <?php if (!empty($anime['puntuacion'])): ?>
+                                    <span class="puntuacion-badge">
+                                        ⭐ <?= number_format($anime['puntuacion'], 1) ?>
+                                    </span>
+                                <?php endif; ?>
                             </div>
                             
                             <div class="progress-bar">
@@ -540,6 +791,15 @@ $animes = obtenerAnimesUsuario($usuario_id);
                             <div class="anime-meta">
                                 <span class="estado-badge <?= $estado_class ?>"><?= $estado_text ?></span>
                                 <span><?= date('d/m/Y', strtotime($anime['fecha_agregado'])) ?></span>
+                            </div>
+                            
+                            <div class="anime-actions">
+                                <button class="btn-action btn-editar" data-anime-id="<?= $anime['anime_id'] ?>">
+                                    ✏️ Editar
+                                </button>
+                                <button class="btn-action btn-eliminar" data-anime-id="<?= $anime['anime_id'] ?>" data-anime-nombre="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['titulo'] ?? 'Sin nombre') ?>">
+                                    🗑️ Eliminar
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -556,15 +816,37 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 <span class="close" onclick="cerrarModal()">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="animeForm" action="procesar_anime.php" method="POST" enctype="multipart/form-data">
+                <form id="animeForm" action="../backend/api/procesar_anime.php" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <label for="nombre">📝 Nombre del Anime</label>
                         <input type="text" id="nombre" name="nombre" required placeholder="Ej: Attack on Titan">
                     </div>
                     
                     <div class="form-group">
+                        <label for="tipo">🎬 Tipo de Anime</label>
+                        <select id="tipo" name="tipo" required>
+                            <option value="TV">📺 Serie TV</option>
+                            <option value="OVA">💽 OVA</option>
+                            <option value="Película">🎬 Película</option>
+                            <option value="Especial">⭐ Especial</option>
+                            <option value="ONA">🌐 ONA (Web)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="estado_anime">📊 Estado del Anime</label>
+                        <select id="estado_anime" name="estado_anime" required>
+                            <option value="Finalizado">✅ Finalizado</option>
+                            <option value="Emitiendo">📡 Emitiendo</option>
+                            <option value="Próximamente">🔜 Próximamente</option>
+                            <option value="Cancelado">❌ Cancelado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="total_episodios">📊 Total de Episodios</label>
                         <input type="number" id="total_episodios" name="total_episodios" min="1" placeholder="Ej: 25">
+                        <div class="file-info">Deja vacío si aún no se conoce el total</div>
                     </div>
                     
                     <div class="form-group">
@@ -573,7 +855,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     </div>
                     
                     <div class="form-group">
-                        <label for="estado">🎯 Estado</label>
+                        <label for="estado">🎯 Mi Estado</label>
                         <select id="estado" name="estado" required>
                             <option value="plan de ver">⏳ Plan de Ver</option>
                             <option value="viendo">👀 Viendo</option>
@@ -581,6 +863,24 @@ $animes = obtenerAnimesUsuario($usuario_id);
                             <option value="en pausa">⏸️ En Pausa</option>
                             <option value="abandonado">❌ Abandonado</option>
                         </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="puntuacion">⭐ Mi Puntuación</label>
+                        <select id="puntuacion" name="puntuacion">
+                            <option value="">Sin puntuar</option>
+                            <option value="10">⭐ 10 - Obra Maestra</option>
+                            <option value="9">⭐ 9 - Excelente</option>
+                            <option value="8">⭐ 8 - Muy Bueno</option>
+                            <option value="7">⭐ 7 - Bueno</option>
+                            <option value="6">⭐ 6 - Decente</option>
+                            <option value="5">⭐ 5 - Promedio</option>
+                            <option value="4">⭐ 4 - Malo</option>
+                            <option value="3">⭐ 3 - Muy Malo</option>
+                            <option value="2">⭐ 2 - Horrible</option>
+                            <option value="1">⭐ 1 - Desastre</option>
+                        </select>
+                        <div class="file-info">Opcional: Califica el anime del 1 al 10</div>
                     </div>
                     
                     <div class="form-group">
@@ -603,81 +903,103 @@ $animes = obtenerAnimesUsuario($usuario_id);
         </div>
     </div>
 
-    <script>
-        // Funcionalidad del modal
-        function abrirModal() {
-            document.getElementById('animeModal').style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function cerrarModal() {
-            document.getElementById('animeModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-            document.getElementById('animeForm').reset();
-        }
-        
-        // Cerrar modal al hacer clic fuera
-        window.onclick = function(event) {
-            const modal = document.getElementById('animeModal');
-            if (event.target == modal) {
-                cerrarModal();
-            }
-        }
-        
-        // Filtrado en tiempo real
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const animeCards = document.querySelectorAll('.anime-card');
-            
-            animeCards.forEach(card => {
-                const animeName = card.getAttribute('data-anime-name');
-                if (animeName.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-        
-        // Actualizar nombre del archivo seleccionado
-        document.getElementById('imagen').addEventListener('change', function() {
-            const fileName = this.files[0]?.name || 'Seleccionar imagen (JPG, PNG - máx. 1MB)';
-            const label = document.querySelector('.file-input-label');
-            
-            if (this.files[0]) {
-                // Verificar tamaño del archivo
-                const fileSize = this.files[0].size / 1024 / 1024; // MB
-                if (fileSize > 1) {
-                    alert('⚠️ El archivo es demasiado grande. Máximo 1MB permitido.');
-                    this.value = '';
-                    label.textContent = '📎 Seleccionar imagen (JPG, PNG - máx. 1MB)';
-                    return;
-                }
-                
-                label.innerHTML = `📎 ${fileName} <span style="color: #00ff88;">✓</span>`;
-            } else {
-                label.textContent = '📎 Seleccionar imagen (JPG, PNG - máx. 1MB)';
-            }
-        });
-        
-        // Validación del formulario
-        document.getElementById('animeForm').addEventListener('submit', function(e) {
-            const nombre = document.getElementById('nombre').value.trim();
-            const totalEpisodios = document.getElementById('total_episodios').value;
-            const capitulosVistos = document.getElementById('capitulos_vistos').value;
-            
-            if (!nombre) {
-                alert('⚠️ Por favor ingresa el nombre del anime.');
-                e.preventDefault();
-                return;
-            }
-            
-            if (totalEpisodios && capitulosVistos && parseInt(capitulosVistos) > parseInt(totalEpisodios)) {
-                alert('⚠️ Los episodios vistos no pueden ser más que el total de episodios.');
-                e.preventDefault();
-                return;
-            }
-        });
-    </script>
+    <!-- Modal para editar anime -->
+    <div id="editAnimeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">✏️ Editar Anime</h2>
+                <span class="close" onclick="cerrarModalEditar()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editAnimeForm" enctype="multipart/form-data">
+                    <input type="hidden" id="edit_anime_id" name="anime_id">
+                    
+                    <div class="form-group">
+                        <label for="edit_nombre">📝 Nombre del Anime</label>
+                        <input type="text" id="edit_nombre" name="nombre" required placeholder="Ej: Attack on Titan">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_tipo">🎬 Tipo de Anime</label>
+                        <select id="edit_tipo" name="tipo" required>
+                            <option value="TV">📺 Serie TV</option>
+                            <option value="OVA">💽 OVA</option>
+                            <option value="Película">🎬 Película</option>
+                            <option value="Especial">⭐ Especial</option>
+                            <option value="ONA">🌐 ONA (Web)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_estado_anime">📊 Estado del Anime</label>
+                        <select id="edit_estado_anime" name="estado_anime" required>
+                            <option value="Finalizado">✅ Finalizado</option>
+                            <option value="Emitiendo">📡 Emitiendo</option>
+                            <option value="Próximamente">🔜 Próximamente</option>
+                            <option value="Cancelado">❌ Cancelado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_total_episodios">📊 Total de Episodios</label>
+                        <input type="number" id="edit_total_episodios" name="total_episodios" min="1" placeholder="Ej: 25">
+                        <div class="file-info">Deja vacío si aún no se conoce el total</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_capitulos_vistos">👁️ Episodios Vistos</label>
+                        <input type="number" id="edit_capitulos_vistos" name="episodios_vistos" min="0" placeholder="Ej: 12">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_estado">🎯 Mi Estado</label>
+                        <select id="edit_estado" name="estado" required>
+                            <option value="plan de ver">⏳ Plan de Ver</option>
+                            <option value="viendo">👀 Viendo</option>
+                            <option value="completado">✅ Completado</option>
+                            <option value="en pausa">⏸️ En Pausa</option>
+                            <option value="abandonado">❌ Abandonado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_puntuacion">⭐ Mi Puntuación</label>
+                        <select id="edit_puntuacion" name="puntuacion">
+                            <option value="">Sin puntuar</option>
+                            <option value="10">⭐ 10 - Obra Maestra</option>
+                            <option value="9">⭐ 9 - Excelente</option>
+                            <option value="8">⭐ 8 - Muy Bueno</option>
+                            <option value="7">⭐ 7 - Bueno</option>
+                            <option value="6">⭐ 6 - Decente</option>
+                            <option value="5">⭐ 5 - Promedio</option>
+                            <option value="4">⭐ 4 - Malo</option>
+                            <option value="3">⭐ 3 - Muy Malo</option>
+                            <option value="2">⭐ 2 - Horrible</option>
+                            <option value="1">⭐ 1 - Desastre</option>
+                        </select>
+                        <div class="file-info">Opcional: Califica el anime del 1 al 10</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_imagen">🖼️ Nueva Imagen (opcional)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="edit_imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png">
+                            <label for="edit_imagen" class="file-input-label">
+                                📎 Cambiar imagen (JPG, PNG - máx. 1MB)
+                            </label>
+                        </div>
+                        <div class="file-info">Formatos: JPG, PNG | Tamaño máximo: 1MB | Deja vacío para mantener la actual</div>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" class="btn-submit">✅ Guardar Cambios</button>
+                        <button type="button" class="btn-cancel" onclick="cerrarModalEditar()">❌ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../frontend/assets/js/animes.js"></script>
 </body>
 </html>

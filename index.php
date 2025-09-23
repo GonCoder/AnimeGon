@@ -1,7 +1,7 @@
 <?php
 // index.php - Página principal de AnimeGon
 
-require_once 'funciones.php';
+require_once 'backend/config/funciones.php';
 
 // Redirigir al dashboard si ya está logueado
 redirigirSiLogueado();

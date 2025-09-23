@@ -26,8 +26,8 @@ $usuario = obtenerUsuarioActual();
                 <nav class="nav">
                     <ul>
                         <li><a href="dashboard.php" class="active">Inicio</a></li>
-                        <li><a href="mis_animes_new.php">Mis Animes</a></li>
-                        <li><a href="#favoritos">Favoritos</a></li>
+                        <li><a href="mis_animes.php">Mis Animes</a></li>
+                        <li><a href="favoritos.php">Favoritos</a></li>
                         <li><a href="#perfil">Mi Perfil</a></li>
                     </ul>
                 </nav>

@@ -1,7 +1,7 @@
 <?php
 // verificar_tablas_animes.php - Script para verificar y crear tablas necesarias
 
-require_once 'config.php';
+require_once 'config/config.php';
 
 $tablas_necesarias = [
     'usuarios' => "CREATE TABLE IF NOT EXISTS usuarios (
@@ -31,6 +31,8 @@ $tablas_necesarias = [
         anime_id INT NOT NULL,
         estado ENUM('Viendo', 'Completado', 'En Pausa', 'Abandonado', 'Plan de Ver') NOT NULL,
         episodios_vistos INT DEFAULT 0,
+        puntuacion DECIMAL(3,1) DEFAULT NULL CHECK (puntuacion >= 0 AND puntuacion <= 10),
+        favorito BOOLEAN DEFAULT FALSE,
         fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY unique_usuario_anime (usuario_id, anime_id),
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -46,11 +48,12 @@ try {
     foreach ($tablas_necesarias as $nombre_tabla => $sql_crear) {
         echo "<p><strong>Verificando tabla: $nombre_tabla</strong></p>";
         
-        // Verificar si la tabla existe
-        $stmt = $conexion->prepare("SHOW TABLES LIKE ?");
+        // Verificar si la tabla existe usando INFORMATION_SCHEMA
+        $stmt = $conexion->prepare("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?");
         $stmt->execute([$nombre_tabla]);
+        $existe = $stmt->fetchColumn() > 0;
         
-        if ($stmt->rowCount() > 0) {
+        if ($existe) {
             echo "<span style='color: green;'>✅ La tabla '$nombre_tabla' ya existe.</span><br>";
         } else {
             echo "<span style='color: orange;'>⚠️ La tabla '$nombre_tabla' no existe. Creando...</span><br>";
@@ -66,7 +69,7 @@ try {
     }
     
     echo "<p><strong>🎯 Verificación completada. Ahora puedes usar la funcionalidad de Mis Animes.</strong></p>";
-    echo "<p><a href='mis_animes.php' style='color: #00ffff;'>📺 Ir a Mis Animes</a></p>";
+    echo "<p><a href='../views/mis_animes.php' style='color: #00ffff;'>📺 Ir a Mis Animes</a></p>";
     
 } catch (Exception $e) {
     echo "<span style='color: red;'>❌ Error de conexión: " . $e->getMessage() . "</span>";

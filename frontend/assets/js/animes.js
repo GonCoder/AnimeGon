@@ -427,3 +427,102 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Función para alternar favoritos
+function toggleFavorito(animeId, button) {
+    // Prevenir que se propague el evento al card
+    event.stopPropagation();
+    
+    // Mostrar feedback visual inmediato
+    button.style.transform = 'scale(1.2)';
+    
+    fetch('../backend/api/toggle_favorito.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            anime_id: animeId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar el estado visual del botón
+            if (data.favorito) {
+                button.classList.add('favorito');
+                button.title = 'Quitar de favoritos';
+            } else {
+                button.classList.remove('favorito');
+                button.title = 'Agregar a favoritos';
+            }
+            
+            // Mostrar mensaje temporal
+            mostrarMensajeTemporal(data.mensaje, 'success');
+        } else {
+            console.error('Error:', data.error);
+            mostrarMensajeTemporal(data.error || 'Error al actualizar favorito', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensajeTemporal('Error de conexión', 'error');
+    })
+    .finally(() => {
+        // Restaurar el tamaño del botón
+        setTimeout(() => {
+            button.style.transform = 'scale(1)';
+        }, 200);
+    });
+}
+
+// Función para mostrar mensajes temporales
+function mostrarMensajeTemporal(mensaje, tipo = 'info') {
+    // Crear elemento de mensaje
+    const mensajeEl = document.createElement('div');
+    mensajeEl.className = `mensaje-temporal mensaje-${tipo}`;
+    mensajeEl.textContent = mensaje;
+    mensajeEl.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 10px;
+        color: white;
+        font-weight: bold;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        ${tipo === 'success' ? 'background: rgba(0, 255, 136, 0.9); border: 2px solid #00ff88;' : ''}
+        ${tipo === 'error' ? 'background: rgba(255, 0, 127, 0.9); border: 2px solid #ff007f;' : ''}
+        ${tipo === 'info' ? 'background: rgba(0, 255, 255, 0.9); border: 2px solid #00ffff;' : ''}
+    `;
+    
+    // Agregar estilos de animación
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    if (!document.querySelector('#mensaje-temporal-styles')) {
+        style.id = 'mensaje-temporal-styles';
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(mensajeEl);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+        mensajeEl.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (mensajeEl.parentNode) {
+                mensajeEl.parentNode.removeChild(mensajeEl);
+            }
+        }, 300);
+    }, 3000);
+}

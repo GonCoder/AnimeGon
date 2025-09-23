@@ -53,11 +53,11 @@ function subirImagen($archivo) {
     // Generar nombre único para el archivo
     $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
     $nombre_archivo = 'anime_' . uniqid() . '_' . time() . '.' . $extension;
-    $ruta_destino = 'uploads/animes/' . $nombre_archivo;
+    $ruta_destino = '../../uploads/animes/' . $nombre_archivo;
     
     // Crear directorio si no existe
-    if (!file_exists('uploads/animes/')) {
-        mkdir('uploads/animes/', 0755, true);
+    if (!file_exists('../../uploads/animes/')) {
+        mkdir('../../uploads/animes/', 0755, true);
     }
     
     // Mover archivo a destino
@@ -99,24 +99,27 @@ function agregarAnime($usuario_id, $datos, $imagen_ruta = null) {
             }
         } else {
             // Crear nuevo anime en la tabla animes
-            $query_anime = "INSERT INTO animes (titulo, episodios_total, imagen_portada, tipo, estado) VALUES (?, ?, ?, 'TV', 'Finalizado')";
+            $query_anime = "INSERT INTO animes (titulo, episodios_total, imagen_portada, tipo, estado) VALUES (?, ?, ?, ?, ?)";
             $stmt_anime = $conexion->prepare($query_anime);
             $stmt_anime->execute([
                 $datos['nombre'],
                 $datos['total_episodios'] ?: null,
-                $imagen_ruta
+                $imagen_ruta,
+                $datos['tipo'] ?: 'TV',
+                $datos['estado_anime'] ?: 'Finalizado'
             ]);
             $anime_id = $conexion->lastInsertId();
         }
         
         // Agregar anime a la lista del usuario
-        $query_usuario_anime = "INSERT INTO lista_usuario (usuario_id, anime_id, episodios_vistos, estado, fecha_agregado) VALUES (?, ?, ?, ?, NOW())";
+        $query_usuario_anime = "INSERT INTO lista_usuario (usuario_id, anime_id, episodios_vistos, estado, puntuacion, fecha_agregado) VALUES (?, ?, ?, ?, ?, NOW())";
         $stmt_usuario_anime = $conexion->prepare($query_usuario_anime);
         $stmt_usuario_anime->execute([
             $usuario_id,
             $anime_id,
             $datos['capitulos_vistos'] ?: 0,
-            ucfirst($datos['estado'])
+            ucfirst($datos['estado']),
+            !empty($datos['puntuacion']) ? $datos['puntuacion'] : null
         ]);
         
         // Confirmar transacción
@@ -153,7 +156,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'nombre' => trim($_POST['nombre'] ?? ''),
         'total_episodios' => intval($_POST['total_episodios'] ?? 0),
         'capitulos_vistos' => intval($_POST['capitulos_vistos'] ?? 0),
-        'estado' => $_POST['estado'] ?? 'pendiente'
+        'estado' => $_POST['estado'] ?? 'plan de ver',
+        'tipo' => $_POST['tipo'] ?? 'TV',
+        'estado_anime' => $_POST['estado_anime'] ?? 'Finalizado',
+        'puntuacion' => !empty($_POST['puntuacion']) ? floatval($_POST['puntuacion']) : null
     ];
     
     // Validaciones
@@ -180,6 +186,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $estados_validos = ['Plan de Ver', 'Viendo', 'Completado', 'En Pausa', 'Abandonado'];
     if (!in_array(ucfirst($datos['estado']), $estados_validos)) {
         $respuesta['errores'][] = 'Estado no válido';
+    }
+    
+    $tipos_validos = ['TV', 'OVA', 'Película', 'Especial', 'ONA'];
+    if (!in_array($datos['tipo'], $tipos_validos)) {
+        $respuesta['errores'][] = 'Tipo de anime no válido';
+    }
+    
+    $estados_anime_validos = ['Emitiendo', 'Finalizado', 'Próximamente', 'Cancelado'];
+    if (!in_array($datos['estado_anime'], $estados_anime_validos)) {
+        $respuesta['errores'][] = 'Estado del anime no válido';
+    }
+    
+    if (!is_null($datos['puntuacion']) && ($datos['puntuacion'] < 1 || $datos['puntuacion'] > 10)) {
+        $respuesta['errores'][] = 'La puntuación debe estar entre 1 y 10';
     }
     
     // Si hay errores, mostrarlos
@@ -212,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['mensaje_error'] = $respuesta['mensaje'];
     }
     
-    header("Location: ../../views/mis_animes_new.php");
+    header("Location: ../../views/mis_animes.php");
     exit();
 }
 
