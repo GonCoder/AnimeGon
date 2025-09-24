@@ -102,6 +102,8 @@ body::before {
     border: 1px solid;
     position: relative;
     overflow: hidden;
+    z-index: 50000;
+    backdrop-filter: blur(10px);
 }
 
 .mensaje::before {
@@ -120,17 +122,17 @@ body::before {
 }
 
 .mensaje.exito {
-    background: linear-gradient(135deg, #0d4f3e 0%, #1a7a5e 100%);
+    background: linear-gradient(135deg, rgba(13, 79, 62, 0.95) 0%, rgba(26, 122, 94, 0.95) 100%);
     color: var(--cyber-green);
     border-color: var(--cyber-green);
-    box-shadow: var(--glow-cyan);
+    box-shadow: var(--glow-cyan), 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .mensaje.error {
-    background: linear-gradient(135deg, #4a0e0e 0%, #7a1a1a 100%);
+    background: linear-gradient(135deg, rgba(74, 14, 14, 0.95) 0%, rgba(122, 26, 26, 0.95) 100%);
     color: var(--neon-pink);
     border-color: var(--neon-pink);
-    box-shadow: var(--glow-pink);
+    box-shadow: var(--glow-pink), 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* === ESTILOS PARA INDEX (LANDING PAGE) - TEMA ANIME OSCURO === */
@@ -1523,4 +1525,23 @@ body::before {
 .btn-anime:hover {
     transform: translateY(-3px);
     box-shadow: 0 0 30px rgba(255, 0, 127, 0.6);
+}
+
+/* Estilos mejorados para alertas y notificaciones */
+.alerta-personalizada,
+.mensaje-temporal {
+    z-index: 99999 !important;
+    position: fixed !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border-width: 2px;
+    border-style: solid;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Asegurar que las alertas estén sobre los modales */
+.modal + .alerta-personalizada,
+.modal + .mensaje-temporal {
+    z-index: 99999 !important;
 }

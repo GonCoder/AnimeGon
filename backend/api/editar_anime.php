@@ -31,12 +31,14 @@ function actualizarAnime($usuario_id, $anime_id, $datos, $imagen_ruta = null) {
         
         // Actualizar información del anime en la tabla animes si es necesario
         if (isset($datos['nombre']) && !empty($datos['nombre'])) {
-            $query_anime = "UPDATE animes SET titulo = ?, titulo_original = ?, titulo_ingles = ?, episodios_total = ?";
+            $query_anime = "UPDATE animes SET titulo = ?, titulo_original = ?, titulo_ingles = ?, episodios_total = ?, tipo = ?, estado = ?";
             $params_anime = [
                 $datos['nombre'], 
                 $datos['titulo_original'] ?: null,
                 $datos['titulo_ingles'] ?: null,
-                $datos['total_episodios'] ?: null
+                $datos['total_episodios'] ?: null,
+                $datos['tipo'] ?: 'TV',
+                $datos['estado_anime'] ?: 'Finalizado'
             ];
             
             if ($imagen_ruta) {
@@ -52,11 +54,12 @@ function actualizarAnime($usuario_id, $anime_id, $datos, $imagen_ruta = null) {
         }
         
         // Actualizar información en lista_usuario
-        $query_lista = "UPDATE lista_usuario SET episodios_vistos = ?, estado = ?, fecha_actualizacion = NOW() WHERE usuario_id = ? AND anime_id = ?";
+        $query_lista = "UPDATE lista_usuario SET episodios_vistos = ?, estado = ?, puntuacion = ? WHERE usuario_id = ? AND anime_id = ?";
         $stmt_lista = $conexion->prepare($query_lista);
         $stmt_lista->execute([
             $datos['episodios_vistos'] ?: 0,
             $datos['estado'],
+            isset($datos['puntuacion']) && $datos['puntuacion'] !== '' ? (int)$datos['puntuacion'] : null,
             $usuario_id,
             $anime_id
         ]);
@@ -124,18 +127,16 @@ function subirNuevaImagen($archivo) {
     // Generar nombre único para el archivo
     $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
     $nombre_archivo = 'anime_' . uniqid() . '_' . time() . '.' . $extension;
-    $ruta_destino = '../../uploads/animes/' . $nombre_archivo;
-    
+    $ruta_destino = '../../img/' . $nombre_archivo;
+
     // Crear directorio si no existe
-    if (!file_exists('../../uploads/animes/')) {
-        mkdir('../../uploads/animes/', 0755, true);
-    }
-    
-    // Mover archivo a destino
+    if (!file_exists('../../img/')) {
+        mkdir('../../img/', 0755, true);
+    }    // Mover archivo a destino
     if (move_uploaded_file($archivo['tmp_name'], $ruta_destino)) {
         $resultado['exito'] = true;
         $resultado['mensaje'] = 'Imagen subida correctamente';
-        $resultado['ruta'] = 'uploads/animes/' . $nombre_archivo;
+        $resultado['ruta'] = 'img/' . $nombre_archivo;
     } else {
         $resultado['mensaje'] = 'Error al mover el archivo al destino';
     }
@@ -166,9 +167,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'nombre' => trim($_POST['nombre'] ?? ''),
         'titulo_original' => trim($_POST['titulo_original'] ?? ''),
         'titulo_ingles' => trim($_POST['titulo_ingles'] ?? ''),
+        'tipo' => $_POST['tipo'] ?? 'TV',
+        'estado_anime' => $_POST['estado_anime'] ?? 'Finalizado',
         'total_episodios' => intval($_POST['total_episodios'] ?? 0),
         'episodios_vistos' => intval($_POST['episodios_vistos'] ?? 0),
-        'estado' => $_POST['estado'] ?? 'Plan de Ver'
+        'estado' => $_POST['estado'] ?? 'Plan de Ver',
+        'puntuacion' => $_POST['puntuacion'] ?? null
     ];
     
     // Validaciones
@@ -197,6 +201,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $respuesta['errores'][] = 'Estado no válido';
     }
     
+    // Validar tipo de anime
+    $tipos_validos = ['TV', 'OVA', 'Película', 'Especial', 'ONA'];
+    if (!in_array($datos['tipo'], $tipos_validos)) {
+        $respuesta['errores'][] = 'Tipo de anime no válido';
+    }
+    
+    // Validar estado del anime
+    $estados_anime_validos = ['Finalizado', 'Emitiendo', 'Próximamente', 'Cancelado'];
+    if (!in_array($datos['estado_anime'], $estados_anime_validos)) {
+        $respuesta['errores'][] = 'Estado del anime no válido';
+    }
+    
+    // Validar puntuación
+    if (!empty($datos['puntuacion'])) {
+        $puntuacion = (int)$datos['puntuacion'];
+        if ($puntuacion < 1 || $puntuacion > 10) {
+            $respuesta['errores'][] = 'La puntuación debe estar entre 1 y 10';
+        }
+    }
+    
     // Si hay errores, devolverlos
     if (!empty($respuesta['errores'])) {
         $respuesta['mensaje'] = implode(', ', $respuesta['errores']);
@@ -204,9 +228,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
     
-    // Procesar imagen si se subió
+    // Procesar imagen (URL tiene prioridad sobre archivo subido)
     $imagen_ruta = null;
-    if (isset($_FILES['imagen'])) {
+    
+    // Verificar si se proporcionó una URL de imagen
+    if (!empty($_POST['imagen_url'])) {
+        $imagen_url = trim($_POST['imagen_url']);
+        // Validar que sea una URL válida
+        if (filter_var($imagen_url, FILTER_VALIDATE_URL)) {
+            $imagen_ruta = $imagen_url;
+        } else {
+            $respuesta['mensaje'] = 'La URL de imagen no es válida';
+            echo json_encode($respuesta);
+            exit();
+        }
+    }
+    // Si no hay URL, procesar archivo subido
+    elseif (isset($_FILES['imagen'])) {
         $resultado_imagen = subirNuevaImagen($_FILES['imagen']);
         if (!$resultado_imagen['exito'] && $_FILES['imagen']['error'] !== UPLOAD_ERR_NO_FILE) {
             $respuesta['mensaje'] = 'Error con la imagen: ' . $resultado_imagen['mensaje'];

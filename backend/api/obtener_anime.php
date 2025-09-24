@@ -25,9 +25,12 @@ try {
     $conexion = obtenerConexion();
     
     // Obtener datos del anime y de la lista del usuario
-    $query = "SELECT a.*, lu.episodios_vistos, lu.estado, lu.puntuacion, lu.favorito
+    $query = "SELECT a.id, a.titulo, a.titulo_original, a.titulo_ingles, a.episodios_total, a.imagen_portada, a.tipo, 
+                     a.estado as anime_estado, lu.episodios_vistos, lu.estado as lista_estado, lu.puntuacion,
+                     (CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END) as favorito
               FROM animes a
               INNER JOIN lista_usuario lu ON a.id = lu.anime_id
+              LEFT JOIN favoritos f ON lu.usuario_id = f.usuario_id AND lu.anime_id = f.anime_id
               WHERE a.id = ? AND lu.usuario_id = ?";
     
     $stmt = $conexion->prepare($query);

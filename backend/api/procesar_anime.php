@@ -53,18 +53,16 @@ function subirImagen($archivo) {
     // Generar nombre único para el archivo
     $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
     $nombre_archivo = 'anime_' . uniqid() . '_' . time() . '.' . $extension;
-    $ruta_destino = '../../uploads/animes/' . $nombre_archivo;
-    
+    $ruta_destino = '../../img/' . $nombre_archivo;
+
     // Crear directorio si no existe
-    if (!file_exists('../../uploads/animes/')) {
-        mkdir('../../uploads/animes/', 0755, true);
-    }
-    
-    // Mover archivo a destino
+    if (!file_exists('../../img/')) {
+        mkdir('../../img/', 0755, true);
+    }    // Mover archivo a destino
     if (move_uploaded_file($archivo['tmp_name'], $ruta_destino)) {
         $resultado['exito'] = true;
         $resultado['mensaje'] = 'Imagen subida correctamente';
-        $resultado['ruta'] = 'uploads/animes/' . $nombre_archivo; // Ruta relativa desde la raíz del proyecto
+        $resultado['ruta'] = 'img/' . $nombre_archivo; // Ruta relativa desde la raíz del proyecto
     } else {
         $resultado['mensaje'] = 'Error al mover el archivo al destino';
     }
@@ -210,9 +208,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($respuesta['errores'])) {
         $respuesta['mensaje'] = implode('<br>', $respuesta['errores']);
     } else {
-        // Procesar imagen si se subió
+        // Procesar imagen (URL tiene prioridad sobre archivo subido)
         $imagen_ruta = null;
-        if (isset($_FILES['imagen'])) {
+        
+        // Verificar si se proporcionó una URL de imagen
+        if (!empty($_POST['imagen_url'])) {
+            $imagen_url = trim($_POST['imagen_url']);
+            // Validar que sea una URL válida
+            if (filter_var($imagen_url, FILTER_VALIDATE_URL)) {
+                $imagen_ruta = $imagen_url;
+            } else {
+                $respuesta['mensaje'] = 'La URL de imagen no es válida';
+            }
+        }
+        // Si no hay URL, procesar archivo subido
+        elseif (isset($_FILES['imagen'])) {
             $resultado_imagen = subirImagen($_FILES['imagen']);
             if (!$resultado_imagen['exito'] && $_FILES['imagen']['error'] !== UPLOAD_ERR_NO_FILE) {
                 $respuesta['mensaje'] = 'Error con la imagen: ' . $resultado_imagen['mensaje'];

@@ -1,0 +1,38 @@
+# Permitir acceso solo a imágenes
+<Files ~ "\.(jpe?g|png|gif|ico)$">
+    Require all granted
+</Files>
+
+# Denegar acceso a archivos PHP
+<Files ~ "\.php$">
+    Require all denied
+</Files>
+
+# Denegar acceso a archivos de script
+<Files ~ "\.(sh|bat|exe|com)$">
+    Require all denied
+</Files>
+
+# Configurar tipos MIME para imágenes
+AddType image/jpeg .jpg .jpeg
+AddType image/png .png
+AddType image/gif .gif
+AddType image/x-icon .ico
+
+# Prevenir ejecución de PHP
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# Headers para cache de imágenes
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 year"
+</IfModule>

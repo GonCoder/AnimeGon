@@ -164,10 +164,10 @@ class AnimeManager {
             document.getElementById('edit_titulo_original').value = anime.titulo_original || '';
             document.getElementById('edit_titulo_ingles').value = anime.titulo_ingles || '';
             document.getElementById('edit_tipo').value = anime.tipo || 'TV';
-            document.getElementById('edit_estado_anime').value = anime.estado || 'Finalizado';
+            document.getElementById('edit_estado_anime').value = anime.anime_estado || 'Finalizado';
             document.getElementById('edit_total_episodios').value = anime.episodios_total || '';
             document.getElementById('edit_capitulos_vistos').value = anime.episodios_vistos || '0';
-            document.getElementById('edit_estado').value = anime.estado || 'Plan de Ver';
+            document.getElementById('edit_estado').value = anime.lista_estado || 'Plan de Ver';
             document.getElementById('edit_puntuacion').value = anime.puntuacion || '';
             
             // Mostrar modal
@@ -327,16 +327,24 @@ class AnimeManager {
         const alerta = document.createElement('div');
         alerta.className = 'alerta-personalizada';
         
+        // Colores con mayor opacidad para mejor visibilidad
         const colores = {
-            'success': 'rgba(0, 255, 136, 0.2)',
-            'error': 'rgba(255, 0, 127, 0.2)',
-            'info': 'rgba(0, 255, 255, 0.2)'
+            'success': 'rgba(0, 255, 136, 0.95)',
+            'error': 'rgba(255, 0, 127, 0.95)',
+            'info': 'rgba(0, 255, 255, 0.95)'
         };
         
         const borderColors = {
             'success': '#00ff88',
             'error': '#ff007f',
             'info': '#00ffff'
+        };
+        
+        // Colores de texto para mejor contraste
+        const textColors = {
+            'success': '#000000',
+            'error': '#ffffff',
+            'info': '#000000'
         };
         
         alerta.style.cssText = `
@@ -347,10 +355,16 @@ class AnimeManager {
             border: 2px solid ${borderColors[tipo]};
             border-radius: 10px;
             padding: 15px 20px;
-            color: ${borderColors[tipo]};
-            z-index: 10000;
+            color: ${textColors[tipo]};
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 99999;
             min-width: 300px;
+            max-width: 400px;
+            word-wrap: break-word;
             animation: slideInRight 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 20px ${borderColors[tipo]}40;
+            backdrop-filter: blur(10px);
         `;
         
         alerta.textContent = mensaje;
@@ -473,23 +487,55 @@ function toggleFavorito(animeId, button) {
 
 // Función para mostrar mensajes temporales
 function mostrarMensajeTemporal(mensaje, tipo = 'info') {
+    // Remover mensajes anteriores
+    const mensajeAnterior = document.querySelector('.mensaje-temporal');
+    if (mensajeAnterior) {
+        mensajeAnterior.remove();
+    }
+    
     // Crear elemento de mensaje
     const mensajeEl = document.createElement('div');
     mensajeEl.className = `mensaje-temporal mensaje-${tipo}`;
     mensajeEl.textContent = mensaje;
+    
+    // Configurar estilos base
+    let backgroundColor, borderColor, textColor;
+    
+    switch(tipo) {
+        case 'success':
+            backgroundColor = 'rgba(0, 255, 136, 0.95)';
+            borderColor = '#00ff88';
+            textColor = '#000000';
+            break;
+        case 'error':
+            backgroundColor = 'rgba(255, 0, 127, 0.95)';
+            borderColor = '#ff007f';
+            textColor = '#ffffff';
+            break;
+        default:
+            backgroundColor = 'rgba(0, 255, 255, 0.95)';
+            borderColor = '#00ffff';
+            textColor = '#000000';
+    }
+    
     mensajeEl.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
         padding: 15px 20px;
         border-radius: 10px;
-        color: white;
+        color: ${textColor};
         font-weight: bold;
-        z-index: 10000;
+        font-size: 14px;
+        z-index: 99999;
         animation: slideIn 0.3s ease;
-        ${tipo === 'success' ? 'background: rgba(0, 255, 136, 0.9); border: 2px solid #00ff88;' : ''}
-        ${tipo === 'error' ? 'background: rgba(255, 0, 127, 0.9); border: 2px solid #ff007f;' : ''}
-        ${tipo === 'info' ? 'background: rgba(0, 255, 255, 0.9); border: 2px solid #00ffff;' : ''}
+        background: ${backgroundColor};
+        border: 2px solid ${borderColor};
+        min-width: 300px;
+        max-width: 400px;
+        word-wrap: break-word;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 20px ${borderColor}40;
+        backdrop-filter: blur(10px);
     `;
     
     // Agregar estilos de animación

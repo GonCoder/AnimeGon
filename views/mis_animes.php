@@ -297,6 +297,56 @@ $animes = obtenerAnimesUsuario($usuario_id);
             margin-left: 10px;
         }
         
+        /* Estilos para estado del anime */
+        .estado-anime {
+            margin: 8px 0;
+        }
+        
+        .estado-anime-badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 1px solid;
+        }
+        
+        .estado-anime-badge.finalizado {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border-color: rgba(40, 167, 69, 0.4);
+        }
+        
+        .estado-anime-badge.emitiendo {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border-color: rgba(255, 193, 7, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        .estado-anime-badge.proximamente {
+            background: rgba(0, 123, 255, 0.2);
+            color: #007bff;
+            border-color: rgba(0, 123, 255, 0.4);
+        }
+        
+        .estado-anime-badge.cancelado {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border-color: rgba(220, 53, 69, 0.4);
+        }
+        
+        .estado-anime-badge.desconocido {
+            background: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+            border-color: rgba(108, 117, 125, 0.4);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -760,7 +810,14 @@ $animes = obtenerAnimesUsuario($usuario_id);
                         </button>
                         
                         <?php if (!empty($anime['imagen_portada'])): ?>
-                            <img src="<?= htmlspecialchars($anime['imagen_portada']) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
+                            <?php 
+                            // Ajustar ruta para imágenes locales desde views/
+                            $ruta_imagen = $anime['imagen_portada'];
+                            if (strpos($ruta_imagen, 'img/') === 0) {
+                                $ruta_imagen = '../' . $ruta_imagen;
+                            }
+                            ?>
+                            <img src="<?= htmlspecialchars($ruta_imagen) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
                         <?php else: ?>
                             <div class="anime-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3rem;">
                                 🎭
@@ -800,6 +857,40 @@ $animes = obtenerAnimesUsuario($usuario_id);
                                     </span>
                                 <?php endif; ?>
                             </div>
+                            
+                            <?php if (!empty($anime['estado_anime'])): ?>
+                                <div class="estado-anime">
+                                    <?php
+                                    // Determinar ícono y clase para el estado del anime
+                                    $estado_anime_icon = '';
+                                    $estado_anime_class = '';
+                                    switch($anime['estado_anime']) {
+                                        case 'Finalizado':
+                                            $estado_anime_icon = '✅';
+                                            $estado_anime_class = 'finalizado';
+                                            break;
+                                        case 'Emitiendo':
+                                            $estado_anime_icon = '📡';
+                                            $estado_anime_class = 'emitiendo';
+                                            break;
+                                        case 'Próximamente':
+                                            $estado_anime_icon = '🔜';
+                                            $estado_anime_class = 'proximamente';
+                                            break;
+                                        case 'Cancelado':
+                                            $estado_anime_icon = '❌';
+                                            $estado_anime_class = 'cancelado';
+                                            break;
+                                        default:
+                                            $estado_anime_icon = '❓';
+                                            $estado_anime_class = 'desconocido';
+                                    }
+                                    ?>
+                                    <span class="estado-anime-badge <?= $estado_anime_class ?>">
+                                        <?= $estado_anime_icon ?> <?= htmlspecialchars($anime['estado_anime']) ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                             
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: <?= $progreso ?>%"></div>
@@ -913,14 +1004,34 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     </div>
                     
                     <div class="form-group">
-                        <label for="imagen">🖼️ Imagen del Anime</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
-                            <label for="imagen" class="file-input-label">
-                                📎 Seleccionar imagen (JPG, PNG, ICO - máx. 1MB)
-                            </label>
+                        <label for="imagen_url">🖼️ Imagen del Anime</label>
+                        
+                        <!-- Opción de URL (recomendada) -->
+                        <div style="margin-bottom: 10px;">
+                            <label for="imagen_url" style="font-size: 0.9rem; color: #28a745;">🌐 URL de imagen (Recomendado - ahorra espacio)</label>
+                            <input type="url" id="imagen_url" name="imagen_url" class="form-control" 
+                                   placeholder="https://example.com/imagen.jpg" 
+                                   style="margin-top: 5px;">
                         </div>
-                        <div class="file-info">Formatos: JPG, PNG, ICO | Tamaño máximo: 1MB</div>
+                        
+                        <!-- Separador -->
+                        <div style="text-align: center; margin: 15px 0; color: #666;">
+                            <span style="background: white; padding: 0 10px;">O</span>
+                            <hr style="border: none; border-top: 1px solid #ddd; margin-top: -12px;">
+                        </div>
+                        
+                        <!-- Opción de subir archivo -->
+                        <div>
+                            <label for="imagen" style="font-size: 0.9rem; color: #666;">📎 Subir desde tu dispositivo</label>
+                            <div class="file-input-wrapper" style="margin-top: 5px;">
+                                <input type="file" id="imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
+                                <label for="imagen" class="file-input-label">
+                                    📎 Seleccionar imagen (JPG, PNG, ICO - máx. 1MB)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="file-info">💡 Tip: Usar URL de imagen es más rápido y ahorra espacio en el servidor</div>
                     </div>
                     
                     <div class="form-buttons">
@@ -1022,14 +1133,34 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     </div>
                     
                     <div class="form-group">
-                        <label for="edit_imagen">🖼️ Nueva Imagen (opcional)</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="edit_imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
-                            <label for="edit_imagen" class="file-input-label">
-                                📎 Cambiar imagen (JPG, PNG, ICO - máx. 1MB)
-                            </label>
+                        <label for="edit_imagen_url">🖼️ Nueva Imagen (opcional)</label>
+                        
+                        <!-- Opción de URL (recomendada) -->
+                        <div style="margin-bottom: 10px;">
+                            <label for="edit_imagen_url" style="font-size: 0.9rem; color: #28a745;">🌐 Nueva URL de imagen</label>
+                            <input type="url" id="edit_imagen_url" name="imagen_url" class="form-control" 
+                                   placeholder="https://example.com/imagen.jpg" 
+                                   style="margin-top: 5px;">
                         </div>
-                        <div class="file-info">Formatos: JPG, PNG, ICO | Tamaño máximo: 1MB | Deja vacío para mantener la actual</div>
+                        
+                        <!-- Separador -->
+                        <div style="text-align: center; margin: 15px 0; color: #666;">
+                            <span style="background: white; padding: 0 10px;">O</span>
+                            <hr style="border: none; border-top: 1px solid #ddd; margin-top: -12px;">
+                        </div>
+                        
+                        <!-- Opción de subir archivo -->
+                        <div>
+                            <label for="edit_imagen" style="font-size: 0.9rem; color: #666;">📎 Subir nueva imagen</label>
+                            <div class="file-input-wrapper" style="margin-top: 5px;">
+                                <input type="file" id="edit_imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
+                                <label for="edit_imagen" class="file-input-label">
+                                    📎 Cambiar imagen (JPG, PNG, ICO - máx. 1MB)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="file-info">💡 Deja ambos campos vacíos para mantener la imagen actual</div>
                     </div>
                     
                     <div class="form-buttons">

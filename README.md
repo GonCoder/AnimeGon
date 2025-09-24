@@ -28,9 +28,8 @@ AnimeGon/
 │   ├── logout.php           # 🚪 Cerrar sesión
 │   ├── mis_animes.php       # 📺 Lista animes (antigua)
 │   └── mis_animes_new.php   # 📺 Lista animes (nueva)
-├── 📂 uploads/               # 📁 Archivos subidos
-│   ├── .htaccess            # 🛡️ Seguridad
-│   └── 📂 animes/           # 🖼️ Imágenes de animes
+├── 📂 img/                   # �️ Imágenes de animes
+│   └── .htaccess            # 🛡️ Seguridad
 ├── index.php                # 🏠 Página de inicio
 └── README.md               # 📚 Documentación
 ```
@@ -41,7 +40,7 @@ AnimeGon/
 - **Backend**: Toda la lógica del servidor y APIs
 - **Frontend**: Recursos estáticos (CSS, JS)
 - **Views**: Páginas de interfaz de usuario
-- **Uploads**: Archivos subidos con seguridad
+- **Img**: Imágenes con seguridad y optimización
 
 ### 🔗 **Rutas Actualizadas:**
 
@@ -60,7 +59,7 @@ AnimeGon/
 ### 🛡️ **Seguridad Mejorada:**
 - Archivos de configuración protegidos en `backend/`
 - APIs organizadas y validadas
-- Uploads con protección `.htaccess`
+- Imágenes con protección `.htaccess`
 - Sanitización de rutas y datos
 
 ## 🚀 Nuevas Funcionalidades
@@ -81,7 +80,7 @@ AnimeGon/
 ### 🔒 Seguridad
 - **🛡️ Validación** de archivos de imagen
 - **📝 Sanitización** de datos de entrada
-- **🔐 Protección** de directorios de uploads
+- **🔐 Protección** de directorios de imágenes
 - **🚫 Prevención** de inyecciones SQL
 
 ## 🗄️ Base de Datos
@@ -119,8 +118,7 @@ define('DB_PASS', 'tu-contraseña');
 
 ### 3. Permisos de Directorio
 ```bash
-chmod 755 uploads/
-chmod 755 uploads/animes/
+chmod 755 img/
 ```
 
 ## 🎯 Uso de la API

@@ -269,6 +269,56 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             margin-left: 10px;
         }
         
+        /* Estilos para estado del anime */
+        .estado-anime {
+            margin: 8px 0;
+        }
+        
+        .estado-anime-badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 1px solid;
+        }
+        
+        .estado-anime-badge.finalizado {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border-color: rgba(40, 167, 69, 0.4);
+        }
+        
+        .estado-anime-badge.emitiendo {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border-color: rgba(255, 193, 7, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        .estado-anime-badge.proximamente {
+            background: rgba(0, 123, 255, 0.2);
+            color: #007bff;
+            border-color: rgba(0, 123, 255, 0.4);
+        }
+        
+        .estado-anime-badge.cancelado {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border-color: rgba(220, 53, 69, 0.4);
+        }
+        
+        .estado-anime-badge.desconocido {
+            background: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+            border-color: rgba(108, 117, 125, 0.4);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -518,7 +568,14 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
                         </button>
                         
                         <?php if (!empty($anime['imagen_portada'])): ?>
-                            <img src="<?= htmlspecialchars($anime['imagen_portada']) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
+                            <?php 
+                            // Ajustar ruta para imágenes locales desde views/
+                            $ruta_imagen = $anime['imagen_portada'];
+                            if (strpos($ruta_imagen, 'img/') === 0) {
+                                $ruta_imagen = '../' . $ruta_imagen;
+                            }
+                            ?>
+                            <img src="<?= htmlspecialchars($ruta_imagen) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
                         <?php else: ?>
                             <div class="anime-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3rem;">
                                 🎭
@@ -558,6 +615,40 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
                                     </span>
                                 <?php endif; ?>
                             </div>
+                            
+                            <?php if (!empty($anime['estado_anime'])): ?>
+                                <div class="estado-anime">
+                                    <?php
+                                    // Determinar ícono y clase para el estado del anime
+                                    $estado_anime_icon = '';
+                                    $estado_anime_class = '';
+                                    switch($anime['estado_anime']) {
+                                        case 'Finalizado':
+                                            $estado_anime_icon = '✅';
+                                            $estado_anime_class = 'finalizado';
+                                            break;
+                                        case 'Emitiendo':
+                                            $estado_anime_icon = '📡';
+                                            $estado_anime_class = 'emitiendo';
+                                            break;
+                                        case 'Próximamente':
+                                            $estado_anime_icon = '🔜';
+                                            $estado_anime_class = 'proximamente';
+                                            break;
+                                        case 'Cancelado':
+                                            $estado_anime_icon = '❌';
+                                            $estado_anime_class = 'cancelado';
+                                            break;
+                                        default:
+                                            $estado_anime_icon = '❓';
+                                            $estado_anime_class = 'desconocido';
+                                    }
+                                    ?>
+                                    <span class="estado-anime-badge <?= $estado_anime_class ?>">
+                                        <?= $estado_anime_icon ?> <?= htmlspecialchars($anime['estado_anime']) ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                             
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: <?= $progreso ?>%"></div>
