@@ -426,6 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.onclick = function(event) {
         const modal = document.getElementById('animeModal');
         const editModal = document.getElementById('editAnimeModal');
+        const importModal = document.getElementById('importModal');
         
         if (event.target == modal) {
             cerrarModal();
@@ -433,6 +434,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (event.target == editModal) {
             cerrarModalEditar();
+        }
+        
+        if (event.target == importModal) {
+            cerrarModalImportar();
         }
     }
 });
@@ -567,3 +572,99 @@ function mostrarMensajeTemporal(mensaje, tipo = 'info') {
         }, 300);
     }, 3000);
 }
+
+// Función para exportar lista
+function exportarLista() {
+    // Mostrar opciones de formato
+    const formato = confirm('¿Deseas exportar en formato JSON (recomendado para importar)?\n\nOK = JSON (para importar)\nCancelar = TXT (solo lectura)') ? 'json' : 'txt';
+    
+    // Crear enlace de descarga
+    const url = `../backend/api/exportar_lista.php?formato=${formato}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '';
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    mostrarMensajeTemporal(`📤 Exportando lista en formato ${formato.toUpperCase()}...`, 'info');
+}
+
+// Función para abrir modal de importar
+function abrirModalImportar() {
+    document.getElementById('importarModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+// Función para cerrar modal de importar
+function cerrarModalImportar() {
+    document.getElementById('importarModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.getElementById('importarForm').reset();
+    
+    // Resetear etiqueta del archivo
+    const label = document.querySelector('#importarModal .file-input-label');
+    if (label) {
+        label.textContent = '📎 Seleccionar archivo (.txt o .json)';
+    }
+}
+
+// Manejar formulario de importación
+document.addEventListener('DOMContentLoaded', function() {
+    const importarForm = document.getElementById('importarForm');
+    if (importarForm) {
+        importarForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const archivoInput = document.getElementById('archivo_importar');
+            
+            if (!archivoInput.files[0]) {
+                mostrarMensajeTemporal('⚠️ Por favor selecciona un archivo para importar', 'error');
+                return;
+            }
+            
+            try {
+                mostrarMensajeTemporal('📥 Importando lista...', 'info');
+                
+                const response = await fetch('../backend/api/importar_lista.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.exito) {
+                    mostrarMensajeTemporal('✅ ' + result.mensaje, 'success');
+                    cerrarModalImportar();
+                    
+                    // Recargar la página después de 3 segundos para mostrar los nuevos animes
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                } else {
+                    mostrarMensajeTemporal('❌ ' + result.mensaje, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarMensajeTemporal('❌ Error al importar la lista', 'error');
+            }
+        });
+    }
+    
+    // Manejar cambio de archivo
+    const archivoInput = document.getElementById('archivo_importar');
+    if (archivoInput) {
+        archivoInput.addEventListener('change', function(e) {
+            const label = document.querySelector('#importarModal .file-input-label');
+            if (e.target.files[0]) {
+                label.innerHTML = `📎 ${e.target.files[0].name} <span style="color: #00ff88;">✓</span>`;
+            } else {
+                label.textContent = '📎 Seleccionar archivo (.txt o .json)';
+            }
+        });
+    }
+});

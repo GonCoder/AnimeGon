@@ -144,6 +144,12 @@ $animes = obtenerAnimesUsuario($usuario_id);
             flex-wrap: wrap;
         }
         
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
         .search-input {
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(0, 255, 255, 0.3);
@@ -183,6 +189,42 @@ $animes = obtenerAnimesUsuario($usuario_id);
         .btn-agregar:hover {
             transform: translateY(-2px);
             box-shadow: 0 0 25px rgba(255, 0, 127, 0.6);
+        }
+        
+        /* Botones de exportar e importar */
+        .btn-exportar,
+        .btn-importar {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-exportar:hover {
+            background: linear-gradient(135deg, #0056b3, #003f7f);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 123, 255, 0.4);
+        }
+        
+        .btn-importar {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+        }
+        
+        .btn-importar:hover {
+            background: linear-gradient(135deg, #1e7e34, #155724);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(40, 167, 69, 0.4);
         }
         
         .animes-grid {
@@ -749,9 +791,17 @@ $animes = obtenerAnimesUsuario($usuario_id);
             <h1 class="animes-title">📺 Mis Animes</h1>
             <div class="filter-section">
                 <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar animes...">
-                <button class="btn-agregar" onclick="abrirModal()">
-                    ➕ Agregar Anime
-                </button>
+                <div class="action-buttons">
+                    <button class="btn-exportar" onclick="exportarLista()">
+                        📤 Exportar
+                    </button>
+                    <button class="btn-importar" onclick="abrirModalImportar()">
+                        📥 Importar
+                    </button>
+                    <button class="btn-agregar" onclick="abrirModal()">
+                        ➕ Agregar Anime
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1166,6 +1216,43 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     <div class="form-buttons">
                         <button type="submit" class="btn-submit">✅ Guardar Cambios</button>
                         <button type="button" class="btn-cancel" onclick="cerrarModalEditar()">❌ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para importar lista -->
+    <div id="importarModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📥 Importar Lista de Animes</h2>
+                <span class="close" onclick="cerrarModalImportar()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="importarForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="archivo_importar">📁 Seleccionar archivo de lista</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="archivo_importar" name="archivo_importar" class="file-input" accept=".txt,.json">
+                            <label for="archivo_importar" class="file-input-label">
+                                📎 Seleccionar archivo (.txt o .json)
+                            </label>
+                        </div>
+                        <div class="file-info">💡 Selecciona un archivo exportado desde AnimeGon</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="reemplazar_duplicados" name="reemplazar_duplicados" style="margin-right: 8px;">
+                            🔄 Reemplazar animes duplicados (si ya existen en tu lista)
+                        </label>
+                        <div class="file-info">Si está desmarcado, los duplicados se omitirán</div>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" class="btn-submit">📥 Importar Lista</button>
+                        <button type="button" class="btn-cancel" onclick="cerrarModalImportar()">❌ Cancelar</button>
                     </div>
                 </form>
             </div>
