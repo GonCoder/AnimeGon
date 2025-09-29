@@ -694,6 +694,90 @@ $animes = obtenerAnimesUsuario($usuario_id);
             background: rgba(255, 255, 255, 0.2);
         }
         
+        /* Estilos para el modal de exportación */
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .export-option-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .export-option-card:hover {
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .export-option-card:active {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .export-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .export-option-card h5 {
+            color: #00ffff;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .export-option-card p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .export-option-card p strong {
+            color: #ff007f;
+        }
+        
+        .export-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .export-features span {
+            background: rgba(0, 255, 255, 0.1);
+            color: #00ffff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* Efectos especiales para las opciones */
+        .export-option-card:nth-child(2) .export-icon {
+            animation-delay: -1.5s;
+        }
+        
+        .export-option-card:nth-child(3) .export-icon {
+            animation-delay: -3s;
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             .animes-header {
@@ -1255,6 +1339,49 @@ $animes = obtenerAnimesUsuario($usuario_id);
                         <button type="button" class="btn-cancel" onclick="cerrarModalImportar()">❌ Cancelar</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para exportar lista -->
+    <div id="exportarModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📤 Exportar Lista de Animes</h2>
+                <span class="close" onclick="cerrarModalExportar()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <h4 style="color: #00ffff; margin-bottom: 25px; text-align: center;">Selecciona el formato de exportación:</h4>
+                    
+                    <div class="export-option-card" onclick="exportarEnFormato('json')">
+                        <div class="export-icon">📄</div>
+                        <h5>Formato JSON</h5>
+                        <p><strong>Recomendado para importar</strong></p>
+                        <p>Conserva toda la información y se puede importar de vuelta a AnimeGon</p>
+                        <div class="export-features">
+                            <span>✅ Datos completos</span>
+                            <span>✅ Reimportable</span>
+                            <span>✅ Estructura organizada</span>
+                        </div>
+                    </div>
+                    
+                    <div class="export-option-card" onclick="exportarEnFormato('txt')">
+                        <div class="export-icon">📝</div>
+                        <h5>Formato TXT</h5>
+                        <p><strong>Solo para lectura humana</strong></p>
+                        <p>Texto legible y fácil de compartir, pero no se puede reimportar</p>
+                        <div class="export-features">
+                            <span>👁️ Fácil de leer</span>
+                            <span>📄 Para compartir</span>
+                            <span>🚫 No reimportable</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-buttons" style="margin-top: 30px;">
+                    <button type="button" class="btn-cancel" onclick="cerrarModalExportar()">❌ Cancelar</button>
+                </div>
             </div>
         </div>
     </div>

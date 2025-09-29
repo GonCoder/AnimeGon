@@ -573,10 +573,22 @@ function mostrarMensajeTemporal(mensaje, tipo = 'info') {
     }, 3000);
 }
 
-// Función para exportar lista
+// Función para exportar lista - Abre el modal de opciones
 function exportarLista() {
-    // Mostrar opciones de formato
-    const formato = confirm('¿Deseas exportar en formato JSON (recomendado para importar)?\n\nOK = JSON (para importar)\nCancelar = TXT (solo lectura)') ? 'json' : 'txt';
+    document.getElementById('exportarModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+// Función para cerrar modal de exportar
+function cerrarModalExportar() {
+    document.getElementById('exportarModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Función para exportar en el formato seleccionado
+function exportarEnFormato(formato) {
+    // Cerrar el modal primero
+    cerrarModalExportar();
     
     // Crear enlace de descarga
     const url = `../backend/api/exportar_lista.php?formato=${formato}`;
@@ -589,7 +601,9 @@ function exportarLista() {
     link.click();
     document.body.removeChild(link);
     
-    mostrarMensajeTemporal(`📤 Exportando lista en formato ${formato.toUpperCase()}...`, 'info');
+    // Mostrar mensaje informativo
+    const tipoFormato = formato === 'json' ? 'JSON (reimportable)' : 'TXT (solo lectura)';
+    mostrarMensajeTemporal(`📤 Exportando lista en formato ${tipoFormato}...`, 'info');
 }
 
 // Función para abrir modal de importar
@@ -667,4 +681,32 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Cerrar modales con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modales = ['animeModal', 'editAnimeModal', 'importarModal', 'exportarModal'];
+            modales.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal && modal.style.display === 'block') {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+    });
+    
+    // Cerrar modales al hacer clic fuera de ellos
+    const modales = ['animeModal', 'editAnimeModal', 'importarModal', 'exportarModal'];
+    modales.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+    });
 });
