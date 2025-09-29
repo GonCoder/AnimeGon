@@ -726,9 +726,32 @@ $animes = obtenerAnimesUsuario($usuario_id);
             color: rgba(255, 255, 255, 0.5);
         }
         
+        .form-group select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%2300ffff" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 20px;
+            cursor: pointer;
+        }
+        
         .form-group select option {
-            background: #2a2a2a;
-            color: white;
+            background: #1a1a1a !important;
+            color: white !important;
+            padding: 10px;
+            border: none;
+        }
+        
+        .form-group select option:checked {
+            background: #00ffff !important;
+            color: #000 !important;
+        }
+        
+        .form-group select option:hover {
+            background: rgba(0, 255, 255, 0.3) !important;
+            color: white !important;
         }
         
         .file-input-wrapper {

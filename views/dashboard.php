@@ -393,7 +393,7 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
         }
 
         .btn-add-anime {
-            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            background: linear-gradient(135deg, #1194f1dd 0%, #00ff8ce2 100%);
             color: #1a1a2e;
             padding: 15px 30px;
             border: none;
@@ -402,15 +402,15 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 5px 20px rgba(0, 255, 0, 0.3);
+            box-shadow: 0 5px 20px rgba(0, 255, 225, 0.3);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .btn-add-anime:hover {
-            background: linear-gradient(135deg, #00cc00 0%, #009900 100%);
+            background: linear-gradient(135deg, #36ffeb90 0%, #00ffd5de 100%);
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 8px 25px rgba(0, 76, 255, 0.5);
         }
 
         /* Estilos para el modal de agregar anime */
@@ -479,6 +479,47 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
             padding: 30px;
             color: white;
         }
+
+        /* Estilos específicos para formularios del modal */
+        .anime-modal select {
+            width: 100% !important;
+            padding: 10px !important;
+            border: 1px solid #00ff00 !important;
+            border-radius: 5px !important;
+            background: rgba(0, 0, 0, 0.3) !important;
+            color: white !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%2300ff00" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') !important;
+            background-repeat: no-repeat !important;
+            background-position: right 15px center !important;
+            background-size: 20px !important;
+            cursor: pointer !important;
+        }
+
+        .anime-modal select:focus {
+            outline: none !important;
+            border-color: #00ff88 !important;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4) !important;
+        }
+
+        .anime-modal select option {
+            background: #1a1a1a !important;
+            color: white !important;
+            padding: 10px !important;
+            border: none !important;
+        }
+
+        .anime-modal select option:checked {
+            background: #00ff00 !important;
+            color: #000 !important;
+        }
+
+        .anime-modal select option:hover {
+            background: rgba(0, 255, 0, 0.3) !important;
+            color: white !important;
+        }
     </style>
 </head>
 <body>
@@ -491,7 +532,7 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                         <li><a href="dashboard.php" class="active">Inicio</a></li>
                         <li><a href="mis_animes.php">Mis Animes</a></li>
                         <li><a href="favoritos.php">Favoritos</a></li>
-                        <li><a href="hub.php">🌐 Hub</a></li>
+                        <li><a href="hub.php">Hub</a></li>
                         <li><a href="#perfil">Mi Perfil</a></li>
                     </ul>
                 </nav>
@@ -562,6 +603,12 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                         <h4>📝 Gestionar Lista</h4>
                         <p>Administra tu lista personal de animes</p>
                         <button class="btn-action" onclick="console.log('Botón Lista clicked'); window.location.href='mis_animes.php'">Ver Lista</button>
+                        <!-- Botón para agregar nuevo anime -->
+                <div class="add-anime-section">
+                    <button class="btn-add-anime" onclick="abrirModalAgregarAnime()">
+                        ➕ Agregar Nuevo Anime
+                    </button>
+                </div>
                     </div>
                     
                     <div class="action-card">
@@ -571,12 +618,7 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                     </div>
                 </div>
                 
-                <!-- Botón para agregar nuevo anime -->
-                <div class="add-anime-section">
-                    <button class="btn-add-anime" onclick="abrirModalAgregarAnime()">
-                        ➕ Agregar Nuevo Anime
-                    </button>
-                </div>
+                
             </section>
 
             <section class="recent-activity">
@@ -896,7 +938,7 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                         <div>
                             <label for="tipo" style="display: block; color: #00ff00; margin-bottom: 5px;">🎬 Tipo de Anime</label>
-                            <select id="tipo" name="tipo" required style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <select id="tipo" name="tipo" required>
                                 <option value="TV">📺 Serie TV</option>
                                 <option value="OVA">💽 OVA</option>
                                 <option value="Película">🎬 Película</option>
@@ -907,7 +949,7 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                         
                         <div>
                             <label for="estado_anime" style="display: block; color: #00ff00; margin-bottom: 5px;">📊 Estado del Anime</label>
-                            <select id="estado_anime" name="estado_anime" required style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <select id="estado_anime" name="estado_anime" required>
                                 <option value="Finalizado">✅ Finalizado</option>
                                 <option value="Emitiendo">📡 Emitiendo</option>
                                 <option value="Próximamente">🔜 Próximamente</option>
@@ -933,7 +975,7 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                         
                         <div>
                             <label for="estado" style="display: block; color: #00ff00; margin-bottom: 5px;">🎯 Mi Estado</label>
-                            <select id="estado" name="estado" required style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <select id="estado" name="estado" required>
                                 <option value="Plan de Ver">⏳ Plan de Ver</option>
                                 <option value="Viendo">👀 Viendo</option>
                                 <option value="Completado">✅ Completado</option>
@@ -944,7 +986,7 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                         
                         <div>
                             <label for="puntuacion" style="display: block; color: #00ff00; margin-bottom: 5px;">⭐ Mi Puntuación</label>
-                            <select id="puntuacion" name="puntuacion" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <select id="puntuacion" name="puntuacion">
                                 <option value="">Sin puntuar</option>
                                 <option value="10">⭐ 10 - Obra Maestra</option>
                                 <option value="9">⭐ 9 - Excelente</option>

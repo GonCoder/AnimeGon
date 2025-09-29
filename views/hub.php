@@ -661,6 +661,34 @@ $animes_hub = obtenerAnimesHub($usuario_id);
             box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
         }
         
+        .form-group select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%2300ff88" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 20px;
+            cursor: pointer;
+        }
+        
+        .form-group select option {
+            background: #1a1a1a !important;
+            color: white !important;
+            padding: 10px;
+            border: none;
+        }
+        
+        .form-group select option:checked {
+            background: #00ff88 !important;
+            color: #000 !important;
+        }
+        
+        .form-group select option:hover {
+            background: rgba(0, 255, 136, 0.3) !important;
+            color: white !important;
+        }
+        
         .form-row {
             display: grid;
             gap: 20px;

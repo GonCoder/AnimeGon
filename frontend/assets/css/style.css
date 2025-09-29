@@ -686,7 +686,8 @@ body::before {
     letter-spacing: 1px;
 }
 
-.input-group input {
+.input-group input, 
+.input-group select {
     width: 100%;
     padding: 15px 20px;
     border: 2px solid rgba(255, 255, 255, 0.2);
@@ -698,11 +699,42 @@ body::before {
     font-weight: 500;
 }
 
+/* Estilos específicos para select */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23ffffff" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 20px;
+    cursor: pointer;
+}
+
+/* Estilos para options */
+select option {
+    background: #1a1a1a !important;
+    color: white !important;
+    padding: 10px;
+    border: none;
+}
+
+select option:checked {
+    background: var(--neon-cyan) !important;
+    color: #000 !important;
+}
+
+select option:hover {
+    background: rgba(0, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
 .input-group input::placeholder {
     color: rgba(255, 255, 255, 0.5);
 }
 
-.input-group input:focus {
+.input-group input:focus,
+.input-group select:focus {
     outline: none;
     border-color: var(--neon-cyan);
     box-shadow: 
@@ -711,7 +743,8 @@ body::before {
     background: rgba(0, 0, 0, 0.5);
 }
 
-.input-group input:valid {
+.input-group input:valid,
+.input-group select:valid {
     border-color: var(--cyber-green);
     box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
 }
