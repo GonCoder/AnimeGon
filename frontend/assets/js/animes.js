@@ -169,6 +169,7 @@ class AnimeManager {
             document.getElementById('edit_capitulos_vistos').value = anime.episodios_vistos || '0';
             document.getElementById('edit_estado').value = anime.lista_estado || 'Plan de Ver';
             document.getElementById('edit_puntuacion').value = anime.puntuacion || '';
+            document.getElementById('edit_animeflv_url_name').value = anime.animeflv_url_name || '';
             
             // Mostrar modal
             document.getElementById('editAnimeModal').style.display = 'block';

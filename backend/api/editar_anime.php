@@ -54,12 +54,13 @@ function actualizarAnime($usuario_id, $anime_id, $datos, $imagen_ruta = null) {
         }
         
         // Actualizar información en lista_usuario
-        $query_lista = "UPDATE lista_usuario SET episodios_vistos = ?, estado = ?, puntuacion = ? WHERE usuario_id = ? AND anime_id = ?";
+        $query_lista = "UPDATE lista_usuario SET episodios_vistos = ?, estado = ?, puntuacion = ?, animeflv_url_name = ? WHERE usuario_id = ? AND anime_id = ?";
         $stmt_lista = $conexion->prepare($query_lista);
         $stmt_lista->execute([
             $datos['episodios_vistos'] ?: 0,
             $datos['estado'],
             isset($datos['puntuacion']) && $datos['puntuacion'] !== '' ? (int)$datos['puntuacion'] : null,
+            !empty($datos['animeflv_url_name']) ? trim($datos['animeflv_url_name']) : null,
             $usuario_id,
             $anime_id
         ]);
@@ -172,7 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'total_episodios' => intval($_POST['total_episodios'] ?? 0),
         'episodios_vistos' => intval($_POST['episodios_vistos'] ?? 0),
         'estado' => $_POST['estado'] ?? 'Plan de Ver',
-        'puntuacion' => $_POST['puntuacion'] ?? null
+        'puntuacion' => $_POST['puntuacion'] ?? null,
+        'animeflv_url_name' => trim($_POST['animeflv_url_name'] ?? '')
     ];
     
     // Validaciones
@@ -205,6 +207,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tipos_validos = ['TV', 'OVA', 'Película', 'Especial', 'ONA'];
     if (!in_array($datos['tipo'], $tipos_validos)) {
         $respuesta['errores'][] = 'Tipo de anime no válido';
+    }
+    
+    // Validar formato de animeflv_url_name si se proporciona
+    if (!empty($datos['animeflv_url_name'])) {
+        if (!preg_match('/^[a-z0-9\-]+$/', $datos['animeflv_url_name'])) {
+            $respuesta['errores'][] = 'El nombre URL de AnimeFLV solo puede contener letras minúsculas, números y guiones';
+        }
+        if (strlen($datos['animeflv_url_name']) > 255) {
+            $respuesta['errores'][] = 'El nombre URL de AnimeFLV es demasiado largo';
+        }
     }
     
     // Validar estado del anime

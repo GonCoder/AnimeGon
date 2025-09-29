@@ -112,14 +112,15 @@ function agregarAnime($usuario_id, $datos, $imagen_ruta = null) {
         }
         
         // Agregar anime a la lista del usuario
-        $query_usuario_anime = "INSERT INTO lista_usuario (usuario_id, anime_id, episodios_vistos, estado, puntuacion, fecha_agregado) VALUES (?, ?, ?, ?, ?, NOW())";
+        $query_usuario_anime = "INSERT INTO lista_usuario (usuario_id, anime_id, episodios_vistos, estado, puntuacion, animeflv_url_name, fecha_agregado) VALUES (?, ?, ?, ?, ?, ?, NOW())";
         $stmt_usuario_anime = $conexion->prepare($query_usuario_anime);
         $stmt_usuario_anime->execute([
             $usuario_id,
             $anime_id,
             $datos['capitulos_vistos'] ?: 0,
             $datos['estado'],
-            !empty($datos['puntuacion']) ? $datos['puntuacion'] : null
+            !empty($datos['puntuacion']) ? $datos['puntuacion'] : null,
+            !empty($datos['animeflv_url_name']) ? trim($datos['animeflv_url_name']) : null
         ]);
         
         // Confirmar transacción
@@ -161,7 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'estado' => $_POST['estado'] ?? 'Plan de Ver',
         'tipo' => $_POST['tipo'] ?? 'TV',
         'estado_anime' => $_POST['estado_anime'] ?? 'Finalizado',
-        'puntuacion' => !empty($_POST['puntuacion']) ? floatval($_POST['puntuacion']) : null
+        'puntuacion' => !empty($_POST['puntuacion']) ? floatval($_POST['puntuacion']) : null,
+        'animeflv_url_name' => trim($_POST['animeflv_url_name'] ?? '')
     ];
     
     // Validaciones
@@ -198,6 +200,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $estados_anime_validos = ['Emitiendo', 'Finalizado', 'Próximamente', 'Cancelado'];
     if (!in_array($datos['estado_anime'], $estados_anime_validos)) {
         $respuesta['errores'][] = 'Estado del anime no válido';
+    }
+    
+    // Validar formato de animeflv_url_name si se proporciona
+    if (!empty($datos['animeflv_url_name'])) {
+        if (!preg_match('/^[a-z0-9\-]+$/', $datos['animeflv_url_name'])) {
+            $respuesta['errores'][] = 'El nombre URL de AnimeFLV solo puede contener letras minúsculas, números y guiones';
+        }
+        if (strlen($datos['animeflv_url_name']) > 255) {
+            $respuesta['errores'][] = 'El nombre URL de AnimeFLV es demasiado largo';
+        }
     }
     
     if (!is_null($datos['puntuacion']) && ($datos['puntuacion'] < 1 || $datos['puntuacion'] > 10)) {

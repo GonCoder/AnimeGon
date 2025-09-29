@@ -32,7 +32,7 @@ function obtenerAnimesUsuario($usuario_id) {
         $conexion = obtenerConexion();
         
         $query = "SELECT lu.*, a.titulo as anime_nombre, a.titulo_original, a.titulo_ingles, a.imagen_portada, a.episodios_total,
-                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, a.id as anime_id,
+                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, lu.animeflv_url_name, a.id as anime_id,
                          a.tipo, a.estado as estado_anime,
                          (CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END) as favorito
                   FROM lista_usuario lu 
@@ -362,9 +362,89 @@ $animes = obtenerAnimesUsuario($usuario_id);
         
         .anime-progress {
             display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .progress-info {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+        }
+        
+        /* Estilos para controles de episodios */
+        .episode-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn-episode {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-episode:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .btn-episode:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-episode:disabled {
+            background: rgba(108, 117, 125, 0.3);
+            color: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-episode-plus {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+        
+        .btn-episode-plus:hover:not(:disabled) {
+            background: linear-gradient(135deg, #218838, #1ea080);
+        }
+        
+        .btn-episode-minus {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+        
+        .btn-episode-minus:hover:not(:disabled) {
+            background: linear-gradient(135deg, #e0a800, #e8710a);
+        }
+        
+        .episode-current {
+            font-weight: bold;
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            font-size: 0.9rem;
+            min-width: 30px;
+            text-align: center;
         }
         
         .progress-text {
@@ -1306,14 +1386,42 @@ $animes = obtenerAnimesUsuario($usuario_id);
                             <?php endif; ?>
                             
                             <div class="anime-progress">
-                                <span class="progress-text">
-                                    <?= $anime['episodios_vistos'] ?> / <?= $anime['episodios_total'] ?: '?' ?> episodios
-                                </span>
-                                <?php if (!empty($anime['puntuacion'])): ?>
-                                    <span class="puntuacion-badge">
-                                        ⭐ <?= number_format($anime['puntuacion'], 1) ?>
+                                <div class="progress-info">
+                                    <span class="progress-text">
+                                        <?= $anime['episodios_vistos'] ?> / <?= $anime['episodios_total'] ?: '?' ?> episodios
                                     </span>
-                                <?php endif; ?>
+                                    <?php if (!empty($anime['puntuacion'])): ?>
+                                        <span class="puntuacion-badge">
+                                            ⭐ <?= number_format($anime['puntuacion'], 1) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <!-- Botones de control de episodios -->
+                                <div class="episode-controls">
+                                    <button class="btn-episode btn-episode-minus" 
+                                            data-anime-id="<?= $anime['anime_id'] ?>"
+                                            data-action="decrementar"
+                                            onclick="actualizarEpisodio(<?= $anime['anime_id'] ?>, 'decrementar')"
+                                            title="⬅️ Episodio anterior (<?= max(0, $anime['episodios_vistos'] - 1) ?>)"
+                                            <?= $anime['episodios_vistos'] <= 0 ? 'disabled' : '' ?>>
+                                        ➖
+                                    </button>
+                                    
+                                    <span class="episode-current" id="episodes-<?= $anime['anime_id'] ?>">
+                                        <?= $anime['episodios_vistos'] ?>
+                                    </span>
+                                    
+                                    <button class="btn-episode btn-episode-plus" 
+                                            data-anime-id="<?= $anime['anime_id'] ?>"
+                                            data-action="incrementar"
+                                            data-animeflv-url="<?= htmlspecialchars($anime['animeflv_url_name'] ?? '') ?>"
+                                            onclick="actualizarEpisodio(<?= $anime['anime_id'] ?>, 'incrementar')"
+                                            title="➡️ Siguiente episodio (<?= $anime['episodios_vistos'] + 1 ?><?= !empty($anime['animeflv_url_name']) ? ' + AnimeFLV' : '' ?>)"
+                                            <?= ($anime['episodios_total'] && $anime['episodios_vistos'] >= $anime['episodios_total']) ? 'disabled' : '' ?>>
+                                        ➕
+                                    </button>
+                                </div>
                             </div>
                             
                             <?php if (!empty($anime['estado_anime'])): ?>
@@ -1476,6 +1584,22 @@ $animes = obtenerAnimesUsuario($usuario_id);
                         </div>
                     </div>
                     
+                    <!-- Seguimiento avanzado -->
+                    <h4 class="form-section-title">🎬 Seguimiento Avanzado</h4>
+                    
+                    <div class="form-group form-full-width">
+                        <label for="animeflv_url_name">🌐 Nombre URL AnimeFLV para seguimiento de capítulos</label>
+                        <input type="text" id="animeflv_url_name" name="animeflv_url_name" 
+                               placeholder="ej: jujutsu-kaisen-tv (sin espacios, solo guiones)" 
+                               pattern="[a-z0-9\-]+" 
+                               title="Solo letras minúsculas, números y guiones">
+                        <div class="file-info">
+                            📱 <strong>Opcional pero recomendado:</strong> Permite acceso directo a episodios en AnimeFLV.<br>
+                            💡 <strong>Cómo encontrarlo:</strong> Ve a AnimeFLV, busca tu anime y copia la parte final de la URL.<br>
+                            🔗 <strong>Ejemplo:</strong> Si la URL es "animeflv.net/anime/jujutsu-kaisen-tv" → escribe "jujutsu-kaisen-tv"
+                        </div>
+                    </div>
+                    
                     <!-- Imagen -->
                     <h4 class="form-section-title">🖼️ Imagen del Anime</h4>
                     
@@ -1616,6 +1740,22 @@ $animes = obtenerAnimesUsuario($usuario_id);
                                 <option value="1">⭐ 1 - Desastre</option>
                             </select>
                             <div class="file-info">Opcional: Califica del 1 al 10</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seguimiento avanzado -->
+                    <h4 class="form-section-title">🎬 Seguimiento Avanzado</h4>
+                    
+                    <div class="form-group form-full-width">
+                        <label for="edit_animeflv_url_name">🌐 Nombre URL AnimeFLV para seguimiento de capítulos</label>
+                        <input type="text" id="edit_animeflv_url_name" name="animeflv_url_name" 
+                               placeholder="ej: jujutsu-kaisen-tv (sin espacios, solo guiones)" 
+                               pattern="[a-z0-9\-]+" 
+                               title="Solo letras minúsculas, números y guiones">
+                        <div class="file-info">
+                            📱 <strong>Configurar para usar botones +/- de episodios:</strong> Permite acceso directo a AnimeFLV.<br>
+                            💡 <strong>Cómo encontrarlo:</strong> Ve a AnimeFLV, busca tu anime y copia la parte final de la URL.<br>
+                            🔗 <strong>Ejemplo:</strong> Si la URL es "animeflv.net/anime/jujutsu-kaisen-tv" → escribe "jujutsu-kaisen-tv"
                         </div>
                     </div>
                     
@@ -1793,5 +1933,180 @@ $animes = obtenerAnimesUsuario($usuario_id);
     </div>
 
     <script src="../frontend/assets/js/animes.js"></script>
+    
+    <script>
+        // Función para actualizar episodios
+        async function actualizarEpisodio(animeId, accion) {
+            const button = document.querySelector(`[data-anime-id="${animeId}"][data-action="${accion}"]`);
+            const episodeSpan = document.getElementById(`episodes-${animeId}`);
+            const currentEpisodes = parseInt(episodeSpan.textContent);
+            
+            // Deshabilitar botón temporalmente
+            button.disabled = true;
+            button.innerHTML = accion === 'incrementar' ? '⏳' : '⏳';
+            
+            try {
+                const response = await fetch('../backend/api/actualizar_episodios.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        anime_id: animeId,
+                        accion: accion
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Actualizar número de episodios
+                    episodeSpan.textContent = data.episodios_nuevos;
+                    
+                    // Actualizar texto de progreso
+                    const progressText = document.querySelector(`[data-anime-id="${animeId}"]`).closest('.anime-card').querySelector('.progress-text');
+                    if (progressText) {
+                        const totalEpisodes = progressText.textContent.split(' / ')[1];
+                        progressText.innerHTML = `${data.episodios_nuevos} / ${totalEpisodes}`;
+                    }
+                    
+                    // Actualizar tooltips de los botones
+                    const minusBtn = document.querySelector(`[data-anime-id="${animeId}"][data-action="decrementar"]`);
+                    const plusBtn = document.querySelector(`[data-anime-id="${animeId}"][data-action="incrementar"]`);
+                    
+                    if (minusBtn) {
+                        minusBtn.title = `⬅️ Episodio anterior (${Math.max(0, data.episodios_nuevos - 1)})`;
+                        minusBtn.disabled = data.episodios_nuevos <= 0;
+                    }
+                    
+                    if (plusBtn) {
+                        const animeflvUrl = plusBtn.getAttribute('data-animeflv-url');
+                        plusBtn.title = `➡️ Siguiente episodio (${data.episodios_nuevos + 1}${animeflvUrl ? ' + AnimeFLV' : ''})`;
+                    }
+                    
+                    // Actualizar barra de progreso si existe
+                    const progressBar = button.closest('.anime-card').querySelector('.progress-fill');
+                    if (progressBar) {
+                        const totalText = progressText.textContent.split(' / ')[1];
+                        const total = totalText === '?' ? null : parseInt(totalText);
+                        if (total) {
+                            const percentage = Math.min((data.episodios_nuevos / total) * 100, 100);
+                            progressBar.style.width = percentage + '%';
+                        }
+                    }
+                    
+                    // Si es incremento y tiene URL de AnimeFLV, abrir enlace
+                    if (accion === 'incrementar' && data.animeflv_url) {
+                        // Mostrar notificación
+                        showNotification(`🎬 Abriendo episodio ${data.episodios_nuevos} en AnimeFLV`, 'success');
+                        
+                        // Abrir en nueva pestaña después de un pequeño delay
+                        setTimeout(() => {
+                            window.open(data.animeflv_url, '_blank');
+                        }, 500);
+                    } else {
+                        // Mostrar notificación normal
+                        showNotification(data.message, 'success');
+                    }
+                    
+                    // Mostrar warning si no tiene URL configurada
+                    if (data.warning) {
+                        setTimeout(() => {
+                            showNotification(data.warning, 'warning');
+                        }, 2000);
+                    }
+                    
+                } else {
+                    showNotification(data.message || 'Error al actualizar episodios', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error de conexión al actualizar episodios', 'error');
+            } finally {
+                // Restaurar botón
+                button.disabled = false;
+                button.innerHTML = accion === 'incrementar' ? '➕' : '➖';
+                
+                // Re-evaluar estado de botones
+                const episodeSpan = document.getElementById(`episodes-${animeId}`);
+                const currentEps = parseInt(episodeSpan.textContent);
+                const minusBtn = document.querySelector(`[data-anime-id="${animeId}"][data-action="decrementar"]`);
+                const plusBtn = document.querySelector(`[data-anime-id="${animeId}"][data-action="incrementar"]`);
+                
+                if (minusBtn) {
+                    minusBtn.disabled = currentEps <= 0;
+                }
+                
+                // Para el botón plus, necesitaríamos conocer el total de episodios
+                // Se podría implementar con data attributes
+            }
+        }
+        
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            // Crear elemento de notificación
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            
+            // Estilos inline básicos
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                max-width: 400px;
+                word-wrap: break-word;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            // Colores según tipo
+            switch(type) {
+                case 'success':
+                    notification.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                    break;
+                case 'error':
+                    notification.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
+                    break;
+                case 'warning':
+                    notification.style.background = 'linear-gradient(135deg, #ffc107, #fd7e14)';
+                    break;
+                default:
+                    notification.style.background = 'linear-gradient(135deg, #007bff, #0056b3)';
+            }
+            
+            // Agregar al DOM
+            document.body.appendChild(notification);
+            
+            // Eliminar después de 4 segundos
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
+        }
+        
+        // Agregar estilos de animación
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
