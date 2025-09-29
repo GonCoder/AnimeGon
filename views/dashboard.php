@@ -262,6 +262,128 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                 transform: scale(1) translateY(0);
             }
         }
+
+        /* Mejoras específicas para el header del dashboard */
+        .header-content {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: nowrap !important;
+            gap: 20px !important;
+        }
+
+        .logo {
+            font-size: 1.8rem !important;
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+        }
+
+        .nav {
+            flex: 1 !important;
+            display: flex !important;
+            justify-content: center !important;
+        }
+
+        .nav ul {
+            display: flex !important;
+            gap: 15px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            list-style: none !important;
+            flex-wrap: nowrap !important;
+        }
+
+        .nav ul li {
+            white-space: nowrap !important;
+        }
+
+        .nav ul li a {
+            font-size: 0.9rem !important;
+            padding: 8px 12px !important;
+        }
+
+        .user-menu {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .user-name {
+            font-size: 0.85rem !important;
+            white-space: nowrap !important;
+            max-width: 180px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .btn-logout {
+            font-size: 0.85rem !important;
+            padding: 6px 12px !important;
+            white-space: nowrap !important;
+        }
+
+        /* Responsive para header compacto */
+        @media (max-width: 1200px) {
+            .nav ul {
+                gap: 10px !important;
+            }
+            
+            .nav ul li a {
+                font-size: 0.8rem !important;
+                padding: 6px 8px !important;
+            }
+            
+            .user-name {
+                max-width: 150px !important;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .header-content {
+                gap: 15px !important;
+            }
+            
+            .logo {
+                font-size: 1.5rem !important;
+            }
+            
+            .nav ul {
+                gap: 8px !important;
+            }
+            
+            .nav ul li a {
+                font-size: 0.75rem !important;
+                padding: 5px 6px !important;
+            }
+            
+            .user-name {
+                font-size: 0.8rem !important;
+                max-width: 120px !important;
+            }
+            
+            .btn-logout {
+                font-size: 0.8rem !important;
+                padding: 5px 8px !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap !important;
+                gap: 10px !important;
+            }
+            
+            .nav {
+                order: 3 !important;
+                flex-basis: 100% !important;
+                margin-top: 10px !important;
+            }
+            
+            .user-menu {
+                order: 2 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -279,8 +401,8 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                     </ul>
                 </nav>
                 <div class="user-menu">
-                    <span class="user-name">¡Hola, 🟢 <?= escape($usuario['nombre']) ?>!</span>
-                    <a href="logout.php" class="btn-logout" title="Cerrar sesión con confirmación">🔴Cerrar Sesión</a>
+                    <span class="user-name">🟢 <?= escape($usuario['nombre']) ?></span>
+                    <a href="logout.php" class="btn-logout" title="Cerrar sesión con confirmación">🔴Salir</a>
                 </div>
             </div>
         </div>
