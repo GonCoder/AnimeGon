@@ -1107,7 +1107,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
                 <a href="mis_animes.php" class="nav-link active">📺 Mis Animes</a>
                 <a href="favoritos.php" class="nav-link">⭐ Favoritos</a>
-                <a href="logout.php" class="nav-link">🚪 Cerrar Sesión</a>
+                <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
             </div>
         </div>
     </nav>
@@ -1702,7 +1702,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
     <div id="confirmLogoutModal" class="confirm-modal logout-modal">
         <div class="confirm-modal-content">
             <div class="confirm-modal-header">
-                <div class="confirm-modal-icon">🚪</div>
+                <div class="confirm-modal-icon">🔴</div>
                 <h3 class="confirm-modal-title">Cerrar Sesión</h3>
             </div>
             <div class="confirm-modal-body">
@@ -1714,7 +1714,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 </div>
                 <div class="confirm-modal-buttons">
                     <button class="btn-confirm" id="confirmLogoutBtn">
-                        🚪 Sí, cerrar sesión
+                        🔴 Sí, cerrar sesión
                     </button>
                     <button class="btn-cancel-confirm" id="cancelLogoutBtn">
                         ❌ Cancelar

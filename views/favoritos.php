@@ -848,7 +848,7 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
                 <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
                 <a href="mis_animes.php" class="nav-link">📺 Mis Animes</a>
                 <a href="favoritos.php" class="nav-link active">⭐ Favoritos</a>
-                <a href="logout.php" class="nav-link">🚪 Cerrar Sesión</a>
+                <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
             </div>
         </div>
     </nav>

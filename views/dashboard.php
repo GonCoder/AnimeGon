@@ -32,8 +32,8 @@ $usuario = obtenerUsuarioActual();
                     </ul>
                 </nav>
                 <div class="user-menu">
-                    <span class="user-name">¡Hola, <?= escape($usuario['nombre']) ?>!</span>
-                    <a href="logout.php" class="btn-logout">Cerrar Sesión</a>
+                    <span class="user-name">¡Hola, 🟢 <?= escape($usuario['nombre']) ?>!</span>
+                    <a href="logout.php" class="btn-logout">🔴Cerrar Sesión</a>
                 </div>
             </div>
         </div>
@@ -44,7 +44,7 @@ $usuario = obtenerUsuarioActual();
             <section class="welcome-section">
                 <div class="welcome-card">
                     <h2>¡Bienvenido de vuelta, <?= escape($usuario['nombre']) ?>!</h2>
-                    <p>Username: <strong><?= escape($usuario['username']) ?></strong></p>
+                    <p>Username: 🟢<strong><?= escape($usuario['username']) ?></strong></p>
                     <p>Email: <strong><?= escape($usuario['email']) ?></strong></p>
                 </div>
             </section>
@@ -191,7 +191,7 @@ $usuario = obtenerUsuarioActual();
     <div id="confirmLogoutModal" class="confirm-modal logout-modal">
         <div class="confirm-modal-content">
             <div class="confirm-modal-header">
-                <div class="confirm-modal-icon">🚪</div>
+                <div class="confirm-modal-icon">🔴</div>
                 <h3 class="confirm-modal-title">Cerrar Sesión</h3>
             </div>
             <div class="confirm-modal-body">
@@ -203,7 +203,7 @@ $usuario = obtenerUsuarioActual();
                 </div>
                 <div class="confirm-modal-buttons">
                     <button class="btn-confirm" id="confirmLogoutBtn">
-                        🚪 Sí, cerrar sesión
+                        🔴 Sí, cerrar sesión
                     </button>
                     <button class="btn-cancel-confirm" id="cancelLogoutBtn">
                         ❌ Cancelar
