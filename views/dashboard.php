@@ -227,6 +227,12 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnimeGon - Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="apple-touch-icon" href="../favicon.svg">
+    
     <link rel="stylesheet" href="../frontend/assets/css/style.css">
     <style>
         /* Estilos para el modal de confirmación */
@@ -1336,7 +1342,7 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             }
         }
 
-        // Event listeners para las preview cards
+        // Event listeners para las preview cards y formulario
         document.addEventListener('DOMContentLoaded', function() {
             const previewCards = document.querySelectorAll('.preview-card');
             previewCards.forEach(card => {
@@ -1345,10 +1351,11 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                     abrirModalPuntuajes();
                 });
             });
-        });
 
-        // Manejar envío del formulario
-        document.getElementById('animeForm').addEventListener('submit', async function(e) {
+            // Manejar envío del formulario
+            const animeForm = document.getElementById('animeForm');
+            if (animeForm) {
+                animeForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -1407,6 +1414,8 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
+            }
+                });
             }
         });
     </script>

@@ -59,6 +59,9 @@ $animes = obtenerAnimesUsuario($usuario_id);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnimeGon - Mis Animes</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="apple-touch-icon" href="../favicon.svg">
     <link rel="stylesheet" href="../frontend/assets/css/style.css">
     <style>
         /* Estilos para indicador de usuario */
