@@ -384,6 +384,101 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                 order: 2 !important;
             }
         }
+
+        /* Estilos para la sección de agregar anime */
+        .add-anime-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .btn-add-anime {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #1a1a2e;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 255, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-add-anime:hover {
+            background: linear-gradient(135deg, #00cc00 0%, #009900 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 0, 0.5);
+        }
+
+        /* Estilos para el modal de agregar anime */
+        .anime-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .anime-modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            margin: 2% auto;
+            padding: 0;
+            border: 2px solid #00ff00;
+            width: 90%;
+            max-width: 900px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .anime-modal-header {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #1a1a2e;
+            padding: 20px;
+            border-radius: 13px 13px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .anime-modal-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .anime-modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #1a1a2e;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .anime-modal-close:hover {
+            background-color: rgba(26, 26, 46, 0.2);
+        }
+
+        .anime-modal-body {
+            padding: 30px;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -474,6 +569,13 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                         <p>Revisa tus animes favoritos</p>
                         <button class="btn-action" onclick="console.log('Botón Favoritos clicked'); window.location.href='favoritos.php'">Ver Favoritos</button>
                     </div>
+                </div>
+                
+                <!-- Botón para agregar nuevo anime -->
+                <div class="add-anime-section">
+                    <button class="btn-add-anime" onclick="abrirModalAgregarAnime()">
+                        ➕ Agregar Nuevo Anime
+                    </button>
                 </div>
             </section>
 
@@ -642,6 +744,93 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                 }
             };
         });
+
+        // Funciones para el modal de agregar anime
+        function abrirModalAgregarAnime() {
+            const modal = document.getElementById('animeModal');
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModalAgregarAnime() {
+            const modal = document.getElementById('animeModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            
+            // Limpiar formulario
+            document.getElementById('animeForm').reset();
+        }
+
+        // Cerrar modal al hacer click fuera de él
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('animeModal');
+            if (event.target === modal) {
+                cerrarModalAgregarAnime();
+            }
+        });
+
+        // Manejar envío del formulario
+        document.getElementById('animeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Agregando...';
+            
+            try {
+                const formData = new FormData(this);
+                const response = await fetch('../backend/api/procesar_anime.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Mostrar mensaje de éxito
+                    const mensaje = document.createElement('div');
+                    mensaje.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 255, 0, 0.2); border: 2px solid #00ff00; border-radius: 10px; padding: 15px 25px; color: #00ff00; z-index: 10000; font-weight: bold;';
+                    mensaje.innerHTML = '✅ ' + result.message;
+                    document.body.appendChild(mensaje);
+                    
+                    setTimeout(() => {
+                        mensaje.remove();
+                    }, 3000);
+                    
+                    // Cerrar modal y recargar página para actualizar estadísticas
+                    cerrarModalAgregarAnime();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                    
+                } else {
+                    // Mostrar mensaje de error
+                    const mensaje = document.createElement('div');
+                    mensaje.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(255, 71, 87, 0.2); border: 2px solid #ff4757; border-radius: 10px; padding: 15px 25px; color: #ff4757; z-index: 10000; font-weight: bold;';
+                    mensaje.innerHTML = '❌ ' + result.message;
+                    document.body.appendChild(mensaje);
+                    
+                    setTimeout(() => {
+                        mensaje.remove();
+                    }, 5000);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                const mensaje = document.createElement('div');
+                mensaje.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(255, 71, 87, 0.2); border: 2px solid #ff4757; border-radius: 10px; padding: 15px 25px; color: #ff4757; z-index: 10000; font-weight: bold;';
+                mensaje.innerHTML = '❌ Error al procesar la solicitud';
+                document.body.appendChild(mensaje);
+                
+                setTimeout(() => {
+                    mensaje.remove();
+                }, 5000);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
     </script>
 
     <!-- Modal de confirmación para cerrar sesión -->
@@ -666,6 +855,134 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                         ❌ Cancelar
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar nuevo anime -->
+    <div id="animeModal" class="anime-modal">
+        <div class="anime-modal-content">
+            <div class="anime-modal-header">
+                <h2 class="anime-modal-title">➕ Agregar Nuevo Anime</h2>
+                <button class="anime-modal-close" onclick="cerrarModalAgregarAnime()">&times;</button>
+            </div>
+            <div class="anime-modal-body">
+                <form id="animeForm" action="../backend/api/procesar_anime.php" method="POST" enctype="multipart/form-data">
+                    <!-- Información básica -->
+                    <h4 style="color: #00ff00; margin-bottom: 15px;">📝 Información Básica</h4>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="nombre" style="display: block; color: #00ff00; margin-bottom: 5px;">📝 Nombre del Anime (Español)</label>
+                        <input type="text" id="nombre" name="nombre" required placeholder="Ej: Ataque a los Titanes" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <label for="titulo_original" style="display: block; color: #00ff00; margin-bottom: 5px;">🏮 Título Original (Japonés)</label>
+                            <input type="text" id="titulo_original" name="titulo_original" placeholder="Ej: 進撃の巨人" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <small style="color: #888;">Opcional: Título en idioma original</small>
+                        </div>
+                        
+                        <div>
+                            <label for="titulo_ingles" style="display: block; color: #00ff00; margin-bottom: 5px;">🇺🇸 Título en Inglés</label>
+                            <input type="text" id="titulo_ingles" name="titulo_ingles" placeholder="Ej: Attack on Titan" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <small style="color: #888;">Opcional: Título oficial en inglés</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Detalles del anime -->
+                    <h4 style="color: #00ff00; margin: 30px 0 15px 0;">🎬 Detalles del Anime</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <label for="tipo" style="display: block; color: #00ff00; margin-bottom: 5px;">🎬 Tipo de Anime</label>
+                            <select id="tipo" name="tipo" required style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                                <option value="TV">📺 Serie TV</option>
+                                <option value="OVA">💽 OVA</option>
+                                <option value="Película">🎬 Película</option>
+                                <option value="Especial">⭐ Especial</option>
+                                <option value="ONA">🌐 ONA (Web)</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="estado_anime" style="display: block; color: #00ff00; margin-bottom: 5px;">📊 Estado del Anime</label>
+                            <select id="estado_anime" name="estado_anime" required style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                                <option value="Finalizado">✅ Finalizado</option>
+                                <option value="Emitiendo">📡 Emitiendo</option>
+                                <option value="Próximamente">🔜 Próximamente</option>
+                                <option value="Cancelado">❌ Cancelado</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="total_episodios" style="display: block; color: #00ff00; margin-bottom: 5px;">📊 Total de Episodios</label>
+                            <input type="number" id="total_episodios" name="total_episodios" min="1" placeholder="Ej: 25" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <small style="color: #888;">Deja vacío si no se conoce</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Mi seguimiento -->
+                    <h4 style="color: #00ff00; margin: 30px 0 15px 0;">🎯 Mi Seguimiento</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <label for="capitulos_vistos" style="display: block; color: #00ff00; margin-bottom: 5px;">👁️ Episodios Vistos</label>
+                            <input type="number" id="capitulos_vistos" name="capitulos_vistos" min="0" value="0" placeholder="Ej: 12" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                        </div>
+                        
+                        <div>
+                            <label for="estado" style="display: block; color: #00ff00; margin-bottom: 5px;">🎯 Mi Estado</label>
+                            <select id="estado" name="estado" required style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                                <option value="Plan de Ver">⏳ Plan de Ver</option>
+                                <option value="Viendo">👀 Viendo</option>
+                                <option value="Completado">✅ Completado</option>
+                                <option value="En Pausa">⏸️ En Pausa</option>
+                                <option value="Abandonado">❌ Abandonado</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="puntuacion" style="display: block; color: #00ff00; margin-bottom: 5px;">⭐ Mi Puntuación</label>
+                            <select id="puntuacion" name="puntuacion" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                                <option value="">Sin puntuar</option>
+                                <option value="10">⭐ 10 - Obra Maestra</option>
+                                <option value="9">⭐ 9 - Excelente</option>
+                                <option value="8">⭐ 8 - Muy Bueno</option>
+                                <option value="7">⭐ 7 - Bueno</option>
+                                <option value="6">⭐ 6 - Decente</option>
+                                <option value="5">⭐ 5 - Promedio</option>
+                                <option value="4">⭐ 4 - Malo</option>
+                                <option value="3">⭐ 3 - Muy Malo</option>
+                                <option value="2">⭐ 2 - Horrible</option>
+                                <option value="1">⭐ 1 - Desastre</option>
+                            </select>
+                            <small style="color: #888;">Opcional: Califica del 1 al 10</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Imagen -->
+                    <h4 style="color: #00ff00; margin: 30px 0 15px 0;">🖼️ Imagen del Anime</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                        <div>
+                            <label for="imagen_url" style="display: block; color: #00ff00; margin-bottom: 5px;">🌐 URL de imagen (Recomendado)</label>
+                            <input type="url" id="imagen_url" name="imagen_url" placeholder="https://example.com/imagen.jpg" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <small style="color: #888;">Más rápido y ahorra espacio</small>
+                        </div>
+                        
+                        <div>
+                            <label for="imagen" style="display: block; color: #00ff00; margin-bottom: 5px;">📎 Subir desde dispositivo</label>
+                            <input type="file" id="imagen" name="imagen" accept="image/jpeg,image/jpg,image/png,image/x-icon" style="width: 100%; padding: 10px; border: 1px solid #00ff00; border-radius: 5px; background: rgba(0, 0, 0, 0.3); color: white;">
+                            <small style="color: #888;">JPG, PNG, ICO (máx. 1MB)</small>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button type="submit" style="background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%); color: #1a1a2e; padding: 12px 30px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">✅ Agregar Anime</button>
+                        <button type="button" onclick="cerrarModalAgregarAnime()" style="background: transparent; color: #ff4757; border: 2px solid #ff4757; padding: 10px 28px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">❌ Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
