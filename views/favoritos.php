@@ -11,6 +11,21 @@ if (!isset($_SESSION['usuario_id'])) {
 
 $usuario_id = $_SESSION['usuario_id'];
 
+// Obtener datos del usuario
+function obtenerDatosUsuario($usuario_id) {
+    try {
+        $conexion = obtenerConexion();
+        $query = "SELECT nombre, username FROM usuarios WHERE id = ?";
+        $stmt = $conexion->prepare($query);
+        $stmt->execute([$usuario_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        return ['nombre' => 'Usuario', 'username' => ''];
+    }
+}
+
+$usuario = obtenerDatosUsuario($usuario_id);
+
 // Obtener animes favoritos del usuario
 function obtenerAnimesFavoritos($usuario_id) {
     try {
@@ -45,6 +60,31 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
     <title>AnimeGon - Mis Favoritos</title>
     <link rel="stylesheet" href="../frontend/assets/css/style.css">
     <style>
+        /* Estilos para indicador de usuario */
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-indicator {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.85rem;
+            color: #00ff00;
+            font-weight: 500;
+            white-space: nowrap;
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(0, 255, 0, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }
+        }
+
         /* Reset y estilos base */
         * {
             margin: 0;
@@ -843,6 +883,7 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
         <div class="nav-container">
             <div class="nav-logo">
                 <h2>🎌 AnimeGon</h2>
+                <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
             </div>
             <div class="nav-menu">
                 <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
