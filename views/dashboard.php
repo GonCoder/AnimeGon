@@ -159,7 +159,7 @@ function obtenerTopAnimesPuntuados($limite = 3) {
             WHERE lu.puntuacion IS NOT NULL 
                 AND lu.puntuacion > 0
             GROUP BY a.id, a.titulo, a.imagen_portada
-            HAVING COUNT(lu.puntuacion) >= 2
+            HAVING COUNT(lu.puntuacion) >= 1
             ORDER BY media_puntuacion DESC, total_puntuaciones DESC
             LIMIT :limite
         ";
@@ -607,15 +607,15 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
 
         /* Estilos para preview de top animes */
         .top-animes-preview {
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 5px;
+            padding-top: 8px;
             border-top: 1px solid rgba(0, 255, 0, 0.3);
         }
 
         .preview-cards {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
         }
 
         .preview-card {
@@ -623,8 +623,8 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             align-items: center;
             background: rgba(0, 255, 0, 0.1);
             border: 1px solid rgba(0, 255, 0, 0.3);
-            border-radius: 8px;
-            padding: 8px;
+            border-radius: 6px;
+            padding: 5px;
             transition: all 0.3s ease;
             cursor: pointer;
         }
@@ -635,19 +635,19 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
         }
 
         .preview-rank {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #00ff00;
-            width: 25px;
+            width: 24px;
             text-align: center;
         }
 
         .preview-image {
-            width: 40px;
-            height: 55px;
+            width: 36px;
+            height: 48px;
             object-fit: cover;
             border-radius: 4px;
-            margin: 0 10px;
+            margin: 0 8px;
         }
 
         .preview-info {
@@ -659,17 +659,20 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             font-weight: bold;
             color: white;
             margin-bottom: 2px;
+            line-height: 1.2;
         }
 
         .preview-rating {
             font-size: 0.75rem;
             color: #00ff00;
             font-weight: bold;
+            line-height: 1.1;
         }
 
         .preview-votes {
             font-size: 0.7rem;
             color: #888;
+            line-height: 1.1;
         }
 
         /* Estilos para el modal de puntuajes */
@@ -989,13 +992,13 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                     
                     <div class="action-card">
                         <h4>🏆 Ver Puntuajes</h4>
-                        <p>Explora los animes mejor valorados por la comunidad</p>
-                        <button class="btn-action" onclick="abrirModalPuntuajes()">Ver Ranking</button>
+                        <p style="margin-bottom: 10px; font-size: 0.9rem;">Animes mejor valorados por la comunidad</p>
+                        <button class="btn-action" onclick="abrirModalPuntuajes()" style="padding: 8px 16px; font-size: 0.9rem;">Ver Ranking</button>
                         
                         <!-- Preview de top 3 animes mejor puntuados -->
                         <?php if (!empty($top_animes_puntuados)): ?>
                             <div class="top-animes-preview">
-                                <h5 style="color: #00ff00; margin: 15px 0 10px 0; font-size: 0.9rem;">🥇 Top 3 Mejor Puntuados</h5>
+                                <h5 style="color: #00ff00; margin: 5px 0 4px 0; font-size: 0.8rem;">🥇 Top 3 Mejor Puntuados</h5>
                                 <div class="preview-cards">
                                     <?php foreach ($top_animes_puntuados as $index => $anime): ?>
                                         <div class="preview-card" data-anime-id="<?= $anime['id'] ?>">
