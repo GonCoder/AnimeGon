@@ -8,6 +8,133 @@ requiereSesion();
 
 // Obtener datos del usuario actual
 $usuario = obtenerUsuarioActual();
+
+// Función para obtener estadísticas del usuario
+function obtenerEstadisticasUsuario($usuario_id) {
+    try {
+        $conexion = obtenerConexion();
+        
+        // Contar animes vistos (completados por el usuario)
+        $stmt_vistos = $conexion->prepare("SELECT COUNT(*) FROM lista_usuario WHERE usuario_id = :usuario_id AND estado = 'Completado'");
+        $stmt_vistos->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+        $stmt_vistos->execute();
+        $animes_vistos = $stmt_vistos->fetchColumn();
+        
+        // Contar favoritos (tabla separada favoritos)
+        $stmt_favoritos = $conexion->prepare("SELECT COUNT(*) FROM favoritos WHERE usuario_id = :usuario_id");
+        $stmt_favoritos->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+        $stmt_favoritos->execute();
+        $favoritos = $stmt_favoritos->fetchColumn();
+        
+        // Contar total en lista (todos los animes del usuario)
+        $stmt_total = $conexion->prepare("SELECT COUNT(*) FROM lista_usuario WHERE usuario_id = :usuario_id");
+        $stmt_total->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+        $stmt_total->execute();
+        $total_lista = $stmt_total->fetchColumn();
+        
+        // Calcular horas vistas basado en episodios_vistos reales
+        // 20 minutos por episodio, cada 3 episodios = 1 hora
+        $stmt_horas = $conexion->prepare("
+            SELECT COALESCE(SUM(lu.episodios_vistos), 0) as total_episodios_vistos
+            FROM lista_usuario lu 
+            WHERE lu.usuario_id = :usuario_id
+        ");
+        $stmt_horas->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+        $stmt_horas->execute();
+        $total_episodios_vistos = $stmt_horas->fetchColumn();
+        
+        // Calcular horas (20 minutos por episodio, cada 3 episodios = 1 hora)
+        $minutos_totales = $total_episodios_vistos * 20;
+        $horas_vistas = round($minutos_totales / 60, 1);
+        
+        return [
+            'animes_vistos' => $animes_vistos,
+            'favoritos' => $favoritos,
+            'total_lista' => $total_lista,
+            'horas_vistas' => $horas_vistas
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Error al obtener estadísticas: " . $e->getMessage());
+        return [
+            'animes_vistos' => 0,
+            'favoritos' => 0,
+            'total_lista' => 0,
+            'horas_vistas' => 0
+        ];
+    }
+}
+
+// Función para obtener actividad reciente del usuario
+function obtenerActividadReciente($usuario_id, $limite = 5) {
+    try {
+        $conexion = obtenerConexion();
+        
+        // Obtener actividad de lista_usuario
+        $stmt_lista = $conexion->prepare("
+            SELECT 
+                a.titulo,
+                lu.estado,
+                lu.fecha_agregado,
+                lu.fecha_actualizacion,
+                lu.puntuacion,
+                lu.episodios_vistos,
+                'lista' as tipo,
+                CASE 
+                    WHEN lu.fecha_actualizacion > lu.fecha_agregado THEN 'actualizado'
+                    ELSE 'agregado'
+                END as tipo_actividad,
+                GREATEST(lu.fecha_agregado, lu.fecha_actualizacion) as fecha_actividad
+            FROM lista_usuario lu
+            INNER JOIN animes a ON lu.anime_id = a.id
+            WHERE lu.usuario_id = :usuario_id
+        ");
+        $stmt_lista->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+        $stmt_lista->execute();
+        $actividad_lista = $stmt_lista->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Obtener actividad de favoritos
+        $stmt_favoritos = $conexion->prepare("
+            SELECT 
+                a.titulo,
+                'favorito' as estado,
+                f.fecha_agregado,
+                f.fecha_agregado as fecha_actualizacion,
+                NULL as puntuacion,
+                NULL as episodios_vistos,
+                'favorito' as tipo,
+                'agregado' as tipo_actividad,
+                f.fecha_agregado as fecha_actividad
+            FROM favoritos f
+            INNER JOIN animes a ON f.anime_id = a.id
+            WHERE f.usuario_id = :usuario_id
+        ");
+        $stmt_favoritos->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+        $stmt_favoritos->execute();
+        $actividad_favoritos = $stmt_favoritos->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Combinar ambas actividades
+        $todas_actividades = array_merge($actividad_lista, $actividad_favoritos);
+        
+        // Ordenar por fecha de actividad más reciente
+        usort($todas_actividades, function($a, $b) {
+            return strtotime($b['fecha_actividad']) - strtotime($a['fecha_actividad']);
+        });
+        
+        // Limitar resultados
+        return array_slice($todas_actividades, 0, $limite);
+        
+    } catch (Exception $e) {
+        error_log("Error al obtener actividad reciente: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Obtener estadísticas del usuario actual
+$estadisticas = obtenerEstadisticasUsuario($usuario['id']);
+
+// Obtener actividad reciente
+$actividad_reciente = obtenerActividadReciente($usuario['id']);
 ?>
 
 <!DOCTYPE html>
@@ -17,6 +144,125 @@ $usuario = obtenerUsuarioActual();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnimeGon - Dashboard</title>
     <link rel="stylesheet" href="../frontend/assets/css/style.css">
+    <style>
+        /* Estilos para el modal de confirmación */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .confirm-modal-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #00ff00;
+            border-radius: 15px;
+            padding: 0;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 255, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .confirm-modal-header {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #1a1a2e;
+            padding: 20px;
+            border-radius: 13px 13px 0 0;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .confirm-modal-icon {
+            font-size: 24px;
+        }
+
+        .confirm-modal-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .confirm-modal-body {
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .confirm-modal-message {
+            color: #ffffff;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .confirm-modal-submessage {
+            color: #cccccc;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-confirm:hover {
+            background: linear-gradient(135deg, #ff3742 0%, #ff2935 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn-cancel-confirm {
+            background: transparent;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-cancel-confirm:hover {
+            background: #00ff00;
+            color: #1a1a2e;
+            transform: translateY(-2px);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.7) translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
     <header class="header">
@@ -34,7 +280,7 @@ $usuario = obtenerUsuarioActual();
                 </nav>
                 <div class="user-menu">
                     <span class="user-name">¡Hola, 🟢 <?= escape($usuario['nombre']) ?>!</span>
-                    <a href="logout.php" class="btn-logout">🔴Cerrar Sesión</a>
+                    <a href="logout.php" class="btn-logout" title="Cerrar sesión con confirmación">🔴Cerrar Sesión</a>
                 </div>
             </div>
         </div>
@@ -56,7 +302,7 @@ $usuario = obtenerUsuarioActual();
                         <div class="stat-icon">📺</div>
                         <div class="stat-content">
                             <h3>Animes Vistos</h3>
-                            <p class="stat-number">0</p>
+                            <p class="stat-number"><?= $estadisticas['animes_vistos'] ?></p>
                         </div>
                     </div>
                     
@@ -64,7 +310,7 @@ $usuario = obtenerUsuarioActual();
                         <div class="stat-icon">⭐</div>
                         <div class="stat-content">
                             <h3>Favoritos</h3>
-                            <p class="stat-number">0</p>
+                            <p class="stat-number"><?= $estadisticas['favoritos'] ?></p>
                         </div>
                     </div>
                     
@@ -72,7 +318,7 @@ $usuario = obtenerUsuarioActual();
                         <div class="stat-icon">📋</div>
                         <div class="stat-content">
                             <h3>En Lista</h3>
-                            <p class="stat-number">0</p>
+                            <p class="stat-number"><?= $estadisticas['total_lista'] ?></p>
                         </div>
                     </div>
                     
@@ -80,7 +326,7 @@ $usuario = obtenerUsuarioActual();
                         <div class="stat-icon">⏰</div>
                         <div class="stat-content">
                             <h3>Horas Vistas</h3>
-                            <p class="stat-number">0h</p>
+                            <p class="stat-number"><?= $estadisticas['horas_vistas'] ?>h</p>
                         </div>
                     </div>
                 </div>
@@ -90,21 +336,21 @@ $usuario = obtenerUsuarioActual();
                 <h3>Acciones Rápidas</h3>
                 <div class="actions-grid">
                     <div class="action-card">
-                        <h4>🔍 Buscar Animes</h4>
-                        <p>Descubre nuevos animes para añadir a tu lista</p>
-                        <button class="btn-action" onclick="alert('Función en desarrollo')">Buscar</button>
+                        <h4>🌐 Explorar Hub</h4>
+                        <p>Descubre nuevos animes y ve las puntuaciones de la comunidad</p>
+                        <button class="btn-action" onclick="window.location.href='hub.php'">Explorar</button>
                     </div>
                     
                     <div class="action-card">
-                        <h4>📝 Añadir a Lista</h4>
-                        <p>Agrega animes que quieres ver próximamente</p>
-                        <button class="btn-action" onclick="alert('Función en desarrollo')">Añadir</button>
+                        <h4>📝 Gestionar Lista</h4>
+                        <p>Administra tu lista personal de animes</p>
+                        <button class="btn-action" onclick="window.location.href='mis_animes.php'">Ver Lista</button>
                     </div>
                     
                     <div class="action-card">
-                        <h4>📊 Ver Estadísticas</h4>
-                        <p>Revisa tu progreso y estadísticas detalladas</p>
-                        <button class="btn-action" onclick="alert('Función en desarrollo')">Ver Stats</button>
+                        <h4>⭐ Ver Favoritos</h4>
+                        <p>Revisa tus animes favoritos</p>
+                        <button class="btn-action" onclick="window.location.href='favoritos.php'">Ver Favoritos</button>
                     </div>
                 </div>
             </section>
@@ -112,13 +358,59 @@ $usuario = obtenerUsuarioActual();
             <section class="recent-activity">
                 <h3>Actividad Reciente</h3>
                 <div class="activity-list">
-                    <div class="activity-item">
-                        <div class="activity-icon">🎉</div>
-                        <div class="activity-content">
-                            <p><strong>¡Te has registrado en AnimeGon!</strong></p>
-                            <small>Bienvenido a nuestra comunidad de anime</small>
+                    <?php if (!empty($actividad_reciente)): ?>
+                        <?php foreach ($actividad_reciente as $actividad): ?>
+                            <div class="activity-item">
+                                <?php
+                                // Determinar ícono y mensaje según el tipo de actividad
+                                $icono = '📺';
+                                $mensaje = '';
+                                $tiempo = '';
+                                
+                                if ($actividad['tipo'] == 'favorito') {
+                                    // Actividad de favoritos
+                                    $icono = '⭐';
+                                    $mensaje = "Agregaste <strong>" . htmlspecialchars($actividad['titulo']) . "</strong> a favoritos";
+                                    $tiempo = date('d/m/Y H:i', strtotime($actividad['fecha_agregado']));
+                                } elseif ($actividad['tipo_actividad'] == 'agregado') {
+                                    // Anime agregado a la lista
+                                    $icono = '➕';
+                                    $mensaje = "Agregaste <strong>" . htmlspecialchars($actividad['titulo']) . "</strong> a tu lista";
+                                    $tiempo = date('d/m/Y H:i', strtotime($actividad['fecha_agregado']));
+                                } else {
+                                    // Anime actualizado en la lista
+                                    if ($actividad['estado'] == 'Completado') {
+                                        $icono = '✅';
+                                        $mensaje = "Completaste <strong>" . htmlspecialchars($actividad['titulo']) . "</strong>";
+                                    } elseif ($actividad['puntuacion'] > 0) {
+                                        $icono = '🎯';
+                                        $mensaje = "Puntuaste <strong>" . htmlspecialchars($actividad['titulo']) . "</strong> con " . $actividad['puntuacion'] . "/10";
+                                    } elseif ($actividad['episodios_vistos'] > 0) {
+                                        $icono = '📺';
+                                        $mensaje = "Viste " . $actividad['episodios_vistos'] . " episodios de <strong>" . htmlspecialchars($actividad['titulo']) . "</strong>";
+                                    } else {
+                                        $icono = '📝';
+                                        $mensaje = "Actualizaste <strong>" . htmlspecialchars($actividad['titulo']) . "</strong>";
+                                    }
+                                    $tiempo = date('d/m/Y H:i', strtotime($actividad['fecha_actualizacion']));
+                                }
+                                ?>
+                                <div class="activity-icon"><?= $icono ?></div>
+                                <div class="activity-content">
+                                    <p><?= $mensaje ?></p>
+                                    <small><?= $tiempo ?></small>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="activity-item">
+                            <div class="activity-icon">🎉</div>
+                            <div class="activity-content">
+                                <p><strong>¡Te has registrado en AnimeGon!</strong></p>
+                                <small>Bienvenido a nuestra comunidad de anime</small>
+                            </div>
                         </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </section>
         </div>
@@ -147,7 +439,36 @@ $usuario = obtenerUsuarioActual();
                     }, 100);
                 }, index * 100);
             });
+
+            // Animación de contador para los números de estadísticas
+            animateCounters();
         });
+
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            
+            counters.forEach(counter => {
+                const target = parseFloat(counter.textContent.replace(/[^\d.]/g, ''));
+                const isHours = counter.textContent.includes('h');
+                const duration = 2000; // 2 segundos
+                const increment = target / (duration / 16); // 60fps
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    
+                    if (isHours) {
+                        counter.textContent = current.toFixed(1) + 'h';
+                    } else {
+                        counter.textContent = Math.floor(current);
+                    }
+                }, 16);
+            });
+        }
 
         // Confirmar logout
         document.querySelector('.btn-logout').addEventListener('click', function(e) {
@@ -157,8 +478,18 @@ $usuario = obtenerUsuarioActual();
             const confirmBtn = document.getElementById('confirmLogoutBtn');
             const cancelBtn = document.getElementById('cancelLogoutBtn');
             
+            // Fallback si el modal no existe
+            if (!modal || !confirmBtn || !cancelBtn) {
+                const confirmed = confirm('¿Estás seguro de que quieres cerrar sesión?');
+                if (confirmed) {
+                    window.location.href = 'logout.php';
+                }
+                return;
+            }
+            
             // Mostrar el modal
             modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevenir scroll
             
             // Configurar los botones
             confirmBtn.onclick = () => {
@@ -167,12 +498,14 @@ $usuario = obtenerUsuarioActual();
             
             cancelBtn.onclick = () => {
                 modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
             };
             
             // Cerrar con escape
             const handleEscape = (e) => {
                 if (e.key === 'Escape') {
                     modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
                     document.removeEventListener('keydown', handleEscape);
                 }
             };
@@ -183,6 +516,7 @@ $usuario = obtenerUsuarioActual();
             modal.onclick = (e) => {
                 if (e.target === modal) {
                     modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
                 }
             };
         });
