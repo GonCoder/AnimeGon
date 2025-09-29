@@ -1341,6 +1341,28 @@ $animes_hub = obtenerAnimesHub($usuario_id);
             });
         });
         
+        // Aplicar búsqueda automática si viene del Dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si hay un término de búsqueda guardado desde el Dashboard
+            const savedSearchTerm = localStorage.getItem('hubSearchTerm');
+            if (savedSearchTerm) {
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.value = savedSearchTerm;
+                    
+                    // Trigger the search
+                    const event = new Event('input', { bubbles: true });
+                    searchInput.dispatchEvent(event);
+                    
+                    // Scroll to search input para que el usuario vea que se aplicó la búsqueda
+                    searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Limpiar el término guardado
+                    localStorage.removeItem('hubSearchTerm');
+                }
+            }
+        });
+
         // Configurar event listeners para los botones de agregar
         document.addEventListener('DOMContentLoaded', function() {
             // Solo agregar listeners a botones habilitados (no deshabilitados)

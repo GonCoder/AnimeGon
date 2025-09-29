@@ -899,6 +899,59 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
         .ranking-list::-webkit-scrollbar-thumb:hover {
             background: rgba(0, 255, 0, 0.7);
         }
+
+        /* Estilos para la búsqueda rápida */
+        .quick-search-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .search-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .quick-search-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            border-radius: 20px;
+            padding: 8px 15px;
+            color: white;
+            flex: 1;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .quick-search-input:focus {
+            outline: none;
+            border-color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .quick-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-quick-search {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 18px;
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-quick-search:hover {
+            background: linear-gradient(135deg, #00cc00 0%, #00aa00 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -976,6 +1029,15 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                         <h4>🌐 Explorar Hub</h4>
                         <p>Descubre nuevos animes y ve las puntuaciones de la comunidad</p>
                         <button class="btn-action" onclick="console.log('Botón Hub clicked'); window.location.href='hub.php'">Explorar</button>
+                        
+                        <!-- Búsqueda rápida de animes -->
+                        <div class="quick-search-section">
+                            <h5 style="color: #00ff00; margin: 15px 0 8px 0; font-size: 0.85rem;">🔍 Búsqueda Rápida</h5>
+                            <div class="search-container">
+                                <input type="text" id="quickSearchInput" class="quick-search-input" placeholder="🔍 Buscar anime..." onkeypress="handleQuickSearchEnter(event)">
+                                <button class="btn-quick-search" onclick="ejecutarBusquedaRapida()">Buscar</button>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="action-card">
@@ -1250,6 +1312,28 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             // Esta función se conectará con el modal existente del Hub
             // Por ahora, redirigimos al Hub con el anime específico
             window.location.href = `hub.php?anime=${animeId}`;
+        }
+
+        // Funciones para búsqueda rápida
+        function ejecutarBusquedaRapida() {
+            const searchInput = document.getElementById('quickSearchInput');
+            const searchTerm = searchInput.value.trim();
+            
+            if (searchTerm) {
+                // Almacenar el término de búsqueda en localStorage para que el Hub lo recoja
+                localStorage.setItem('hubSearchTerm', searchTerm);
+                window.location.href = 'hub.php';
+            } else {
+                // Si está vacío, solo ir al Hub
+                localStorage.removeItem('hubSearchTerm');
+                window.location.href = 'hub.php';
+            }
+        }
+
+        function handleQuickSearchEnter(event) {
+            if (event.key === 'Enter') {
+                ejecutarBusquedaRapida();
+            }
         }
 
         // Event listeners para las preview cards
