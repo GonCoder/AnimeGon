@@ -460,19 +460,19 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                     <div class="action-card">
                         <h4>🌐 Explorar Hub</h4>
                         <p>Descubre nuevos animes y ve las puntuaciones de la comunidad</p>
-                        <button class="btn-action" onclick="window.location.href='hub.php'">Explorar</button>
+                        <button class="btn-action" onclick="console.log('Botón Hub clicked'); window.location.href='hub.php'">Explorar</button>
                     </div>
                     
                     <div class="action-card">
                         <h4>📝 Gestionar Lista</h4>
                         <p>Administra tu lista personal de animes</p>
-                        <button class="btn-action" onclick="window.location.href='mis_animes.php'">Ver Lista</button>
+                        <button class="btn-action" onclick="console.log('Botón Lista clicked'); window.location.href='mis_animes.php'">Ver Lista</button>
                     </div>
                     
                     <div class="action-card">
                         <h4>⭐ Ver Favoritos</h4>
                         <p>Revisa tus animes favoritos</p>
-                        <button class="btn-action" onclick="window.location.href='favoritos.php'">Ver Favoritos</button>
+                        <button class="btn-action" onclick="console.log('Botón Favoritos clicked'); window.location.href='favoritos.php'">Ver Favoritos</button>
                     </div>
                 </div>
             </section>

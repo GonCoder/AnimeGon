@@ -1074,6 +1074,7 @@ body::before {
     background: radial-gradient(circle at center, rgba(191, 0, 255, 0.1) 0%, transparent 70%);
     opacity: 0;
     transition: opacity 0.4s ease;
+    pointer-events: none; /* Permite que los clicks pasen a través del pseudo-elemento */
 }
 
 .action-card:hover::before {
@@ -1115,6 +1116,8 @@ body::before {
     letter-spacing: 0.5px;
     font-size: 0.9rem;
     box-shadow: 0 0 15px rgba(0, 102, 255, 0.3);
+    position: relative;
+    z-index: 10; /* Asegurar que esté por encima de otros elementos */
 }
 
 .btn-action:hover {
