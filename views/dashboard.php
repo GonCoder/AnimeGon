@@ -20,11 +20,11 @@ function obtenerEstadisticasUsuario($usuario_id) {
         $stmt_vistos->execute();
         $animes_vistos = $stmt_vistos->fetchColumn();
         
-        // Contar favoritos (tabla separada favoritos)
-        $stmt_favoritos = $conexion->prepare("SELECT COUNT(*) FROM favoritos WHERE usuario_id = :usuario_id");
-        $stmt_favoritos->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
-        $stmt_favoritos->execute();
-        $favoritos = $stmt_favoritos->fetchColumn();
+        // Contar puntuaciones realizadas por el usuario
+        $stmt_puntuaciones = $conexion->prepare("SELECT COUNT(*) FROM lista_usuario WHERE usuario_id = :usuario_id AND puntuacion IS NOT NULL AND puntuacion > 0");
+        $stmt_puntuaciones->bindParam(':usuario_id', $usuario_id, PDO::PARAM_INT);
+        $stmt_puntuaciones->execute();
+        $puntuaciones_realizadas = $stmt_puntuaciones->fetchColumn();
         
         // Contar total en lista (todos los animes del usuario)
         $stmt_total = $conexion->prepare("SELECT COUNT(*) FROM lista_usuario WHERE usuario_id = :usuario_id");
@@ -49,7 +49,7 @@ function obtenerEstadisticasUsuario($usuario_id) {
         
         return [
             'animes_vistos' => $animes_vistos,
-            'favoritos' => $favoritos,
+            'puntuaciones_realizadas' => $puntuaciones_realizadas,
             'total_lista' => $total_lista,
             'horas_vistas' => $horas_vistas
         ];
@@ -58,7 +58,7 @@ function obtenerEstadisticasUsuario($usuario_id) {
         error_log("Error al obtener estadísticas: " . $e->getMessage());
         return [
             'animes_vistos' => 0,
-            'favoritos' => 0,
+            'puntuaciones_realizadas' => 0,
             'total_lista' => 0,
             'horas_vistas' => 0
         ];
@@ -135,6 +135,90 @@ $estadisticas = obtenerEstadisticasUsuario($usuario['id']);
 
 // Obtener actividad reciente
 $actividad_reciente = obtenerActividadReciente($usuario['id']);
+
+// Función para obtener los animes mejor puntuados
+function obtenerTopAnimesPuntuados($limite = 3) {
+    try {
+        $conexion = obtenerConexion();
+        
+        $query = "
+            SELECT 
+                a.id,
+                a.titulo,
+                a.imagen_portada,
+                ROUND(AVG(CAST(lu.puntuacion AS DECIMAL(3,1))), 1) as media_puntuacion,
+                COUNT(lu.puntuacion) as total_puntuaciones,
+                GROUP_CONCAT(
+                    CONCAT(u.nombre, ':', lu.puntuacion) 
+                    ORDER BY lu.puntuacion DESC, lu.fecha_actualizacion DESC 
+                    LIMIT 5
+                ) as top_usuarios
+            FROM animes a
+            INNER JOIN lista_usuario lu ON a.id = lu.anime_id
+            INNER JOIN usuarios u ON lu.usuario_id = u.id
+            WHERE lu.puntuacion IS NOT NULL 
+                AND lu.puntuacion > 0
+            GROUP BY a.id, a.titulo, a.imagen_portada
+            HAVING COUNT(lu.puntuacion) >= 2
+            ORDER BY media_puntuacion DESC, total_puntuaciones DESC
+            LIMIT :limite
+        ";
+        
+        $stmt = $conexion->prepare($query);
+        $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch (Exception $e) {
+        error_log("Error al obtener top animes puntuados: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Función para obtener todos los animes puntuados con ranking
+function obtenerTodosAnimesPuntuados() {
+    try {
+        $conexion = obtenerConexion();
+        
+        $query = "
+            SELECT 
+                a.id,
+                a.titulo,
+                a.titulo_original,
+                a.imagen_portada,
+                a.tipo,
+                a.episodios_total,
+                ROUND(AVG(CAST(lu.puntuacion AS DECIMAL(3,1))), 1) as media_puntuacion,
+                COUNT(lu.puntuacion) as total_puntuaciones,
+                GROUP_CONCAT(
+                    CONCAT(u.nombre, ':', lu.puntuacion, ':', u.username) 
+                    ORDER BY lu.puntuacion DESC, lu.fecha_actualizacion DESC 
+                ) as usuarios_puntuaciones
+            FROM animes a
+            INNER JOIN lista_usuario lu ON a.id = lu.anime_id
+            INNER JOIN usuarios u ON lu.usuario_id = u.id
+            WHERE lu.puntuacion IS NOT NULL 
+                AND lu.puntuacion > 0
+            GROUP BY a.id, a.titulo, a.titulo_original, a.imagen_portada, a.tipo, a.episodios_total
+            HAVING COUNT(lu.puntuacion) >= 1
+            ORDER BY media_puntuacion DESC, total_puntuaciones DESC
+        ";
+        
+        $stmt = $conexion->prepare($query);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch (Exception $e) {
+        error_log("Error al obtener todos los animes puntuados: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Obtener datos para la nueva sección de puntuajes
+$top_animes_puntuados = obtenerTopAnimesPuntuados(3);
+$todos_animes_puntuados = obtenerTodosAnimesPuntuados();
 ?>
 
 <!DOCTYPE html>
@@ -520,6 +604,298 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
             background: rgba(0, 255, 0, 0.3) !important;
             color: white !important;
         }
+
+        /* Estilos para preview de top animes */
+        .top-animes-preview {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .preview-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .preview-card {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 8px;
+            padding: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .preview-card:hover {
+            background: rgba(0, 255, 0, 0.2);
+            transform: translateX(5px);
+        }
+
+        .preview-rank {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ff00;
+            width: 25px;
+            text-align: center;
+        }
+
+        .preview-image {
+            width: 40px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin: 0 10px;
+        }
+
+        .preview-info {
+            flex: 1;
+        }
+
+        .preview-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .preview-rating {
+            font-size: 0.75rem;
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .preview-votes {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        /* Estilos para el modal de puntuajes */
+        .puntuajes-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .puntuajes-modal-content {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            margin: 1% auto;
+            padding: 0;
+            border: 3px solid #00ff00;
+            width: 95%;
+            max-width: 1400px;
+            height: 95vh;
+            border-radius: 20px;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .puntuajes-modal-header {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #0a0a0a;
+            padding: 20px 30px;
+            border-radius: 17px 17px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .puntuajes-modal-title {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .puntuajes-modal-close {
+            background: none;
+            border: none;
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: #0a0a0a;
+            padding: 0;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .puntuajes-modal-close:hover {
+            background-color: rgba(10, 10, 10, 0.2);
+        }
+
+        .puntuajes-modal-body {
+            padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .puntuajes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .puntuaje-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .puntuaje-card:hover {
+            border-color: #00ff00;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .puntuaje-card-header {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .puntuaje-anime-image {
+            width: 80px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .puntuaje-anime-info {
+            flex: 1;
+        }
+
+        .puntuaje-anime-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .puntuaje-anime-type {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .puntuaje-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .puntuaje-media {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00ff00;
+        }
+
+        .puntuaje-votos {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .ranking-usuarios {
+            margin-top: 15px;
+        }
+
+        .ranking-title {
+            font-size: 0.9rem;
+            color: #00ff00;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 8px;
+            background: rgba(0, 255, 0, 0.1);
+            border-radius: 5px;
+            font-size: 0.8rem;
+        }
+
+        .ranking-usuario {
+            color: white;
+            font-weight: 500;
+        }
+
+        .ranking-puntuacion {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .btn-ver-detalle {
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #0a0a0a;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-ver-detalle:hover {
+            background: linear-gradient(135deg, #00cc00 0%, #00aa00 100%);
+            transform: translateY(-2px);
+        }
+
+        /* Scrollbar personalizada para modal */
+        .puntuajes-modal-body::-webkit-scrollbar,
+        .ranking-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .puntuajes-modal-body::-webkit-scrollbar-track,
+        .ranking-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .puntuajes-modal-body::-webkit-scrollbar-thumb,
+        .ranking-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 0, 0.5);
+            border-radius: 4px;
+        }
+
+        .puntuajes-modal-body::-webkit-scrollbar-thumb:hover,
+        .ranking-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 0, 0.7);
+        }
     </style>
 </head>
 <body>
@@ -565,10 +941,10 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                     </div>
                     
                     <div class="stat-card">
-                        <div class="stat-icon">⭐</div>
+                        <div class="stat-icon">🎯</div>
                         <div class="stat-content">
-                            <h3>Favoritos</h3>
-                            <p class="stat-number"><?= $estadisticas['favoritos'] ?></p>
+                            <h3>Puntuaciones</h3>
+                            <p class="stat-number"><?= $estadisticas['puntuaciones_realizadas'] ?></p>
                         </div>
                     </div>
                     
@@ -612,9 +988,29 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                     </div>
                     
                     <div class="action-card">
-                        <h4>⭐ Ver Favoritos</h4>
-                        <p>Revisa tus animes favoritos</p>
-                        <button class="btn-action" onclick="console.log('Botón Favoritos clicked'); window.location.href='favoritos.php'">Ver Favoritos</button>
+                        <h4>🏆 Ver Puntuajes</h4>
+                        <p>Explora los animes mejor valorados por la comunidad</p>
+                        <button class="btn-action" onclick="abrirModalPuntuajes()">Ver Ranking</button>
+                        
+                        <!-- Preview de top 3 animes mejor puntuados -->
+                        <?php if (!empty($top_animes_puntuados)): ?>
+                            <div class="top-animes-preview">
+                                <h5 style="color: #00ff00; margin: 15px 0 10px 0; font-size: 0.9rem;">🥇 Top 3 Mejor Puntuados</h5>
+                                <div class="preview-cards">
+                                    <?php foreach ($top_animes_puntuados as $index => $anime): ?>
+                                        <div class="preview-card" data-anime-id="<?= $anime['id'] ?>">
+                                            <div class="preview-rank"><?= $index + 1 ?></div>
+                                            <img src="<?= htmlspecialchars($anime['imagen_portada'] ?: '../img/default-anime.jpg') ?>" alt="<?= htmlspecialchars($anime['titulo']) ?>" class="preview-image">
+                                            <div class="preview-info">
+                                                <div class="preview-title"><?= htmlspecialchars(substr($anime['titulo'], 0, 25)) ?><?= strlen($anime['titulo']) > 25 ? '...' : '' ?></div>
+                                                <div class="preview-rating">⭐ <?= $anime['media_puntuacion'] ?>/10</div>
+                                                <div class="preview-votes">(<?= $anime['total_puntuaciones'] ?> votos)</div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
                 
@@ -803,12 +1199,65 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
             document.getElementById('animeForm').reset();
         }
 
-        // Cerrar modal al hacer click fuera de él
+        // Cerrar modales al hacer click fuera de ellos
         window.addEventListener('click', function(event) {
-            const modal = document.getElementById('animeModal');
-            if (event.target === modal) {
+            const animeModal = document.getElementById('animeModal');
+            const puntuajesModal = document.getElementById('puntuajesModal');
+            
+            if (event.target === animeModal) {
                 cerrarModalAgregarAnime();
             }
+            
+            if (event.target === puntuajesModal) {
+                cerrarModalPuntuajes();
+            }
+        });
+
+        // Cerrar modales con la tecla Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const animeModal = document.getElementById('animeModal');
+                const puntuajesModal = document.getElementById('puntuajesModal');
+                
+                if (animeModal.style.display === 'block') {
+                    cerrarModalAgregarAnime();
+                }
+                
+                if (puntuajesModal.style.display === 'block') {
+                    cerrarModalPuntuajes();
+                }
+            }
+        });
+
+        // Funciones para el modal de puntuajes
+        function abrirModalPuntuajes() {
+            const modal = document.getElementById('puntuajesModal');
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModalPuntuajes() {
+            const modal = document.getElementById('puntuajesModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Función para abrir el modal de valoraciones del Hub (reutilizada)
+        function abrirModalValoracionesHub(animeId, animeTitle) {
+            // Esta función se conectará con el modal existente del Hub
+            // Por ahora, redirigimos al Hub con el anime específico
+            window.location.href = `hub.php?anime=${animeId}`;
+        }
+
+        // Event listeners para las preview cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const previewCards = document.querySelectorAll('.preview-card');
+            previewCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const animeId = this.dataset.animeId;
+                    abrirModalPuntuajes();
+                });
+            });
         });
 
         // Manejar envío del formulario
@@ -1025,6 +1474,90 @@ $actividad_reciente = obtenerActividadReciente($usuario['id']);
                         <button type="button" onclick="cerrarModalAgregarAnime()" style="background: transparent; color: #ff4757; border: 2px solid #ff4757; padding: 10px 28px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">❌ Cancelar</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Puntuajes Completo -->
+    <div id="puntuajesModal" class="puntuajes-modal">
+        <div class="puntuajes-modal-content">
+            <div class="puntuajes-modal-header">
+                <h2 class="puntuajes-modal-title">
+                    🏆 Ranking de Animes por Puntuación
+                </h2>
+                <button class="puntuajes-modal-close" onclick="cerrarModalPuntuajes()">&times;</button>
+            </div>
+            <div class="puntuajes-modal-body">
+                <?php if (!empty($todos_animes_puntuados)): ?>
+                    <div class="puntuajes-grid">
+                        <?php foreach ($todos_animes_puntuados as $index => $anime): ?>
+                            <div class="puntuaje-card">
+                                <div class="puntuaje-card-header">
+                                    <img src="<?= htmlspecialchars($anime['imagen_portada'] ?: '../img/default-anime.jpg') ?>" 
+                                         alt="<?= htmlspecialchars($anime['titulo']) ?>" 
+                                         class="puntuaje-anime-image">
+                                    <div class="puntuaje-anime-info">
+                                        <div class="puntuaje-anime-title">
+                                            #<?= $index + 1 ?> <?= htmlspecialchars($anime['titulo']) ?>
+                                        </div>
+                                        <?php if (!empty($anime['titulo_original'])): ?>
+                                            <div class="puntuaje-anime-type">
+                                                🏮 <?= htmlspecialchars($anime['titulo_original']) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div class="puntuaje-anime-type">
+                                            <?= htmlspecialchars($anime['tipo']) ?>
+                                            <?php if ($anime['episodios_total']): ?>
+                                                • <?= $anime['episodios_total'] ?> episodios
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="puntuaje-stats">
+                                            <div class="puntuaje-media">⭐ <?= $anime['media_puntuacion'] ?>/10</div>
+                                            <div class="puntuaje-votos"><?= $anime['total_puntuaciones'] ?> puntuaciones</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="ranking-usuarios">
+                                    <div class="ranking-title">🏅 Top Usuarios que lo Puntuaron:</div>
+                                    <div class="ranking-list">
+                                        <?php 
+                                        $usuarios = explode(',', $anime['usuarios_puntuaciones']);
+                                        $mostrados = 0;
+                                        foreach ($usuarios as $usuario_data): 
+                                            if ($mostrados >= 5) break;
+                                            $partes = explode(':', $usuario_data);
+                                            if (count($partes) >= 3):
+                                                $nombre = $partes[0];
+                                                $puntuacion = $partes[1];
+                                                $username = $partes[2];
+                                                $mostrados++;
+                                        ?>
+                                            <div class="ranking-item">
+                                                <span class="ranking-usuario"><?= htmlspecialchars($nombre) ?> (@<?= htmlspecialchars($username) ?>)</span>
+                                                <span class="ranking-puntuacion"><?= $puntuacion ?>/10</span>
+                                            </div>
+                                        <?php 
+                                            endif;
+                                        endforeach; 
+                                        ?>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn-ver-detalle" onclick="abrirModalValoracionesHub(<?= $anime['id'] ?>, '<?= htmlspecialchars($anime['titulo']) ?>')">
+                                    👁️ Ver Todas las Valoraciones
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div style="text-align: center; padding: 50px; color: #888;">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🎯</div>
+                        <h3 style="color: #00ff00; margin-bottom: 10px;">Sin Puntuaciones Aún</h3>
+                        <p>La comunidad aún no ha puntuado ningún anime.</p>
+                        <p>¡Sé el primero en agregar y puntuar animes!</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
