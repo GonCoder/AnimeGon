@@ -150,10 +150,68 @@ $usuario = obtenerUsuarioActual();
 
         // Confirmar logout
         document.querySelector('.btn-logout').addEventListener('click', function(e) {
-            if (!confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                e.preventDefault();
-            }
+            e.preventDefault();
+            
+            const modal = document.getElementById('confirmLogoutModal');
+            const confirmBtn = document.getElementById('confirmLogoutBtn');
+            const cancelBtn = document.getElementById('cancelLogoutBtn');
+            
+            // Mostrar el modal
+            modal.style.display = 'flex';
+            
+            // Configurar los botones
+            confirmBtn.onclick = () => {
+                window.location.href = 'logout.php';
+            };
+            
+            cancelBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+            
+            // Cerrar con escape
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    modal.style.display = 'none';
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            
+            document.addEventListener('keydown', handleEscape);
+            
+            // Cerrar al hacer clic en el fondo
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
         });
     </script>
+
+    <!-- Modal de confirmación para cerrar sesión -->
+    <div id="confirmLogoutModal" class="confirm-modal logout-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-modal-icon">🚪</div>
+                <h3 class="confirm-modal-title">Cerrar Sesión</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <div class="confirm-modal-message">
+                    ¿Estás seguro de que quieres cerrar sesión?
+                </div>
+                <div class="confirm-modal-submessage">
+                    Tendrás que iniciar sesión nuevamente para acceder a tu cuenta.
+                </div>
+                <div class="confirm-modal-buttons">
+                    <button class="btn-confirm" id="confirmLogoutBtn">
+                        🚪 Sí, cerrar sesión
+                    </button>
+                    <button class="btn-cancel-confirm" id="cancelLogoutBtn">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

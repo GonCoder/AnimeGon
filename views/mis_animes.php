@@ -519,7 +519,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
             border: 2px solid rgba(0, 255, 255, 0.3);
             border-radius: 20px;
             width: 90%;
-            max-width: 500px;
+            max-width: 1200px;
             max-height: calc(100vh - 40px);
             box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
             animation: modalShow 0.3s ease;
@@ -527,6 +527,12 @@ $animes = obtenerAnimesUsuario($usuario_id);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+        
+        /* Modal específico para agregar/editar anime con layout horizontal */
+        #animeModal .modal-content,
+        #editAnimeModal .modal-content {
+            max-width: 1200px;
         }
         
         @keyframes modalShow {
@@ -582,6 +588,71 @@ $animes = obtenerAnimesUsuario($usuario_id);
         
         .form-group {
             margin-bottom: 25px;
+        }
+        
+        /* Sistema de grid para formularios horizontales */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .form-grid .form-group {
+            margin-bottom: 0;
+        }
+        
+        .form-row {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .form-row-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .form-row-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        
+        .form-row-4 {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+        
+        .form-full-width {
+            grid-column: 1 / -1;
+        }
+        
+        /* Ajustes para campos específicos */
+        .form-group.image-section {
+            grid-column: 1 / -1;
+        }
+        
+        /* Mejorar espaciado en grid */
+        .form-row .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Ajustes para labels más compactos en grid */
+        .form-row .form-group label {
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        
+        .form-row .file-info {
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        
+        /* Estilos para separadores visuales */
+        .form-section-title {
+            color: #00ffff;
+            font-size: 1.1rem;
+            margin: 25px 0 15px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
         
         .form-group label {
@@ -778,7 +849,181 @@ $animes = obtenerAnimesUsuario($usuario_id);
             animation-delay: -3s;
         }
         
+        /* Estilos para modales de confirmación */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .confirm-modal-content {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            margin: 15% auto;
+            padding: 0;
+            border: 2px solid rgba(255, 71, 87, 0.6);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 0 50px rgba(255, 71, 87, 0.4);
+            animation: scaleIn 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .confirm-modal-header {
+            background: linear-gradient(135deg, #ff4757, #ff3742);
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .confirm-modal-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: shake 0.5s ease;
+        }
+        
+        .confirm-modal-title {
+            color: white;
+            margin: 0;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .confirm-modal-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .confirm-modal-message {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .confirm-modal-submessage {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+        
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn-confirm {
+            background: linear-gradient(135deg, #ff4757, #ff3742);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(255, 71, 87, 0.6);
+            background: linear-gradient(135deg, #ff3742, #ff2838);
+        }
+        
+        .btn-cancel-confirm {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-cancel-confirm:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* Modal de confirmación para logout */
+        .logout-modal .confirm-modal-content {
+            border-color: rgba(255, 193, 7, 0.6);
+            box-shadow: 0 0 50px rgba(255, 193, 7, 0.4);
+        }
+        
+        .logout-modal .confirm-modal-header {
+            background: linear-gradient(135deg, #ffc107, #ffb300);
+        }
+        
+        .logout-modal .btn-confirm {
+            background: linear-gradient(135deg, #ffc107, #ffb300);
+        }
+        
+        .logout-modal .btn-confirm:hover {
+            background: linear-gradient(135deg, #ffb300, #ffa000);
+            box-shadow: 0 0 25px rgba(255, 193, 7, 0.6);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { 
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.7);
+            }
+            to { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        /* Posicionamiento centrado */
+        .confirm-modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
+        }
+        
         /* Responsive */
+        @media (max-width: 1024px) {
+            .form-row-4 {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .form-row-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
         @media (max-width: 768px) {
             .animes-header {
                 flex-direction: column;
@@ -806,11 +1051,22 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 width: 95%;
                 margin: 10px auto;
                 max-height: calc(100vh - 20px);
+                max-width: none;
             }
             
             .modal-body {
                 padding: 20px;
                 max-height: calc(100vh - 140px);
+            }
+            
+            /* En móviles, forzar layout vertical */
+            .form-grid,
+            .form-row,
+            .form-row-2,
+            .form-row-3,
+            .form-row-4 {
+                grid-template-columns: 1fr;
+                gap: 15px;
             }
             
             .form-buttons {
@@ -1059,113 +1315,127 @@ $animes = obtenerAnimesUsuario($usuario_id);
             </div>
             <div class="modal-body">
                 <form id="animeForm" action="../backend/api/procesar_anime.php" method="POST" enctype="multipart/form-data">
-                    <div class="form-group">
+                    <!-- Información básica -->
+                    <h4 class="form-section-title">📝 Información Básica</h4>
+                    
+                    <div class="form-group form-full-width">
                         <label for="nombre">📝 Nombre del Anime (Español)</label>
                         <input type="text" id="nombre" name="nombre" required placeholder="Ej: Ataque a los Titanes">
                     </div>
                     
-                    <div class="form-group">
-                        <label for="titulo_original">🏮 Título Original (Japonés)</label>
-                        <input type="text" id="titulo_original" name="titulo_original" placeholder="Ej: 進撃の巨人">
-                        <div class="file-info">Opcional: Título en idioma original</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="titulo_ingles">🇺🇸 Título en Inglés</label>
-                        <input type="text" id="titulo_ingles" name="titulo_ingles" placeholder="Ej: Attack on Titan">
-                        <div class="file-info">Opcional: Título oficial en inglés</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tipo">🎬 Tipo de Anime</label>
-                        <select id="tipo" name="tipo" required>
-                            <option value="TV">📺 Serie TV</option>
-                            <option value="OVA">💽 OVA</option>
-                            <option value="Película">🎬 Película</option>
-                            <option value="Especial">⭐ Especial</option>
-                            <option value="ONA">🌐 ONA (Web)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="estado_anime">📊 Estado del Anime</label>
-                        <select id="estado_anime" name="estado_anime" required>
-                            <option value="Finalizado">✅ Finalizado</option>
-                            <option value="Emitiendo">📡 Emitiendo</option>
-                            <option value="Próximamente">🔜 Próximamente</option>
-                            <option value="Cancelado">❌ Cancelado</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="total_episodios">📊 Total de Episodios</label>
-                        <input type="number" id="total_episodios" name="total_episodios" min="1" placeholder="Ej: 25">
-                        <div class="file-info">Deja vacío si aún no se conoce el total</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="capitulos_vistos">👁️ Episodios Vistos</label>
-                        <input type="number" id="capitulos_vistos" name="capitulos_vistos" min="0" value="0" placeholder="Ej: 12">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="estado">🎯 Mi Estado</label>
-                        <select id="estado" name="estado" required>
-                            <option value="Plan de Ver">⏳ Plan de Ver</option>
-                            <option value="Viendo">👀 Viendo</option>
-                            <option value="Completado">✅ Completado</option>
-                            <option value="En Pausa">⏸️ En Pausa</option>
-                            <option value="Abandonado">❌ Abandonado</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="puntuacion">⭐ Mi Puntuación</label>
-                        <select id="puntuacion" name="puntuacion">
-                            <option value="">Sin puntuar</option>
-                            <option value="10">⭐ 10 - Obra Maestra</option>
-                            <option value="9">⭐ 9 - Excelente</option>
-                            <option value="8">⭐ 8 - Muy Bueno</option>
-                            <option value="7">⭐ 7 - Bueno</option>
-                            <option value="6">⭐ 6 - Decente</option>
-                            <option value="5">⭐ 5 - Promedio</option>
-                            <option value="4">⭐ 4 - Malo</option>
-                            <option value="3">⭐ 3 - Muy Malo</option>
-                            <option value="2">⭐ 2 - Horrible</option>
-                            <option value="1">⭐ 1 - Desastre</option>
-                        </select>
-                        <div class="file-info">Opcional: Califica el anime del 1 al 10</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="imagen_url">🖼️ Imagen del Anime</label>
-                        
-                        <!-- Opción de URL (recomendada) -->
-                        <div style="margin-bottom: 10px;">
-                            <label for="imagen_url" style="font-size: 0.9rem; color: #28a745;">🌐 URL de imagen (Recomendado - ahorra espacio)</label>
-                            <input type="url" id="imagen_url" name="imagen_url" class="form-control" 
-                                   placeholder="https://example.com/imagen.jpg" 
-                                   style="margin-top: 5px;">
+                    <div class="form-row form-row-2">
+                        <div class="form-group">
+                            <label for="titulo_original">🏮 Título Original (Japonés)</label>
+                            <input type="text" id="titulo_original" name="titulo_original" placeholder="Ej: 進撃の巨人">
+                            <div class="file-info">Opcional: Título en idioma original</div>
                         </div>
                         
-                        <!-- Separador -->
-                        <div style="text-align: center; margin: 15px 0; color: #666;">
-                            <span style="background: white; padding: 0 10px;">O</span>
-                            <hr style="border: none; border-top: 1px solid #ddd; margin-top: -12px;">
+                        <div class="form-group">
+                            <label for="titulo_ingles">🇺🇸 Título en Inglés</label>
+                            <input type="text" id="titulo_ingles" name="titulo_ingles" placeholder="Ej: Attack on Titan">
+                            <div class="file-info">Opcional: Título oficial en inglés</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detalles del anime -->
+                    <h4 class="form-section-title">🎬 Detalles del Anime</h4>
+                    
+                    <div class="form-row form-row-3">
+                        <div class="form-group">
+                            <label for="tipo">🎬 Tipo de Anime</label>
+                            <select id="tipo" name="tipo" required>
+                                <option value="TV">📺 Serie TV</option>
+                                <option value="OVA">💽 OVA</option>
+                                <option value="Película">🎬 Película</option>
+                                <option value="Especial">⭐ Especial</option>
+                                <option value="ONA">🌐 ONA (Web)</option>
+                            </select>
                         </div>
                         
-                        <!-- Opción de subir archivo -->
-                        <div>
-                            <label for="imagen" style="font-size: 0.9rem; color: #666;">📎 Subir desde tu dispositivo</label>
-                            <div class="file-input-wrapper" style="margin-top: 5px;">
-                                <input type="file" id="imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
-                                <label for="imagen" class="file-input-label">
-                                    📎 Seleccionar imagen (JPG, PNG, ICO - máx. 1MB)
-                                </label>
+                        <div class="form-group">
+                            <label for="estado_anime">📊 Estado del Anime</label>
+                            <select id="estado_anime" name="estado_anime" required>
+                                <option value="Finalizado">✅ Finalizado</option>
+                                <option value="Emitiendo">📡 Emitiendo</option>
+                                <option value="Próximamente">🔜 Próximamente</option>
+                                <option value="Cancelado">❌ Cancelado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="total_episodios">📊 Total de Episodios</label>
+                            <input type="number" id="total_episodios" name="total_episodios" min="1" placeholder="Ej: 25">
+                            <div class="file-info">Deja vacío si no se conoce</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mi seguimiento -->
+                    <h4 class="form-section-title">🎯 Mi Seguimiento</h4>
+                    
+                    <div class="form-row form-row-3">
+                        <div class="form-group">
+                            <label for="capitulos_vistos">👁️ Episodios Vistos</label>
+                            <input type="number" id="capitulos_vistos" name="capitulos_vistos" min="0" value="0" placeholder="Ej: 12">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="estado">🎯 Mi Estado</label>
+                            <select id="estado" name="estado" required>
+                                <option value="Plan de Ver">⏳ Plan de Ver</option>
+                                <option value="Viendo">👀 Viendo</option>
+                                <option value="Completado">✅ Completado</option>
+                                <option value="En Pausa">⏸️ En Pausa</option>
+                                <option value="Abandonado">❌ Abandonado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="puntuacion">⭐ Mi Puntuación</label>
+                            <select id="puntuacion" name="puntuacion">
+                                <option value="">Sin puntuar</option>
+                                <option value="10">⭐ 10 - Obra Maestra</option>
+                                <option value="9">⭐ 9 - Excelente</option>
+                                <option value="8">⭐ 8 - Muy Bueno</option>
+                                <option value="7">⭐ 7 - Bueno</option>
+                                <option value="6">⭐ 6 - Decente</option>
+                                <option value="5">⭐ 5 - Promedio</option>
+                                <option value="4">⭐ 4 - Malo</option>
+                                <option value="3">⭐ 3 - Muy Malo</option>
+                                <option value="2">⭐ 2 - Horrible</option>
+                                <option value="1">⭐ 1 - Desastre</option>
+                            </select>
+                            <div class="file-info">Opcional: Califica del 1 al 10</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Imagen -->
+                    <h4 class="form-section-title">🖼️ Imagen del Anime</h4>
+                    
+                    <div class="form-group form-full-width image-section">
+                        <label for="imagen_url" style="display: none;">🖼️ Imagen del Anime</label>
+                        
+                        <div class="form-row form-row-2">
+                            <!-- Opción de URL (recomendada) -->
+                            <div>
+                                <label for="imagen_url" style="font-size: 0.9rem; color: #28a745;">🌐 URL de imagen (Recomendado)</label>
+                                <input type="url" id="imagen_url" name="imagen_url" class="form-control" 
+                                       placeholder="https://example.com/imagen.jpg" 
+                                       style="margin-top: 5px;">
+                                <div class="file-info">Más rápido y ahorra espacio</div>
+                            </div>
+                            
+                            <!-- Opción de subir archivo -->
+                            <div>
+                                <label for="imagen" style="font-size: 0.9rem; color: #666;">📎 Subir desde dispositivo</label>
+                                <div class="file-input-wrapper" style="margin-top: 5px;">
+                                    <input type="file" id="imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
+                                    <label for="imagen" class="file-input-label">
+                                        📎 JPG, PNG, ICO (máx. 1MB)
+                                    </label>
+                                </div>
+                                <div class="file-info">Imagen desde tu computadora</div>
                             </div>
                         </div>
-                        
-                        <div class="file-info">💡 Tip: Usar URL de imagen es más rápido y ahorra espacio en el servidor</div>
                     </div>
                     
                     <div class="form-buttons">
@@ -1188,113 +1458,129 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 <form id="editAnimeForm" enctype="multipart/form-data">
                     <input type="hidden" id="edit_anime_id" name="anime_id">
                     
-                    <div class="form-group">
+                    <!-- Información básica -->
+                    <h4 class="form-section-title">📝 Información Básica</h4>
+                    
+                    <div class="form-group form-full-width">
                         <label for="edit_nombre">📝 Nombre del Anime (Español)</label>
                         <input type="text" id="edit_nombre" name="nombre" required placeholder="Ej: Ataque a los Titanes">
                     </div>
                     
-                    <div class="form-group">
-                        <label for="edit_titulo_original">🏮 Título Original (Japonés)</label>
-                        <input type="text" id="edit_titulo_original" name="titulo_original" placeholder="Ej: 進撃の巨人">
-                        <div class="file-info">Opcional: Título en idioma original</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit_titulo_ingles">🇺🇸 Título en Inglés</label>
-                        <input type="text" id="edit_titulo_ingles" name="titulo_ingles" placeholder="Ej: Attack on Titan">
-                        <div class="file-info">Opcional: Título oficial en inglés</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit_tipo">🎬 Tipo de Anime</label>
-                        <select id="edit_tipo" name="tipo" required>
-                            <option value="TV">📺 Serie TV</option>
-                            <option value="OVA">💽 OVA</option>
-                            <option value="Película">🎬 Película</option>
-                            <option value="Especial">⭐ Especial</option>
-                            <option value="ONA">🌐 ONA (Web)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit_estado_anime">📊 Estado del Anime</label>
-                        <select id="edit_estado_anime" name="estado_anime" required>
-                            <option value="Finalizado">✅ Finalizado</option>
-                            <option value="Emitiendo">📡 Emitiendo</option>
-                            <option value="Próximamente">🔜 Próximamente</option>
-                            <option value="Cancelado">❌ Cancelado</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit_total_episodios">📊 Total de Episodios</label>
-                        <input type="number" id="edit_total_episodios" name="total_episodios" min="1" placeholder="Ej: 25">
-                        <div class="file-info">Deja vacío si aún no se conoce el total</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit_capitulos_vistos">👁️ Episodios Vistos</label>
-                        <input type="number" id="edit_capitulos_vistos" name="episodios_vistos" min="0" placeholder="Ej: 12">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit_estado">🎯 Mi Estado</label>
-                        <select id="edit_estado" name="estado" required>
-                            <option value="Plan de Ver">⏳ Plan de Ver</option>
-                            <option value="Viendo">👀 Viendo</option>
-                            <option value="Completado">✅ Completado</option>
-                            <option value="En Pausa">⏸️ En Pausa</option>
-                            <option value="Abandonado">❌ Abandonado</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit_puntuacion">⭐ Mi Puntuación</label>
-                        <select id="edit_puntuacion" name="puntuacion">
-                            <option value="">Sin puntuar</option>
-                            <option value="10">⭐ 10 - Obra Maestra</option>
-                            <option value="9">⭐ 9 - Excelente</option>
-                            <option value="8">⭐ 8 - Muy Bueno</option>
-                            <option value="7">⭐ 7 - Bueno</option>
-                            <option value="6">⭐ 6 - Decente</option>
-                            <option value="5">⭐ 5 - Promedio</option>
-                            <option value="4">⭐ 4 - Malo</option>
-                            <option value="3">⭐ 3 - Muy Malo</option>
-                            <option value="2">⭐ 2 - Horrible</option>
-                            <option value="1">⭐ 1 - Desastre</option>
-                        </select>
-                        <div class="file-info">Opcional: Califica el anime del 1 al 10</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="edit_imagen_url">🖼️ Nueva Imagen (opcional)</label>
-                        
-                        <!-- Opción de URL (recomendada) -->
-                        <div style="margin-bottom: 10px;">
-                            <label for="edit_imagen_url" style="font-size: 0.9rem; color: #28a745;">🌐 Nueva URL de imagen</label>
-                            <input type="url" id="edit_imagen_url" name="imagen_url" class="form-control" 
-                                   placeholder="https://example.com/imagen.jpg" 
-                                   style="margin-top: 5px;">
+                    <div class="form-row form-row-2">
+                        <div class="form-group">
+                            <label for="edit_titulo_original">🏮 Título Original (Japonés)</label>
+                            <input type="text" id="edit_titulo_original" name="titulo_original" placeholder="Ej: 進撃の巨人">
+                            <div class="file-info">Opcional: Título en idioma original</div>
                         </div>
                         
-                        <!-- Separador -->
-                        <div style="text-align: center; margin: 15px 0; color: #666;">
-                            <span style="background: white; padding: 0 10px;">O</span>
-                            <hr style="border: none; border-top: 1px solid #ddd; margin-top: -12px;">
+                        <div class="form-group">
+                            <label for="edit_titulo_ingles">🇺🇸 Título en Inglés</label>
+                            <input type="text" id="edit_titulo_ingles" name="titulo_ingles" placeholder="Ej: Attack on Titan">
+                            <div class="file-info">Opcional: Título oficial en inglés</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detalles del anime -->
+                    <h4 class="form-section-title">🎬 Detalles del Anime</h4>
+                    
+                    <div class="form-row form-row-3">
+                        <div class="form-group">
+                            <label for="edit_tipo">🎬 Tipo de Anime</label>
+                            <select id="edit_tipo" name="tipo" required>
+                                <option value="TV">📺 Serie TV</option>
+                                <option value="OVA">💽 OVA</option>
+                                <option value="Película">🎬 Película</option>
+                                <option value="Especial">⭐ Especial</option>
+                                <option value="ONA">🌐 ONA (Web)</option>
+                            </select>
                         </div>
                         
-                        <!-- Opción de subir archivo -->
-                        <div>
-                            <label for="edit_imagen" style="font-size: 0.9rem; color: #666;">📎 Subir nueva imagen</label>
-                            <div class="file-input-wrapper" style="margin-top: 5px;">
-                                <input type="file" id="edit_imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
-                                <label for="edit_imagen" class="file-input-label">
-                                    📎 Cambiar imagen (JPG, PNG, ICO - máx. 1MB)
-                                </label>
+                        <div class="form-group">
+                            <label for="edit_estado_anime">📊 Estado del Anime</label>
+                            <select id="edit_estado_anime" name="estado_anime" required>
+                                <option value="Finalizado">✅ Finalizado</option>
+                                <option value="Emitiendo">📡 Emitiendo</option>
+                                <option value="Próximamente">🔜 Próximamente</option>
+                                <option value="Cancelado">❌ Cancelado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_total_episodios">📊 Total de Episodios</label>
+                            <input type="number" id="edit_total_episodios" name="total_episodios" min="1" placeholder="Ej: 25">
+                            <div class="file-info">Deja vacío si no se conoce</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mi seguimiento -->
+                    <h4 class="form-section-title">🎯 Mi Seguimiento</h4>
+                    
+                    <div class="form-row form-row-3">
+                        <div class="form-group">
+                            <label for="edit_capitulos_vistos">👁️ Episodios Vistos</label>
+                            <input type="number" id="edit_capitulos_vistos" name="episodios_vistos" min="0" placeholder="Ej: 12">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_estado">🎯 Mi Estado</label>
+                            <select id="edit_estado" name="estado" required>
+                                <option value="Plan de Ver">⏳ Plan de Ver</option>
+                                <option value="Viendo">👀 Viendo</option>
+                                <option value="Completado">✅ Completado</option>
+                                <option value="En Pausa">⏸️ En Pausa</option>
+                                <option value="Abandonado">❌ Abandonado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_puntuacion">⭐ Mi Puntuación</label>
+                            <select id="edit_puntuacion" name="puntuacion">
+                                <option value="">Sin puntuar</option>
+                                <option value="10">⭐ 10 - Obra Maestra</option>
+                                <option value="9">⭐ 9 - Excelente</option>
+                                <option value="8">⭐ 8 - Muy Bueno</option>
+                                <option value="7">⭐ 7 - Bueno</option>
+                                <option value="6">⭐ 6 - Decente</option>
+                                <option value="5">⭐ 5 - Promedio</option>
+                                <option value="4">⭐ 4 - Malo</option>
+                                <option value="3">⭐ 3 - Muy Malo</option>
+                                <option value="2">⭐ 2 - Horrible</option>
+                                <option value="1">⭐ 1 - Desastre</option>
+                            </select>
+                            <div class="file-info">Opcional: Califica del 1 al 10</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Imagen -->
+                    <h4 class="form-section-title">🖼️ Nueva Imagen (opcional)</h4>
+                    
+                    <div class="form-group form-full-width image-section">
+                        <label for="edit_imagen_url" style="display: none;">🖼️ Nueva Imagen (opcional)</label>
+                        
+                        <div class="form-row form-row-2">
+                            <!-- Opción de URL -->
+                            <div>
+                                <label for="edit_imagen_url" style="font-size: 0.9rem; color: #28a745;">🌐 Nueva URL de imagen</label>
+                                <input type="url" id="edit_imagen_url" name="imagen_url" class="form-control" 
+                                       placeholder="https://example.com/imagen.jpg" 
+                                       style="margin-top: 5px;">
+                                <div class="file-info">URL de imagen online</div>
+                            </div>
+                            
+                            <!-- Opción de subir archivo -->
+                            <div>
+                                <label for="edit_imagen" style="font-size: 0.9rem; color: #666;">📎 Subir nueva imagen</label>
+                                <div class="file-input-wrapper" style="margin-top: 5px;">
+                                    <input type="file" id="edit_imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
+                                    <label for="edit_imagen" class="file-input-label">
+                                        📎 JPG, PNG, ICO (máx. 1MB)
+                                    </label>
+                                </div>
+                                <div class="file-info">Archivo desde dispositivo</div>
                             </div>
                         </div>
                         
-                        <div class="file-info">💡 Deja ambos campos vacíos para mantener la imagen actual</div>
+                        <div class="file-info" style="text-align: center; margin-top: 10px;">💡 Deja ambos campos vacíos para mantener la imagen actual</div>
                     </div>
                     
                     <div class="form-buttons">
@@ -1381,6 +1667,58 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 
                 <div class="form-buttons" style="margin-top: 30px;">
                     <button type="button" class="btn-cancel" onclick="cerrarModalExportar()">❌ Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para eliminar anime -->
+    <div id="confirmDeleteModal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-modal-icon">🗑️</div>
+                <h3 class="confirm-modal-title">Eliminar Anime</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <div class="confirm-modal-message" id="deleteMessage">
+                    ¿Estás seguro de que quieres eliminar este anime de tu lista?
+                </div>
+                <div class="confirm-modal-submessage">
+                    Esta acción no se puede deshacer y el anime se eliminará permanentemente de tu lista.
+                </div>
+                <div class="confirm-modal-buttons">
+                    <button class="btn-confirm" id="confirmDeleteBtn">
+                        🗑️ Sí, eliminar
+                    </button>
+                    <button class="btn-cancel-confirm" id="cancelDeleteBtn">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para cerrar sesión -->
+    <div id="confirmLogoutModal" class="confirm-modal logout-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-modal-icon">🚪</div>
+                <h3 class="confirm-modal-title">Cerrar Sesión</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <div class="confirm-modal-message">
+                    ¿Estás seguro de que quieres cerrar sesión?
+                </div>
+                <div class="confirm-modal-submessage">
+                    Tendrás que iniciar sesión nuevamente para acceder a tu cuenta.
+                </div>
+                <div class="confirm-modal-buttons">
+                    <button class="btn-confirm" id="confirmLogoutBtn">
+                        🚪 Sí, cerrar sesión
+                    </button>
+                    <button class="btn-cancel-confirm" id="cancelLogoutBtn">
+                        ❌ Cancelar
+                    </button>
                 </div>
             </div>
         </div>

@@ -383,6 +383,16 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             box-shadow: 0 0 15px rgba(255, 71, 87, 0.6);
         }
         
+        .btn-quitar-favorito {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: white;
+        }
+        
+        .btn-quitar-favorito:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 107, 157, 0.6);
+        }
+        
         .estado-badge {
             padding: 4px 12px;
             border-radius: 15px;
@@ -449,6 +459,321 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
         }
         
+        /* Estilos del Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f0f23);
+            margin: 2% auto;
+            padding: 0;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+            padding: 20px;
+            border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 13px 13px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            color: #00ffff;
+            margin: 0;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+        }
+        
+        .close {
+            color: #ff007f;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .close:hover {
+            background: rgba(255, 0, 127, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .form-section-title {
+            color: #ffd700;
+            font-size: 1.2rem;
+            margin: 25px 0 15px 0;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #00ffff;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+        
+        .form-row {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .form-row-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .form-row-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .form-full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .file-info {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn-submit, .btn-cancel {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+        
+        .btn-cancel {
+            background: linear-gradient(135deg, #ff4757, #ff3742);
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.6);
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .file-input-label:hover {
+            border-color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        /* Estilos para modales de confirmación */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+        }
+        
+        .confirm-modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f0f23);
+            margin: 8% auto;
+            padding: 0;
+            border: 2px solid rgba(255, 107, 157, 0.4);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            max-height: 85vh;
+            box-shadow: 0 0 40px rgba(255, 107, 157, 0.3);
+            animation: confirmModalSlideIn 0.4s ease;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @keyframes confirmModalSlideIn {
+            from { transform: translateY(-100px) scale(0.8); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        .confirm-modal-header {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            padding: 25px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 107, 157, 0.3);
+        }
+        
+        .confirm-modal-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .confirm-modal-title {
+            color: white;
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .confirm-modal-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .confirm-modal-message {
+            color: #ffffff;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .confirm-modal-submessage {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            padding: 0 25px 25px 25px;
+            box-sizing: border-box;
+        }
+        
+        .btn-confirm, .btn-cancel-confirm {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            flex: 1;
+            max-width: 130px;
+            min-width: 90px;
+        }
+        
+        .btn-confirm {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: white;
+        }
+        
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(255, 107, 157, 0.6);
+        }
+        
+        .btn-cancel-confirm {
+            background: linear-gradient(135deg, #666, #444);
+            color: white;
+        }
+        
+        .btn-cancel-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(102, 102, 102, 0.6);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .favoritos-header {
@@ -467,6 +792,48 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             
             .animes-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+            
+            .form-row-2, .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+            }
+            
+            .confirm-modal-content {
+                width: 98%;
+                margin: 5% auto;
+            }
+            
+            .confirm-modal-body {
+                padding: 20px;
+            }
+            
+            .btn-confirm, .btn-cancel-confirm {
+                padding: 12px 15px;
+                font-size: 0.85rem;
+                flex: 1;
+                min-width: 85px;
+                max-width: 120px;
+            }
+            
+            .confirm-modal-buttons {
+                gap: 12px;
+                padding: 0 20px 20px 20px;
+                margin: 15px 0 0 0;
+            }
+            
+            .confirm-modal-content {
+                width: 95%;
+                margin: 5% auto;
+                max-width: 380px;
             }
         }
     </style>
@@ -663,8 +1030,8 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
                                 <button class="btn-action btn-editar" data-anime-id="<?= $anime['anime_id'] ?>">
                                     ✏️ Editar
                                 </button>
-                                <button class="btn-action btn-eliminar" data-anime-id="<?= $anime['anime_id'] ?>" data-anime-nombre="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['titulo'] ?? 'Sin nombre') ?>">
-                                    🗑️ Eliminar
+                                <button class="btn-action btn-quitar-favorito" data-anime-id="<?= $anime['anime_id'] ?>" data-anime-nombre="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['titulo'] ?? 'Sin nombre') ?>">
+                                    💔 Quitar de Favoritos
                                 </button>
                             </div>
                         </div>
@@ -674,8 +1041,208 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
         </div>
     </div>
 
+    <!-- Modal de confirmación para quitar de favoritos -->
+    <div id="confirmRemoveFavoriteModal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <div class="confirm-modal-icon">💔</div>
+                <h3 class="confirm-modal-title">Quitar de Favoritos</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <div class="confirm-modal-message" id="removeFavoriteMessage">
+                    ¿Estás seguro de que quieres quitar este anime de tus favoritos?
+                </div>
+                <div class="confirm-modal-submessage">
+                    El anime permanecerá en tu lista, solo se quitará de favoritos. Podrás volver a marcarlo como favorito cuando quieras.
+                </div>
+                <div class="confirm-modal-buttons">
+                    <button class="btn-confirm" id="confirmRemoveFavoriteBtn">
+                        💔 Sí, quitar
+                    </button>
+                    <button class="btn-cancel-confirm" id="cancelRemoveFavoriteBtn">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar anime -->
+    <div id="editAnimeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">✏️ Editar Anime</h2>
+                <span class="close" onclick="cerrarModalEditar()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editAnimeForm" enctype="multipart/form-data">
+                    <input type="hidden" id="edit_anime_id" name="anime_id">
+                    
+                    <!-- Información básica -->
+                    <h4 class="form-section-title">📝 Información Básica</h4>
+                    
+                    <div class="form-group form-full-width">
+                        <label for="edit_nombre">📝 Nombre del Anime (Español)</label>
+                        <input type="text" id="edit_nombre" name="nombre" required placeholder="Ej: Ataque a los Titanes">
+                    </div>
+                    
+                    <div class="form-row form-row-2">
+                        <div class="form-group">
+                            <label for="edit_titulo_original">🏮 Título Original (Japonés)</label>
+                            <input type="text" id="edit_titulo_original" name="titulo_original" placeholder="Ej: 進撃の巨人">
+                            <div class="file-info">Opcional: Título en idioma original</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_titulo_ingles">🇺🇸 Título en Inglés</label>
+                            <input type="text" id="edit_titulo_ingles" name="titulo_ingles" placeholder="Ej: Attack on Titan">
+                            <div class="file-info">Opcional: Título oficial en inglés</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detalles del anime -->
+                    <h4 class="form-section-title">🎬 Detalles del Anime</h4>
+                    
+                    <div class="form-row form-row-3">
+                        <div class="form-group">
+                            <label for="edit_tipo">🎬 Tipo de Anime</label>
+                            <select id="edit_tipo" name="tipo" required>
+                                <option value="TV">📺 Serie TV</option>
+                                <option value="OVA">💽 OVA</option>
+                                <option value="Película">🎬 Película</option>
+                                <option value="Especial">⭐ Especial</option>
+                                <option value="ONA">🌐 ONA (Web)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_estado_anime">📊 Estado del Anime</label>
+                            <select id="edit_estado_anime" name="estado_anime" required>
+                                <option value="Finalizado">✅ Finalizado</option>
+                                <option value="Emitiendo">📡 Emitiendo</option>
+                                <option value="Próximamente">🔜 Próximamente</option>
+                                <option value="Cancelado">❌ Cancelado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_total_episodios">📊 Total de Episodios</label>
+                            <input type="number" id="edit_total_episodios" name="total_episodios" min="1" placeholder="Ej: 25">
+                            <div class="file-info">Deja vacío si no se conoce</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mi seguimiento -->
+                    <h4 class="form-section-title">🎯 Mi Seguimiento</h4>
+                    
+                    <div class="form-row form-row-3">
+                        <div class="form-group">
+                            <label for="edit_capitulos_vistos">👁️ Episodios Vistos</label>
+                            <input type="number" id="edit_capitulos_vistos" name="episodios_vistos" min="0" placeholder="Ej: 12">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_estado">🎯 Mi Estado</label>
+                            <select id="edit_estado" name="estado" required>
+                                <option value="Plan de Ver">⏳ Plan de Ver</option>
+                                <option value="Viendo">👀 Viendo</option>
+                                <option value="Completado">✅ Completado</option>
+                                <option value="En Pausa">⏸️ En Pausa</option>
+                                <option value="Abandonado">❌ Abandonado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit_puntuacion">⭐ Mi Puntuación</label>
+                            <select id="edit_puntuacion" name="puntuacion">
+                                <option value="">Sin puntuar</option>
+                                <option value="10">⭐ 10 - Obra Maestra</option>
+                                <option value="9">⭐ 9 - Excelente</option>
+                                <option value="8">⭐ 8 - Muy Bueno</option>
+                                <option value="7">⭐ 7 - Bueno</option>
+                                <option value="6">⭐ 6 - Decente</option>
+                                <option value="5">⭐ 5 - Promedio</option>
+                                <option value="4">⭐ 4 - Malo</option>
+                                <option value="3">⭐ 3 - Muy Malo</option>
+                                <option value="2">⭐ 2 - Horrible</option>
+                                <option value="1">⭐ 1 - Desastre</option>
+                            </select>
+                            <div class="file-info">Opcional: Califica del 1 al 10</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Imagen -->
+                    <h4 class="form-section-title">🖼️ Nueva Imagen (opcional)</h4>
+                    
+                    <div class="form-group form-full-width image-section">
+                        <label for="edit_imagen_url" style="display: none;">🖼️ Nueva Imagen (opcional)</label>
+                        
+                        <div class="form-row form-row-2">
+                            <!-- Opción de URL -->
+                            <div>
+                                <label for="edit_imagen_url" style="font-size: 0.9rem; color: #28a745;">🌐 Nueva URL de imagen</label>
+                                <input type="url" id="edit_imagen_url" name="imagen_url" class="form-control" 
+                                       placeholder="https://example.com/imagen.jpg" 
+                                       style="margin-top: 5px;">
+                                <div class="file-info">URL de imagen online</div>
+                            </div>
+                            
+                            <!-- Opción de subir archivo -->
+                            <div>
+                                <label for="edit_imagen" style="font-size: 0.9rem; color: #666;">📎 Subir nueva imagen</label>
+                                <div class="file-input-wrapper" style="margin-top: 5px;">
+                                    <input type="file" id="edit_imagen" name="imagen" class="file-input" accept="image/jpeg,image/jpg,image/png,image/x-icon">
+                                    <label for="edit_imagen" class="file-input-label">
+                                        📎 JPG, PNG, ICO (máx. 1MB)
+                                    </label>
+                                </div>
+                                <div class="file-info">Archivo desde dispositivo</div>
+                            </div>
+                        </div>
+                        
+                        <div class="file-info" style="text-align: center; margin-top: 10px;">💡 Deja ambos campos vacíos para mantener la imagen actual</div>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" class="btn-submit">✅ Guardar Cambios</button>
+                        <button type="button" class="btn-cancel" onclick="cerrarModalEditar()">❌ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="../frontend/assets/js/animes.js"></script>
     <script>
+        // Inicializar el AnimeManager cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Crear instancia del AnimeManager si no existe
+            if (typeof animeManager === 'undefined') {
+                window.animeManager = new AnimeManager();
+            }
+            
+            // Configurar event listeners para los botones de editar
+            document.querySelectorAll('.btn-editar').forEach(button => {
+                button.addEventListener('click', function() {
+                    const animeId = this.getAttribute('data-anime-id');
+                    if (animeId && window.animeManager) {
+                        window.animeManager.abrirModalEdicion(animeId);
+                    }
+                });
+            });
+            
+            // Configurar event listeners para los botones de quitar de favoritos
+            document.querySelectorAll('.btn-quitar-favorito').forEach(button => {
+                button.addEventListener('click', function() {
+                    const animeId = this.getAttribute('data-anime-id');
+                    const animeNombre = this.getAttribute('data-anime-nombre');
+                    if (animeId && animeNombre) {
+                        confirmarQuitarDeFavoritos(animeId, animeNombre, this);
+                    }
+                });
+            });
+        });
+        
         // Filtrado específico para favoritos
         document.getElementById('searchInput')?.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
@@ -690,6 +1257,60 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
                 }
             });
         });
+        
+        // Función específica para quitar de favoritos con modal personalizado
+        function confirmarQuitarDeFavoritos(animeId, animeNombre, buttonElement) {
+            const modal = document.getElementById('confirmRemoveFavoriteModal');
+            const removeFavoriteMessage = document.getElementById('removeFavoriteMessage');
+            const confirmBtn = document.getElementById('confirmRemoveFavoriteBtn');
+            const cancelBtn = document.getElementById('cancelRemoveFavoriteBtn');
+            
+            // Actualizar el mensaje con el título del anime
+            removeFavoriteMessage.textContent = `¿Estás seguro de que quieres quitar "${animeNombre}" de tus favoritos?`;
+            
+            // Mostrar el modal
+            modal.style.display = 'flex';
+            
+            // Configurar los botones
+            confirmBtn.onclick = () => {
+                modal.style.display = 'none';
+                
+                // Buscar el botón de estrella de favoritos en la misma tarjeta
+                const card = buttonElement.closest('.anime-card');
+                const favoriteButton = card.querySelector('.favorite-btn.favorito');
+                
+                if (favoriteButton) {
+                    // Simular clic en el botón de estrella para quitar de favoritos
+                    favoriteButton.click();
+                } else {
+                    // Si no encuentra el botón, llamar directamente a toggleFavorito
+                    if (typeof toggleFavorito === 'function') {
+                        toggleFavorito(animeId, favoriteButton);
+                    }
+                }
+            };
+            
+            cancelBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+            
+            // Cerrar con escape
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    modal.style.display = 'none';
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            
+            document.addEventListener('keydown', handleEscape);
+            
+            // Cerrar al hacer clic en el fondo
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
         
         // Override del toggleFavorito para actualizar la página cuando se quite un favorito
         const originalToggleFavorito = window.toggleFavorito;

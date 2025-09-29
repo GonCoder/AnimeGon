@@ -218,11 +218,43 @@ class AnimeManager {
 
     // Confirmar eliminación
     confirmarEliminar(animeId, animeNombre) {
-        const confirmar = confirm(`🗑️ ¿Estás seguro de que quieres eliminar "${animeNombre}" de tu lista?\n\nEsta acción no se puede deshacer.`);
+        const modal = document.getElementById('confirmDeleteModal');
+        const deleteMessage = document.getElementById('deleteMessage');
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const cancelBtn = document.getElementById('cancelDeleteBtn');
         
-        if (confirmar) {
+        // Actualizar el mensaje con el título del anime
+        deleteMessage.textContent = `¿Estás seguro de que quieres eliminar "${animeNombre}" de tu lista?`;
+        
+        // Mostrar el modal
+        modal.style.display = 'flex';
+        
+        // Configurar los botones
+        confirmBtn.onclick = () => {
+            modal.style.display = 'none';
             this.eliminarAnime(animeId, animeNombre);
-        }
+        };
+        
+        cancelBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+        
+        // Cerrar con escape
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                modal.style.display = 'none';
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        
+        document.addEventListener('keydown', handleEscape);
+        
+        // Cerrar al hacer clic en el fondo
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
     }
 
     // Eliminar anime
