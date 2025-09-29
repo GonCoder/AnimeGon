@@ -364,9 +364,23 @@ $animes_hub = obtenerAnimesHub($usuario_id);
         }
         
         .rating-badge.sin-puntuaciones {
-            background: rgba(108, 117, 125, 0.3);
-            color: #6c757d;
-            border: 1px solid rgba(108, 117, 125, 0.4);
+            background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+            color: #00ff00;
+            border: 1px dashed #00ff00;
+            animation: pulse 2s infinite;
+        }
+
+        .rating-badge.sin-puntuaciones:hover {
+            background: linear-gradient(135deg, #004400 0%, #006600 100%);
+            border: 1px solid #00ff00;
+            animation: none;
+            transform: scale(1.05);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
         }
         
         /* Estilos para estado del anime */
@@ -1061,8 +1075,11 @@ $animes_hub = obtenerAnimesHub($usuario_id);
                                           title="Ver todas las puntuaciones (<?= $anime['total_valoraciones'] ?> valoraciones)">
                                         ⭐ <?= number_format($anime['puntuacion_promedio'], 1) ?> (<?= $anime['total_valoraciones'] ?>)
                                     </span>
-                                <?php elseif ($anime['usuarios_que_lo_tienen'] > 0): ?>
-                                    <span class="rating-badge sin-puntuaciones" title="Sin puntuaciones aún">
+                                <?php else: ?>
+                                    <span class="rating-badge clickeable sin-puntuaciones" 
+                                          data-anime-id="<?= $anime['id'] ?>"
+                                          data-anime-titulo="<?= htmlspecialchars($anime['titulo']) ?>"
+                                          title="¡Sé el primero en puntuar este anime!">
                                         ⭐ Sin valorar
                                     </span>
                                 <?php endif; ?>
