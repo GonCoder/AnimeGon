@@ -619,24 +619,49 @@ function cerrarModalExportar() {
 }
 
 // Función para exportar en el formato seleccionado
-function exportarEnFormato(formato) {
+async function exportarEnFormato(formato) {
     // Cerrar el modal primero
     cerrarModalExportar();
     
-    // Crear enlace de descarga
-    const url = `../backend/api/exportar_lista.php?formato=${formato}`;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = '';
-    link.style.display = 'none';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Mostrar mensaje informativo
-    const tipoFormato = formato === 'json' ? 'JSON (reimportable)' : 'TXT (solo lectura)';
-    mostrarMensajeTemporal(`📤 Exportando lista en formato ${tipoFormato}...`, 'info');
+    try {
+        mostrarMensajeTemporal('📤 Preparando exportación...', 'info');
+        
+        // Primero verificar que el endpoint responde
+        const url = `../backend/api/exportar_lista.php?formato=${formato}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Error ${response.status}: ${errorText}`);
+        }
+        
+        // Si la respuesta es JSON y contiene error, mostrarlo
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const jsonResponse = await response.json();
+            if (jsonResponse.error) {
+                throw new Error(jsonResponse.error);
+            }
+        }
+        
+        // Crear enlace de descarga
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = '';
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Mostrar mensaje informativo
+        const tipoFormato = formato === 'json' ? 'JSON (reimportable)' : 'TXT (solo lectura)';
+        mostrarMensajeTemporal(`✅ Lista exportada en formato ${tipoFormato}`, 'success');
+        
+    } catch (error) {
+        console.error('Error en exportación:', error);
+        mostrarMensajeTemporal(`❌ Error al exportar: ${error.message}`, 'error');
+    }
 }
 
 // Función para abrir modal de importar

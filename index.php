@@ -23,7 +23,7 @@ $mostrarMensajeLogout = isset($_GET['logout']) && $_GET['logout'] == '1';
         <div class="container">
             <nav class="nav">
                 <div class="logo">
-                    <h1>AnimeGon</h1>
+                    <h1 style="margin-right: 30px;">AnimeGon</h1>
                 </div>
                 <div class="nav-links">
                     <a href="views/login.php" class="btn-nav">Iniciar Sesión</a>
