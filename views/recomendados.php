@@ -1051,17 +1051,21 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                     body: formData
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
                 
                 if (result.success) {
                     cerrarModalRecomendacion();
-                    mostrarModalMensaje('success', '¡Éxito!', `Recomendación enviada exitosamente a ${selectedUsers.length} usuario(s)`);
+                    mostrarModalMensaje('success', '¡Éxito!', result.message || `Recomendación enviada exitosamente a ${selectedUsers.length} usuario(s)`);
                 } else {
                     mostrarModalMensaje('error', 'Error', result.message);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                mostrarModalMensaje('error', 'Error de Conexión', 'Error de conexión al enviar la recomendación');
+                console.error('Error completo:', error);
+                mostrarModalMensaje('error', 'Error de Conexión', 'Error de conexión al enviar la recomendación: ' + error.message);
             }
         });
 
@@ -1124,24 +1128,32 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             const formData = new FormData(this);
             
             try {
-                const response = await fetch('../backend/api/procesar_anime.php', {
+                const response = await fetch('../backend/api/procesar_recomendacion.php', {
                     method: 'POST',
                     body: formData
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
                 const result = await response.json();
                 
                 if (result.success) {
                     cerrarModalAgregar();
-                    mostrarModalMensaje('success', '¡Éxito!', 'Anime agregado exitosamente a tu lista', function() {
+                    let mensaje = result.message;
+                    if (result.data && result.data.debug_info) {
+                        console.log('Debug info:', result.data.debug_info);
+                    }
+                    mostrarModalMensaje('success', '¡Éxito!', mensaje, function() {
                         location.reload();
                     });
                 } else {
                     mostrarModalMensaje('error', 'Error', result.message);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                mostrarModalMensaje('error', 'Error de Conexión', 'Error de conexión al procesar la solicitud');
+                console.error('Error completo:', error);
+                mostrarModalMensaje('error', 'Error de Conexión', 'Error de conexión al procesar la solicitud: ' + error.message);
             }
         });
 
