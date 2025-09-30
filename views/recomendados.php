@@ -164,18 +164,23 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             justify-content: space-between;
             align-items: center;
             padding: 0 20px;
+            position: relative;
         }
         
         .nav-logo h2 {
             color: #da70d6;
             text-shadow: 0 0 20px rgba(218, 112, 214, 0.6);
             font-size: 1.8rem;
+            margin: 0;
         }
         
         .nav-menu {
             display: flex;
             gap: 2rem;
             align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
         
         .nav-link {
@@ -185,6 +190,7 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             border-radius: 25px;
             transition: all 0.3s ease;
             border: 2px solid transparent;
+            white-space: nowrap;
         }
         
         .nav-link:hover {
@@ -197,6 +203,107 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             background: linear-gradient(135deg, #8a2be2, #da70d6);
             color: white;
             border-color: transparent;
+        }
+        
+        /* Botón hamburguesa */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1001;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: #da70d6;
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(218, 112, 214, 0.5);
+        }
+        
+        /* Animación del botón hamburguesa */
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+        
+        /* Estilos para menú móvil */
+        .nav-menu.mobile {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
+            backdrop-filter: blur(20px);
+            padding-top: 80px;
+            gap: 0;
+            transition: left 0.3s ease;
+            border-right: 2px solid rgba(138, 43, 226, 0.4);
+            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .nav-menu.mobile.active {
+            left: 0;
+        }
+        
+        .nav-menu.mobile .nav-link {
+            width: 100%;
+            padding: 15px 25px;
+            border-radius: 0;
+            border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+            text-align: left;
+            font-size: 1.1rem;
+            color: white !important;
+            display: block;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-menu.mobile .nav-link:hover {
+            background: rgba(138, 43, 226, 0.3);
+            color: #da70d6 !important;
+            border-left: 4px solid #da70d6;
+            transform: translateX(5px);
+        }
+        
+        .nav-menu.mobile .nav-link.active {
+            background: linear-gradient(135deg, #8a2be2, #da70d6);
+            color: white !important;
+            border-left: 4px solid #ffffff;
+        }
+        
+        /* Overlay para cerrar menú móvil */
+        .nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            transition: opacity 0.3s ease;
+        }
+        
+        .nav-overlay.active {
+            display: block;
+            opacity: 1;
         }
         
         /* Estilos específicos para la página de recomendados */
@@ -751,19 +858,114 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
         }
         
         /* Responsive design */
+        @media (max-width: 992px) {
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .nav-link {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .nav-logo h2 {
+                font-size: 1.6rem;
+            }
+        }
+        
         @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+                order: 3;
+            }
+            
+            .nav-menu:not(.mobile) {
+                display: none;
+            }
+            
+            .nav-menu.mobile {
+                display: flex;
+            }
+            
+            .nav-container {
+                padding: 0 15px;
+            }
+            
+            .nav-logo {
+                order: 1;
+            }
+            
+            .user-indicator {
+                order: 2;
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+            
             .recommendations-container {
                 flex-direction: column;
                 height: auto;
+                gap: 15px;
             }
             
             .recommendations-section {
-                height: 50vh;
+                height: auto;
+                min-height: 40vh;
+            }
+            
+            .recomendados-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .recomendados-title {
+                font-size: 2rem;
+            }
+            
+            .search-input-recommend {
+                max-width: 100%;
             }
             
             .confirm-modal-content, .message-modal-content {
                 margin: 20% auto;
                 width: 95%;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+            
+            .anime-card-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .anime-card-image {
+                align-self: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-logo h2 {
+                font-size: 1.4rem;
+            }
+            
+            .user-indicator {
+                display: none;
+            }
+            
+            .recomendados-title {
+                font-size: 1.5rem;
+            }
+            
+            .nav-menu.mobile {
+                width: 90%;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -773,9 +975,14 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
         <div class="nav-container">
             <div class="nav-logo">
                 <h2>🎌 AnimeGon</h2>
-                <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
             </div>
-            <div class="nav-menu">
+            <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
+            <div class="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="nav-menu" id="navMenu">
                 <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
                 <a href="mis_animes.php" class="nav-link">📺 Mis Animes</a>
                 <a href="favoritos.php" class="nav-link">⭐ Favoritos</a>
@@ -784,6 +991,7 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                 <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
             </div>
         </div>
+        <div class="nav-overlay" id="navOverlay" onclick="closeMobileMenu()"></div>
     </nav>
 
     <div class="recomendados-container">
@@ -1241,6 +1449,65 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             }
         }
 
+        // Funciones para el menú hamburguesa
+        window.toggleMobileMenu = function() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.getElementById('navMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            
+            console.log('Toggle menu called');
+            console.log('Menu element:', navMenu);
+            
+            hamburger.classList.toggle('active');
+            
+            // Si el menú no tiene la clase mobile, agregarla
+            if (!navMenu.classList.contains('mobile')) {
+                navMenu.classList.add('mobile');
+            }
+            
+            navMenu.classList.toggle('active');
+            navOverlay.classList.toggle('active');
+            
+            console.log('Menu classes:', navMenu.className);
+            
+            // Prevenir scroll del body cuando el menú está abierto
+            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : 'auto';
+        }
+        
+        window.closeMobileMenu = function() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.getElementById('navMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            
+            console.log('Close menu called');
+            
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+            navOverlay.classList.remove('active');
+            
+            // En desktop, remover la clase mobile completamente
+            if (window.innerWidth > 768) {
+                navMenu.classList.remove('mobile');
+            }
+            
+            // Restaurar scroll del body
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Cerrar menú móvil al hacer clic en un enlace
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                closeMobileMenu();
+            });
+        });
+        
+        // Cerrar menú móvil al redimensionar la ventana a desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeMobileMenu();
+            }
+        });
+        
         }); // Fin del DOMContentLoaded
     </script>
 

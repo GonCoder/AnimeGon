@@ -993,7 +993,49 @@ $animes_hub = obtenerAnimesHub($usuario_id);
         }
 
         /* Responsive */
+        @media (max-width: 992px) {
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .nav-link {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .nav-logo h2 {
+                font-size: 1.6rem;
+            }
+        }
+        
         @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+                order: 3;
+            }
+            
+            .nav-menu:not(.mobile) {
+                display: none;
+            }
+            
+            .nav-menu.mobile {
+                display: flex;
+            }
+            
+            .nav-container {
+                padding: 0 15px;
+            }
+            
+            .nav-logo {
+                order: 1;
+            }
+            
+            .user-indicator {
+                order: 2;
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+            
             .hub-header {
                 flex-direction: column;
                 align-items: stretch;
@@ -1025,6 +1067,20 @@ $animes_hub = obtenerAnimesHub($usuario_id);
                 flex-direction: column;
             }
         }
+        
+        @media (max-width: 480px) {
+            .nav-logo h2 {
+                font-size: 1.4rem;
+            }
+            
+            .user-indicator {
+                display: none;
+            }
+            
+            .nav-menu.mobile {
+                width: 90%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1032,9 +1088,14 @@ $animes_hub = obtenerAnimesHub($usuario_id);
         <div class="nav-container">
             <div class="nav-logo">
                 <h2>🎌 AnimeGon</h2>
-                <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
             </div>
-            <div class="nav-menu">
+            <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
+            <div class="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="nav-menu" id="navMenu">
                 <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
                 <a href="mis_animes.php" class="nav-link">📺 Mis Animes</a>
                 <a href="favoritos.php" class="nav-link">⭐ Favoritos</a>
@@ -1043,6 +1104,7 @@ $animes_hub = obtenerAnimesHub($usuario_id);
                 <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
             </div>
         </div>
+        <div class="nav-overlay" id="navOverlay" onclick="closeMobileMenu()"></div>
     </nav>
 
     <div class="hub-container">
@@ -1811,6 +1873,57 @@ $animes_hub = obtenerAnimesHub($usuario_id);
             currentAnimeId = null;
             currentRating = 0;
         }
+        
+        // Funciones para el menú hamburguesa
+        window.toggleMobileMenu = function() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.getElementById('navMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            
+            hamburger.classList.toggle('active');
+            
+            if (!navMenu.classList.contains('mobile')) {
+                navMenu.classList.add('mobile');
+            }
+            
+            navMenu.classList.toggle('active');
+            navOverlay.classList.toggle('active');
+            
+            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : 'auto';
+        }
+        
+        window.closeMobileMenu = function() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.getElementById('navMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+            navOverlay.classList.remove('active');
+            
+            if (window.innerWidth > 768) {
+                navMenu.classList.remove('mobile');
+            }
+            
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Event listeners para el menú hamburguesa
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cerrar menú móvil al hacer clic en un enlace
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    closeMobileMenu();
+                });
+            });
+            
+            // Cerrar menú móvil al redimensionar la ventana a desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    closeMobileMenu();
+                }
+            });
+        });
     </script>
 </body>
 </html>

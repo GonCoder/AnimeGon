@@ -1248,9 +1248,14 @@ $animes = obtenerAnimesUsuario($usuario_id);
         <div class="nav-container">
             <div class="nav-logo">
                 <h2>🎌 AnimeGon</h2>
-                <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
             </div>
-            <div class="nav-menu">
+            <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
+            <div class="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="nav-menu" id="navMenu">
                 <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
                 <a href="mis_animes.php" class="nav-link active">📺 Mis Animes</a>
                 <a href="favoritos.php" class="nav-link">⭐ Favoritos</a>
@@ -1259,6 +1264,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
             </div>
         </div>
+        <div class="nav-overlay" id="navOverlay" onclick="closeMobileMenu()"></div>
     </nav>
 
     <div class="animes-container">

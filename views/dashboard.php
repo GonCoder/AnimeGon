@@ -399,6 +399,136 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             flex-shrink: 0 !important;
         }
 
+        /* Estilos del menú hamburguesa para dashboard */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1006;
+            position: relative;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: #00ff41;
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+        
+        /* Animación del botón hamburguesa */
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+        
+        /* Estilos para menú móvil del dashboard */
+        .nav.mobile {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(0, 26, 21, 0.98), rgba(0, 33, 28, 0.98));
+            backdrop-filter: blur(20px);
+            padding-top: 80px;
+            z-index: 1002;
+            transition: left 0.3s ease;
+            border-right: 2px solid rgba(0, 255, 65, 0.4);
+            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .nav.mobile.active {
+            left: 0;
+        }
+        
+        .nav.mobile ul {
+            flex-direction: column !important;
+            gap: 0 !important;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            position: relative;
+            z-index: 1003;
+        }
+        
+        .nav.mobile ul li {
+            width: 100%;
+            position: relative;
+            z-index: 1004;
+        }
+        
+        .nav.mobile ul li a {
+            width: 100%;
+            padding: 15px 25px !important;
+            border-radius: 0 !important;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+            text-align: left;
+            font-size: 1.1rem !important;
+            color: white !important;
+            display: block;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1005;
+            pointer-events: auto;
+        }
+        
+        .nav.mobile ul li a:hover {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41 !important;
+            border-left: 4px solid #00ff41;
+            transform: translateX(5px);
+        }
+        
+        .nav.mobile ul li a.active {
+            background: linear-gradient(135deg, #ff007f, #00ff41);
+            color: white !important;
+            border-left: 4px solid #ffffff;
+        }
+        
+        /* Overlay para cerrar menú móvil - solo área clickeable */
+        .nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 300px;
+            width: calc(100% - 300px);
+            height: 100%;
+            background: transparent;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Media query para overlay responsive */
+        @media (max-width: 480px) {
+            .nav-overlay {
+                left: 90vw;
+                width: 10vw;
+            }
+        }
+        
+        /* Eliminar fondo oscuro - no necesario */
+        .nav-overlay-full {
+            display: none;
+        }
+
         .user-name {
             font-size: 0.85rem !important;
             white-space: nowrap !important;
@@ -958,6 +1088,78 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
         }
+
+        /* Media queries responsive para dashboard */
+        @media (max-width: 992px) {
+            .header-content {
+                gap: 15px !important;
+            }
+            
+            .nav ul {
+                gap: 10px !important;
+            }
+            
+            .nav ul li a {
+                font-size: 0.8rem !important;
+                padding: 6px 8px !important;
+            }
+            
+            .logo {
+                font-size: 1.6rem !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+                order: 3;
+            }
+            
+            .nav:not(.mobile) {
+                display: none !important;
+            }
+            
+            .nav.mobile {
+                display: block;
+            }
+            
+            .header-content {
+                padding: 0 15px;
+                position: relative;
+            }
+            
+            .logo {
+                order: 1;
+            }
+            
+            .user-menu {
+                order: 2;
+                gap: 8px !important;
+            }
+            
+            .user-name {
+                font-size: 0.8rem !important;
+            }
+            
+            .btn-logout {
+                font-size: 0.8rem !important;
+                padding: 4px 8px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.4rem !important;
+            }
+            
+            .user-name {
+                display: none;
+            }
+            
+            .nav.mobile {
+                width: 90%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -965,7 +1167,16 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
         <div class="container">
             <div class="header-content">
                 <h1 class="logo">AnimeGon</h1>
-                <nav class="nav">
+                <div class="user-menu">
+                    <span class="user-name">🟢 <?= escape($usuario['nombre']) ?></span>
+                    <a href="logout.php" class="btn-logout" title="Cerrar sesión con confirmación">🔴Salir</a>
+                </div>
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <nav class="nav" id="navMenu">
                     <ul>
                         <li><a href="dashboard.php" class="active">Inicio</a></li>
                         <li><a href="mis_animes.php">Mis Animes</a></li>
@@ -975,12 +1186,9 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                         <li><a href="#perfil">Mi Perfil</a></li>
                     </ul>
                 </nav>
-                <div class="user-menu">
-                    <span class="user-name">🟢 <?= escape($usuario['nombre']) ?></span>
-                    <a href="logout.php" class="btn-logout" title="Cerrar sesión con confirmación">🔴Salir</a>
-                </div>
             </div>
         </div>
+        <div class="nav-overlay" id="navOverlay" onclick="closeMobileMenu()"></div>
     </header>
 
     <main class="main">
@@ -1658,6 +1866,59 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             </div>
         </div>
     </div>
+
+    <script>
+        // Funciones para el menú hamburguesa
+        window.toggleMobileMenu = function() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.getElementById('navMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            
+            hamburger.classList.toggle('active');
+            
+            if (!navMenu.classList.contains('mobile')) {
+                navMenu.classList.add('mobile');
+            }
+            
+            navMenu.classList.toggle('active');
+            navOverlay.classList.toggle('active');
+            
+            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : 'auto';
+        }
+        
+        window.closeMobileMenu = function() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.getElementById('navMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+            navOverlay.classList.remove('active');
+            
+            if (window.innerWidth > 768) {
+                navMenu.classList.remove('mobile');
+            }
+            
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Event listeners para el menú hamburguesa
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cerrar menú móvil al hacer clic en un enlace
+            document.querySelectorAll('.nav ul li a').forEach(link => {
+                link.addEventListener('click', () => {
+                    closeMobileMenu();
+                });
+            });
+            
+            // Cerrar menú móvil al redimensionar la ventana a desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
