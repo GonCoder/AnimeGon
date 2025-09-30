@@ -124,13 +124,24 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             position: relative;
         }
         
-        /* Botón hamburguesa */
+        /* Menú hamburguesa */
         .hamburger {
             display: none;
             flex-direction: column;
             cursor: pointer;
-            padding: 5px;
-            z-index: 1001;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1006;
+        }
+        
+        .hamburger:hover {
+            background: rgba(0, 255, 0, 0.2);
+            border-color: rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
         }
         
         .hamburger span {
@@ -138,12 +149,11 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             height: 3px;
             background: #00ff00;
             margin: 3px 0;
-            transition: 0.3s;
+            transition: all 0.3s ease;
             border-radius: 2px;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
         }
         
-        /* Animación del botón hamburguesa */
         .hamburger.active span:nth-child(1) {
             transform: rotate(-45deg) translate(-5px, 6px);
         }
@@ -156,71 +166,79 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             transform: rotate(45deg) translate(-5px, -6px);
         }
         
-        /* Estilos para menú móvil */
+        /* Menú móvil */
         .nav-menu.mobile {
+            display: none;
             position: fixed;
             top: 0;
-            left: -100%;
-            width: 80%;
-            max-width: 300px;
+            right: -100%;
+            width: 280px;
             height: 100vh;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
             background: linear-gradient(135deg, rgba(0, 46, 26, 0.98), rgba(0, 62, 33, 0.98));
-            backdrop-filter: blur(20px);
-            padding-top: 80px;
+            backdrop-filter: blur(15px);
+            border-left: 2px solid rgba(0, 255, 0, 0.3);
+            padding: 80px 20px 20px;
+            flex-direction: column;
             gap: 0;
-            transition: left 0.3s ease;
-            border-right: 2px solid rgba(0, 255, 0, 0.4);
-            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1005;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
         }
         
-        .nav-menu.mobile.active {
-            left: 0;
+        .nav-menu.mobile.show {
+            right: 0;
+            display: flex;
+        }
+        
+        .nav-menu.mobile li {
+            list-style: none;
+            width: 100%;
         }
         
         .nav-menu.mobile .nav-link {
-            width: 100%;
-            padding: 15px 25px;
-            border-radius: 0;
-            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
-            text-align: left;
-            font-size: 1.1rem;
-            color: white !important;
-            display: block;
-            text-decoration: none;
+            padding: 15px 20px;
+            margin: 5px 0;
+            border-radius: 10px;
             transition: all 0.3s ease;
+            color: #ffffff;
+            text-decoration: none;
+            border: 2px solid transparent;
+            background: rgba(0, 255, 0, 0.05);
+            backdrop-filter: blur(10px);
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .nav-menu.mobile .nav-link:hover {
-            background: rgba(0, 255, 0, 0.2);
-            color: #00ff00 !important;
-            border-left: 4px solid #00ff00;
-            transform: translateX(5px);
+            background: rgba(0, 255, 0, 0.15);
+            border-color: rgba(0, 255, 0, 0.3);
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.2);
         }
         
         .nav-menu.mobile .nav-link.active {
-            background: linear-gradient(135deg, #00ff00, #32cd32);
-            color: white !important;
-            border-left: 4px solid #ffffff;
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(50, 205, 50, 0.2));
+            border-color: #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         }
         
-        /* Overlay para cerrar menú móvil */
-        .nav-overlay {
+        /* Overlay del menú */
+        .mobile-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 999;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
             transition: opacity 0.3s ease;
         }
         
-        .nav-overlay.active {
+        .mobile-overlay.show {
             display: block;
             opacity: 1;
         }
@@ -948,7 +966,49 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
         }
 
         /* Responsive */
+        @media (max-width: 992px) {
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .nav-link {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .nav-logo h2 {
+                font-size: 1.6rem;
+            }
+        }
+        
         @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+                order: 3;
+            }
+            
+            .nav-menu:not(.mobile) {
+                display: none;
+            }
+            
+            .nav-menu.mobile {
+                display: flex;
+            }
+            
+            .nav-container {
+                padding: 0 15px;
+            }
+            
+            .nav-logo {
+                order: 1;
+            }
+            
+            .user-indicator {
+                order: 2;
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+            
             .favoritos-header {
                 flex-direction: column;
                 align-items: stretch;
@@ -1009,6 +1069,21 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
                 max-width: 380px;
             }
         }
+        
+        @media (max-width: 480px) {
+            .nav-menu.mobile {
+                width: 90vw;
+            }
+            
+            .nav-logo h2 {
+                font-size: 1.4rem;
+            }
+            
+            .user-indicator {
+                font-size: 0.7rem;
+                padding: 3px 6px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1017,22 +1092,34 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             <div class="nav-logo">
                 <h2>🎌 AnimeGon</h2>
             </div>
+            <ul class="nav-menu">
+                <li><a href="dashboard.php" class="nav-link">📊 Dashboard</a></li>
+                <li><a href="mis_animes.php" class="nav-link">📺 Mis Animes</a></li>
+                <li><a href="favoritos.php" class="nav-link active">⭐ Favoritos</a></li>
+                <li><a href="recomendados.php" class="nav-link">🎯 Recomendados</a></li>
+                <li><a href="hub.php" class="nav-link">🌐 Hub</a></li>
+                <li><a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a></li>
+            </ul>
             <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
             <div class="hamburger" onclick="toggleMobileMenu()">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
-            <div class="nav-menu" id="navMenu">
-                <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
-                <a href="mis_animes.php" class="nav-link">📺 Mis Animes</a>
-                <a href="favoritos.php" class="nav-link active">⭐ Favoritos</a>
-                <a href="recomendados.php" class="nav-link">🎯 Recomendados</a>
-                <a href="hub.php" class="nav-link">🌐 Hub</a>
-                <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
-            </div>
         </div>
-        <div class="nav-overlay" id="navOverlay" onclick="closeMobileMenu()"></div>
+        
+        <!-- Menú móvil -->
+        <ul class="nav-menu mobile" id="mobileMenu">
+            <li><a href="dashboard.php" class="nav-link" onclick="closeMobileMenu()">📊 Dashboard</a></li>
+            <li><a href="mis_animes.php" class="nav-link" onclick="closeMobileMenu()">📺 Mis Animes</a></li>
+            <li><a href="favoritos.php" class="nav-link active" onclick="closeMobileMenu()">⭐ Favoritos</a></li>
+            <li><a href="recomendados.php" class="nav-link" onclick="closeMobileMenu()">🎯 Recomendados</a></li>
+            <li><a href="hub.php" class="nav-link" onclick="closeMobileMenu()">🌐 Hub</a></li>
+            <li><a href="logout.php" class="nav-link" onclick="closeMobileMenu()">🔴 Cerrar Sesión</a></li>
+        </ul>
+        
+        <!-- Overlay para cerrar el menú -->
+        <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
     </nav>
 
     <div class="favoritos-container">
@@ -1520,38 +1607,37 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             }, 1000);
         };
         
-        // Funciones para el menú hamburguesa
-        window.toggleMobileMenu = function() {
+        // Funciones del menú hamburguesa
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileOverlay = document.getElementById('mobileOverlay');
             const hamburger = document.querySelector('.hamburger');
-            const navMenu = document.getElementById('navMenu');
-            const navOverlay = document.getElementById('navOverlay');
             
-            hamburger.classList.toggle('active');
-            
-            if (!navMenu.classList.contains('mobile')) {
-                navMenu.classList.add('mobile');
+            if (mobileMenu && mobileOverlay && hamburger) {
+                const isOpen = mobileMenu.classList.contains('show');
+                
+                if (isOpen) {
+                    closeMobileMenu();
+                } else {
+                    mobileMenu.classList.add('show');
+                    mobileOverlay.classList.add('show');
+                    hamburger.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
             }
-            
-            navMenu.classList.toggle('active');
-            navOverlay.classList.toggle('active');
-            
-            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : 'auto';
         }
         
-        window.closeMobileMenu = function() {
+        function closeMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileOverlay = document.getElementById('mobileOverlay');
             const hamburger = document.querySelector('.hamburger');
-            const navMenu = document.getElementById('navMenu');
-            const navOverlay = document.getElementById('navOverlay');
             
-            hamburger.classList.remove('active');
-            navMenu.classList.remove('active');
-            navOverlay.classList.remove('active');
-            
-            if (window.innerWidth > 768) {
-                navMenu.classList.remove('mobile');
+            if (mobileMenu && mobileOverlay && hamburger) {
+                mobileMenu.classList.remove('show');
+                mobileOverlay.classList.remove('show');
+                hamburger.classList.remove('active');
+                document.body.style.overflow = '';
             }
-            
-            document.body.style.overflow = 'auto';
         }
         
         // Event listeners para el menú hamburguesa
