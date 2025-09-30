@@ -979,7 +979,8 @@ if (!$usuario) {
                         <div class="username-section">
                             <div class="username-current">
                                 <span class="username-label">Nombre de usuario actual:</span>
-                                <span class="username-value">@<?= htmlspecialchars($usuario['username']) ?></span>
+                                <span class="username-value" id="usernameDisplay">@<?= str_repeat('*', strlen($usuario['username'])) ?></span>
+                                <span class="username-value" id="usernameReal" style="display: none;">@<?= htmlspecialchars($usuario['username']) ?></span>
                             </div>
                             
                             <button type="button" class="btn btn-secondary" id="revealUsernameBtn" onclick="toggleUsernameEdit()">
@@ -1213,6 +1214,10 @@ if (!$usuario) {
                     body: formData
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1224,8 +1229,8 @@ if (!$usuario) {
                     mostrarMensaje(result.message, 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                mostrarMensaje('Error al actualizar el nombre', 'error');
+                console.error('Error completo:', error);
+                mostrarMensaje('Error de conexión al actualizar el nombre: ' + error.message, 'error');
             }
         });
 
@@ -1233,13 +1238,21 @@ if (!$usuario) {
         window.toggleUsernameEdit = function() {
             const editForm = document.getElementById('usernameEditForm');
             const button = document.getElementById('revealUsernameBtn');
+            const usernameDisplay = document.getElementById('usernameDisplay');
+            const usernameReal = document.getElementById('usernameReal');
             
             if (editForm.style.display === 'none') {
+                // Mostrar el formulario y revelar el username real
                 editForm.style.display = 'block';
+                usernameDisplay.style.display = 'none';
+                usernameReal.style.display = 'inline';
                 button.innerHTML = '👁️ Ocultar editor de usuario';
                 button.classList.add('active');
             } else {
+                // Ocultar el formulario y mostrar asteriscos
                 editForm.style.display = 'none';
+                usernameDisplay.style.display = 'inline';
+                usernameReal.style.display = 'none';
                 button.innerHTML = '👁️ Mostrar editor de usuario';
                 button.classList.remove('active');
                 // Limpiar el formulario cuando se oculte
@@ -1279,7 +1292,8 @@ if (!$usuario) {
                 if (result.success) {
                     mostrarMensaje(result.message, 'success');
                     // Actualizar el username en la página
-                    document.querySelector('.username-value').textContent = '@' + nuevoUsername;
+                    document.getElementById('usernameReal').textContent = '@' + nuevoUsername;
+                    document.getElementById('usernameDisplay').textContent = '@' + '*'.repeat(nuevoUsername.length);
                     // Ocultar el formulario
                     toggleUsernameEdit();
                 } else {

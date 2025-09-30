@@ -6,73 +6,7 @@ require_once '../config/funciones.php';
 // Verificar que el usuario esté logueado
 if (!isset($_SESSION['usuario_id'])) {
     http_response_code(401);
-       } catch (PDOException $e) {
-        error_log("Error al cambiar contraseña: " . $e->getMessage());
-        return ['success' => false, 'message' => 'Error al actualizar la contraseña'];
-    }
-}
-
-// Función para cambiar el username
-function cambiarUsername($conexion, $usuario_id, $datos) {
-    try {
-        // Validar datos de entrada
-        $nuevo_username = trim($datos['nuevo_username'] ?? '');
-        $password_actual = trim($datos['password_username'] ?? '');
-        
-        if (empty($nuevo_username) || empty($password_actual)) {
-            return ['success' => false, 'message' => 'Todos los campos son obligatorios'];
-        }
-        
-        // Validaciones del username
-        if (strlen($nuevo_username) < 3 || strlen($nuevo_username) > 30) {
-            return ['success' => false, 'message' => 'El nombre de usuario debe tener entre 3 y 30 caracteres'];
-        }
-        
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $nuevo_username)) {
-            return ['success' => false, 'message' => 'El nombre de usuario solo puede contener letras, números y guiones bajos'];
-        }
-        
-        // Verificar contraseña actual
-        $query_user = "SELECT password, username FROM usuarios WHERE id = ?";
-        $stmt_user = $conexion->prepare($query_user);
-        $stmt_user->execute([$usuario_id]);
-        $usuario = $stmt_user->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$usuario || !password_verify($password_actual, $usuario['password'])) {
-            return ['success' => false, 'message' => 'La contraseña actual es incorrecta'];
-        }
-        
-        // Verificar si el nuevo username ya existe
-        if (strtolower($nuevo_username) !== strtolower($usuario['username'])) {
-            $query_check = "SELECT id FROM usuarios WHERE LOWER(username) = LOWER(?) AND id != ?";
-            $stmt_check = $conexion->prepare($query_check);
-            $stmt_check->execute([$nuevo_username, $usuario_id]);
-            
-            if ($stmt_check->rowCount() > 0) {
-                return ['success' => false, 'message' => 'Este nombre de usuario ya está en uso'];
-            }
-        }
-        
-        // Actualizar el username
-        $query = "UPDATE usuarios SET username = ? WHERE id = ?";
-        $stmt = $conexion->prepare($query);
-        $stmt->execute([$nuevo_username, $usuario_id]);
-        
-        if ($stmt->rowCount() > 0) {
-            return [
-                'success' => true,
-                'message' => 'Nombre de usuario actualizado correctamente'
-            ];
-        } else {
-            return ['success' => false, 'message' => 'No se realizaron cambios. El nombre de usuario es el mismo'];
-        }
-        
-    } catch (PDOException $e) {
-        error_log("Error al cambiar username: " . $e->getMessage());
-        return ['success' => false, 'message' => 'Error de base de datos al cambiar nombre de usuario'];
-    }
-}
-?>json_encode(['success' => false, 'message' => 'No autorizado']);
+    echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit();
 }
 
@@ -121,6 +55,7 @@ try {
     ]);
 }
 
+// Función para cambiar el nombre
 function cambiarNombre($conexion, $usuario_id, $datos) {
     $nuevo_nombre = trim($datos['nuevo_nombre'] ?? '');
     
@@ -293,6 +228,67 @@ function cambiarPassword($conexion, $usuario_id, $datos) {
     } catch (PDOException $e) {
         error_log("Error al cambiar contraseña: " . $e->getMessage());
         return ['success' => false, 'message' => 'Error al actualizar la contraseña'];
+    }
+}
+
+// Función para cambiar el username
+function cambiarUsername($conexion, $usuario_id, $datos) {
+    try {
+        // Validar datos de entrada
+        $nuevo_username = trim($datos['nuevo_username'] ?? '');
+        $password_actual = trim($datos['password_username'] ?? '');
+        
+        if (empty($nuevo_username) || empty($password_actual)) {
+            return ['success' => false, 'message' => 'Todos los campos son obligatorios'];
+        }
+        
+        // Validaciones del username
+        if (strlen($nuevo_username) < 3 || strlen($nuevo_username) > 30) {
+            return ['success' => false, 'message' => 'El nombre de usuario debe tener entre 3 y 30 caracteres'];
+        }
+        
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $nuevo_username)) {
+            return ['success' => false, 'message' => 'El nombre de usuario solo puede contener letras, números y guiones bajos'];
+        }
+        
+        // Verificar contraseña actual
+        $query_user = "SELECT password, username FROM usuarios WHERE id = ?";
+        $stmt_user = $conexion->prepare($query_user);
+        $stmt_user->execute([$usuario_id]);
+        $usuario = $stmt_user->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$usuario || !password_verify($password_actual, $usuario['password'])) {
+            return ['success' => false, 'message' => 'La contraseña actual es incorrecta'];
+        }
+        
+        // Verificar si el nuevo username ya existe
+        if (strtolower($nuevo_username) !== strtolower($usuario['username'])) {
+            $query_check = "SELECT id FROM usuarios WHERE LOWER(username) = LOWER(?) AND id != ?";
+            $stmt_check = $conexion->prepare($query_check);
+            $stmt_check->execute([$nuevo_username, $usuario_id]);
+            
+            if ($stmt_check->rowCount() > 0) {
+                return ['success' => false, 'message' => 'Este nombre de usuario ya está en uso'];
+            }
+        }
+        
+        // Actualizar el username
+        $query = "UPDATE usuarios SET username = ? WHERE id = ?";
+        $stmt = $conexion->prepare($query);
+        $stmt->execute([$nuevo_username, $usuario_id]);
+        
+        if ($stmt->rowCount() > 0) {
+            return [
+                'success' => true,
+                'message' => 'Nombre de usuario actualizado correctamente'
+            ];
+        } else {
+            return ['success' => false, 'message' => 'No se realizaron cambios. El nombre de usuario es el mismo'];
+        }
+        
+    } catch (PDOException $e) {
+        error_log("Error al cambiar username: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Error de base de datos al cambiar nombre de usuario'];
     }
 }
 ?>
