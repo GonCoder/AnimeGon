@@ -1168,7 +1168,7 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             <div class="header-content">
                 <h1 class="logo">AnimeGon</h1>
                 <div class="user-menu">
-                    <span class="user-name">🟢 <?= escape($usuario['nombre']) ?></span>
+                    <span class="user-name" onclick="window.location.href='perfil.php'" style="cursor: pointer;">🟢 <?= escape($usuario['nombre']) ?></span>
                     <a href="logout.php" class="btn-logout" title="Cerrar sesión con confirmación">🔴Salir</a>
                 </div>
                 <div class="hamburger" onclick="toggleMobileMenu()">
@@ -1183,7 +1183,7 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                         <li><a href="favoritos.php">Favoritos</a></li>
                         <li><a href="recomendados.php">Recomendados</a></li>
                         <li><a href="hub.php">Hub</a></li>
-                        <li><a href="#perfil">Mi Perfil</a></li>
+                        <li><a href="perfil.php">Mi Perfil</a></li>
                     </ul>
                 </nav>
             </div>

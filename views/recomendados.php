@@ -176,7 +176,7 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
         
         .nav-menu {
             display: flex;
-            gap: 2rem;
+            gap: 1rem;
             align-items: center;
             list-style: none;
             margin: 0;
@@ -186,11 +186,12 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
         .nav-link {
             color: white;
             text-decoration: none;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.7rem;
             border-radius: 25px;
             transition: all 0.3s ease;
             border: 2px solid transparent;
             white-space: nowrap;
+            font-size: 0.9rem;
         }
         
         .nav-link:hover {
@@ -860,12 +861,12 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
         /* Responsive design */
         @media (max-width: 992px) {
             .nav-menu {
-                gap: 1rem;
+                gap: 0.8rem;
             }
             
             .nav-link {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.9rem;
+                padding: 0.3rem 0.6rem;
+                font-size: 0.85rem;
             }
             
             .nav-logo h2 {
@@ -976,7 +977,7 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             <div class="nav-logo">
                 <h2>🎌 AnimeGon</h2>
             </div>
-            <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
+            <span class="user-indicator" onclick="window.location.href='perfil.php'" style="cursor: pointer;">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
             <div class="hamburger" onclick="toggleMobileMenu()">
                 <span></span>
                 <span></span>
@@ -988,6 +989,7 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                 <a href="favoritos.php" class="nav-link">⭐ Favoritos</a>
                 <a href="recomendados.php" class="nav-link active">🎯 Recomendados</a>
                 <a href="hub.php" class="nav-link">🌐 Hub</a>
+                <a href="perfil.php" class="nav-link">👤 Mi Perfil</a>
                 <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
             </div>
         </div>
