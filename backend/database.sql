@@ -127,7 +127,7 @@ CREATE TABLE lista_usuario (
     anime_id INT NOT NULL,
     estado ENUM('Viendo', 'Completado', 'En Pausa', 'Abandonado', 'Plan de Ver') NOT NULL,
     episodios_vistos INT DEFAULT 0,
-    puntuacion TINYINT CHECK (puntuacion BETWEEN 1 AND 10),
+    puntuacion TINYINT,
     fecha_inicio DATE,
     fecha_finalizacion DATE,
     rewatching BOOLEAN DEFAULT FALSE,
@@ -170,7 +170,7 @@ CREATE TABLE reseñas (
     anime_id INT NOT NULL,
     titulo VARCHAR(255),
     contenido TEXT NOT NULL,
-    puntuacion TINYINT CHECK (puntuacion BETWEEN 1 AND 10),
+    puntuacion TINYINT,
     contiene_spoilers BOOLEAN DEFAULT FALSE,
     util_positivo INT DEFAULT 0,
     util_negativo INT DEFAULT 0,
@@ -211,7 +211,7 @@ CREATE TABLE episodios_vistos (
     anime_id INT NOT NULL,
     episodio_numero INT NOT NULL,
     fecha_visto TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    puntuacion_episodio TINYINT CHECK (puntuacion_episodio BETWEEN 1 AND 10),
+    puntuacion_episodio TINYINT,
     comentario TEXT,
     UNIQUE KEY unique_usuario_anime_episodio (usuario_id, anime_id, episodio_numero),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
@@ -447,3 +447,41 @@ CREATE INDEX idx_episodios_usuario_fecha ON episodios_vistos(usuario_id, fecha_v
 -- Para verificar la creación exitosa
 SELECT 'Base de datos AnimeGon creada exitosamente' as status;
 SHOW TABLES;
+
+-- ========================================
+-- EXTENSIONES Y MEJORAS ADICIONALES
+-- ========================================
+
+-- Campo adicional para URLs de AnimeFLV
+ALTER TABLE lista_usuario 
+ADD COLUMN IF NOT EXISTS animeflv_url_name VARCHAR(255) DEFAULT NULL;
+
+-- Índice para mejor rendimiento
+ALTER TABLE lista_usuario 
+ADD INDEX IF NOT EXISTS idx_animeflv_url (animeflv_url_name);
+
+-- Tabla de recomendaciones para el sistema social
+CREATE TABLE IF NOT EXISTS recomendaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_emisor_id INT NOT NULL,
+    usuario_receptor_id INT NOT NULL,
+    anime_id INT NOT NULL,
+    valoracion_recomendacion TINYINT NOT NULL,
+    mensaje_recomendacion TEXT NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    leido BOOLEAN DEFAULT FALSE,
+    fecha_lectura TIMESTAMP NULL,
+    
+    FOREIGN KEY (usuario_emisor_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_receptor_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (anime_id) REFERENCES animes(id) ON DELETE CASCADE,
+    
+    INDEX idx_receptor (usuario_receptor_id),
+    INDEX idx_emisor (usuario_emisor_id),
+    INDEX idx_anime (anime_id),
+    INDEX idx_fecha_creacion (fecha_creacion),
+    INDEX idx_leido (leido),
+    
+    UNIQUE KEY unique_recomendacion (usuario_emisor_id, usuario_receptor_id, anime_id)
+) ENGINE=InnoDB;
+

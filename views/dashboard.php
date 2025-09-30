@@ -970,6 +970,7 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                         <li><a href="dashboard.php" class="active">Inicio</a></li>
                         <li><a href="mis_animes.php">Mis Animes</a></li>
                         <li><a href="favoritos.php">Favoritos</a></li>
+                        <li><a href="recomendados.php">Recomendados</a></li>
                         <li><a href="hub.php">Hub</a></li>
                         <li><a href="#perfil">Mi Perfil</a></li>
                     </ul>

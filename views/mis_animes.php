@@ -1254,6 +1254,7 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
                 <a href="mis_animes.php" class="nav-link active">📺 Mis Animes</a>
                 <a href="favoritos.php" class="nav-link">⭐ Favoritos</a>
+                <a href="recomendados.php" class="nav-link">🎯 Recomendados</a>
                 <a href="hub.php" class="nav-link">🌐 Hub</a>
                 <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
             </div>
