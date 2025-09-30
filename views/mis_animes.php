@@ -122,18 +122,23 @@ $animes = obtenerAnimesUsuario($usuario_id);
             justify-content: space-between;
             align-items: center;
             padding: 0 20px;
+            position: relative;
         }
         
         .nav-logo h2 {
             color: #00ffff;
             text-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
             font-size: 1.8rem;
+            margin: 0;
         }
         
         .nav-menu {
             display: flex;
             gap: 2rem;
             align-items: center;
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
         
         .nav-link {
@@ -155,6 +160,224 @@ $animes = obtenerAnimesUsuario($usuario_id);
             background: linear-gradient(135deg, #ff007f, #bf00ff);
             color: white;
             border-color: transparent;
+        }
+        
+        /* Botón hamburguesa */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1001;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: #00ffff;
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        /* Animación del botón hamburguesa */
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+        
+        /* Estilos para menú móvil */
+        .nav-menu.mobile {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            background: linear-gradient(135deg, rgba(0, 26, 46, 0.98), rgba(0, 33, 62, 0.98));
+            backdrop-filter: blur(20px);
+            padding-top: 80px;
+            gap: 0;
+            transition: left 0.3s ease;
+            border-right: 2px solid rgba(0, 255, 255, 0.4);
+            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .nav-menu.mobile.active {
+            left: 0;
+        }
+        
+        .nav-menu.mobile .nav-link {
+            width: 100%;
+            padding: 15px 25px;
+            border-radius: 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            text-align: left;
+            font-size: 1.1rem;
+            color: white !important;
+            display: block;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-menu.mobile .nav-link:hover {
+            background: rgba(0, 255, 255, 0.2);
+            color: #00ffff !important;
+            border-left: 4px solid #00ffff;
+            transform: translateX(5px);
+        }
+        
+        .nav-menu.mobile .nav-link.active {
+            background: linear-gradient(135deg, #ff007f, #00ffff);
+            color: white !important;
+            border-left: 4px solid #ffffff;
+        }
+        
+        /* Overlay para cerrar menú móvil */
+        .nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 300px;
+            width: calc(100% - 300px);
+            height: 100%;
+            background: transparent;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Media query para overlay responsive */
+        @media (max-width: 480px) {
+            .nav-overlay {
+                left: 90vw;
+                width: 10vw;
+            }
+        }
+        
+        /* Botón hamburguesa */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1001;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: #00ffff;
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        /* Animación del botón hamburguesa */
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+        
+        /* Estilos para menú móvil */
+        .nav-menu.mobile {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            background: linear-gradient(135deg, rgba(0, 26, 46, 0.98), rgba(0, 33, 62, 0.98));
+            backdrop-filter: blur(20px);
+            padding-top: 80px;
+            gap: 0;
+            transition: left 0.3s ease;
+            border-right: 2px solid rgba(0, 255, 255, 0.4);
+            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .nav-menu.mobile.active {
+            left: 0;
+        }
+        
+        .nav-menu.mobile .nav-link {
+            width: 100%;
+            padding: 15px 25px;
+            border-radius: 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            text-align: left;
+            font-size: 1.1rem;
+            color: white !important;
+            display: block;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-menu.mobile .nav-link:hover {
+            background: rgba(0, 255, 255, 0.2);
+            color: #00ffff !important;
+            border-left: 4px solid #00ffff;
+            transform: translateX(5px);
+        }
+        
+        .nav-menu.mobile .nav-link.active {
+            background: linear-gradient(135deg, #ff007f, #00ffff);
+            color: white !important;
+            border-left: 4px solid #ffffff;
+        }
+        
+        /* Overlay para cerrar menú móvil */
+        .nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 300px;
+            width: calc(100% - 300px);
+            height: 100%;
+            background: transparent;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Media query para overlay responsive */
+        @media (max-width: 480px) {
+            .nav-overlay {
+                left: 90vw;
+                width: 10vw;
+            }
         }
         
         /* Estilos específicos para la página de animes */
@@ -1170,7 +1393,49 @@ $animes = obtenerAnimesUsuario($usuario_id);
             }
         }
         
+        @media (max-width: 992px) {
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .nav-link {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .nav-logo h2 {
+                font-size: 1.6rem;
+            }
+        }
+        
         @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+                order: 3;
+            }
+            
+            .nav-menu:not(.mobile) {
+                display: none;
+            }
+            
+            .nav-menu.mobile {
+                display: flex;
+            }
+            
+            .nav-container {
+                padding: 0 15px;
+            }
+            
+            .nav-logo {
+                order: 1;
+            }
+            
+            .user-indicator {
+                order: 2;
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+            
             .animes-header {
                 flex-direction: column;
                 align-items: stretch;
@@ -1249,21 +1514,33 @@ $animes = obtenerAnimesUsuario($usuario_id);
             <div class="nav-logo">
                 <h2>🎌 AnimeGon</h2>
             </div>
+            <ul class="nav-menu">
+                <li><a href="dashboard.php" class="nav-link">📊 Dashboard</a></li>
+                <li><a href="mis_animes.php" class="nav-link active">📺 Mis Animes</a></li>
+                <li><a href="favoritos.php" class="nav-link">⭐ Favoritos</a></li>
+                <li><a href="recomendados.php" class="nav-link">🎯 Recomendados</a></li>
+                <li><a href="hub.php" class="nav-link">🌐 Hub</a></li>
+                <li><a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a></li>
+            </ul>
             <span class="user-indicator">🟢 <?= htmlspecialchars($usuario['nombre']) ?></span>
             <div class="hamburger" onclick="toggleMobileMenu()">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
-            <div class="nav-menu" id="navMenu">
-                <a href="dashboard.php" class="nav-link">📊 Dashboard</a>
-                <a href="mis_animes.php" class="nav-link active">📺 Mis Animes</a>
-                <a href="favoritos.php" class="nav-link">⭐ Favoritos</a>
-                <a href="recomendados.php" class="nav-link">🎯 Recomendados</a>
-                <a href="hub.php" class="nav-link">🌐 Hub</a>
-                <a href="logout.php" class="nav-link">🔴 Cerrar Sesión</a>
-            </div>
         </div>
+        
+        <!-- Menú móvil -->
+        <div class="nav-menu mobile" id="navMenu">
+            <a href="dashboard.php" class="nav-link" onclick="closeMobileMenu()">📊 Dashboard</a>
+            <a href="mis_animes.php" class="nav-link active" onclick="closeMobileMenu()">📺 Mis Animes</a>
+            <a href="favoritos.php" class="nav-link" onclick="closeMobileMenu()">⭐ Favoritos</a>
+            <a href="recomendados.php" class="nav-link" onclick="closeMobileMenu()">🎯 Recomendados</a>
+            <a href="hub.php" class="nav-link" onclick="closeMobileMenu()">🌐 Hub</a>
+            <a href="logout.php" class="nav-link" onclick="closeMobileMenu()">🔴 Cerrar Sesión</a>
+        </div>
+        
+        <!-- Overlay para cerrar el menú -->
         <div class="nav-overlay" id="navOverlay" onclick="closeMobileMenu()"></div>
     </nav>
 
@@ -2047,6 +2324,39 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 
                 // Para el botón plus, necesitaríamos conocer el total de episodios
                 // Se podría implementar con data attributes
+            }
+        }
+        
+        // Funciones del menú hamburguesa
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            const hamburger = document.querySelector('.hamburger');
+            
+            if (navMenu && navOverlay && hamburger) {
+                const isOpen = navMenu.classList.contains('active');
+                
+                if (isOpen) {
+                    closeMobileMenu();
+                } else {
+                    navMenu.classList.add('active');
+                    navOverlay.classList.add('active');
+                    hamburger.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+        }
+        
+        function closeMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            const hamburger = document.querySelector('.hamburger');
+            
+            if (navMenu && navOverlay && hamburger) {
+                navMenu.classList.remove('active');
+                navOverlay.classList.remove('active');
+                hamburger.classList.remove('active');
+                document.body.style.overflow = '';
             }
         }
         
