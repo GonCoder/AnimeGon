@@ -32,7 +32,7 @@ function obtenerAnimesUsuario($usuario_id) {
         $conexion = obtenerConexion();
         
         $query = "SELECT lu.*, a.titulo as anime_nombre, a.titulo_original, a.titulo_ingles, a.imagen_portada, a.episodios_total,
-                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, lu.animeflv_url_name, a.id as anime_id,
+                         lu.episodios_vistos, lu.fecha_agregado, lu.estado, lu.puntuacion, a.animeflv_url_name, a.id as anime_id,
                          a.tipo, a.estado as estado_anime,
                          (CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END) as favorito
                   FROM lista_usuario lu 

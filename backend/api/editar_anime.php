@@ -53,14 +53,20 @@ function actualizarAnime($usuario_id, $anime_id, $datos, $imagen_ruta = null) {
             $stmt_anime->execute($params_anime);
         }
         
+        // Actualizar animeflv_url_name en la tabla animes (beneficia a todos los usuarios)
+        if (!empty($datos['animeflv_url_name'])) {
+            $query_actualizar_anime_url = "UPDATE animes SET animeflv_url_name = ? WHERE id = ?";
+            $stmt_actualizar_anime_url = $conexion->prepare($query_actualizar_anime_url);
+            $stmt_actualizar_anime_url->execute([trim($datos['animeflv_url_name']), $anime_id]);
+        }
+        
         // Actualizar información en lista_usuario
-        $query_lista = "UPDATE lista_usuario SET episodios_vistos = ?, estado = ?, puntuacion = ?, animeflv_url_name = ? WHERE usuario_id = ? AND anime_id = ?";
+        $query_lista = "UPDATE lista_usuario SET episodios_vistos = ?, estado = ?, puntuacion = ? WHERE usuario_id = ? AND anime_id = ?";
         $stmt_lista = $conexion->prepare($query_lista);
         $stmt_lista->execute([
             $datos['episodios_vistos'] ?: 0,
             $datos['estado'],
             isset($datos['puntuacion']) && $datos['puntuacion'] !== '' ? (int)$datos['puntuacion'] : null,
-            !empty($datos['animeflv_url_name']) ? trim($datos['animeflv_url_name']) : null,
             $usuario_id,
             $anime_id
         ]);

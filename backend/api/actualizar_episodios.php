@@ -37,7 +37,7 @@ try {
     // Si falla (campo no existe), usar consulta sin ese campo
     try {
         $stmt = $pdo->prepare("
-            SELECT lu.episodios_vistos, lu.animeflv_url_name, a.episodios_total, a.titulo
+            SELECT lu.episodios_vistos, a.animeflv_url_name, a.episodios_total, a.titulo
             FROM lista_usuario lu
             INNER JOIN animes a ON lu.anime_id = a.id
             WHERE lu.usuario_id = ? AND lu.anime_id = ?

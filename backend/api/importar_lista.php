@@ -69,7 +69,18 @@ function buscarOCrearAnime($conexion, $anime_data) {
     $anime_existente = $stmt_buscar->fetch(PDO::FETCH_ASSOC);
     
     if ($anime_existente) {
-        return $anime_existente['id'];
+        $anime_id = $anime_existente['id'];
+        
+        // Si tenemos animeflv_url_name en los datos, actualizar el anime existente
+        if (!empty($anime_data['animeflv_url_name'])) {
+            $query_actualizar_anime = "UPDATE animes SET animeflv_url_name = ? WHERE id = ? AND (animeflv_url_name IS NULL OR animeflv_url_name = '')";
+            $stmt_actualizar_anime = $conexion->prepare($query_actualizar_anime);
+            $stmt_actualizar_anime->execute([$anime_data['animeflv_url_name'], $anime_id]);
+            
+            error_log("Actualizando anime existente ID $anime_id con URL: " . $anime_data['animeflv_url_name']);
+        }
+        
+        return $anime_id;
     }
     
     // Crear nuevo anime
@@ -77,8 +88,8 @@ function buscarOCrearAnime($conexion, $anime_data) {
         titulo, titulo_original, titulo_ingles, sinopsis, tipo, estado, 
         episodios_total, episodios_emitidos, duracion_episodio, fecha_inicio, 
         fecha_fin, temporada, año, clasificacion, puntuacion_promedio, 
-        total_votos, popularidad, imagen_portada, trailer_url, sitio_oficial
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        total_votos, popularidad, imagen_portada, trailer_url, sitio_oficial, animeflv_url_name
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt_crear = $conexion->prepare($query_crear);
     $stmt_crear->execute([
         $titulo,
@@ -100,7 +111,8 @@ function buscarOCrearAnime($conexion, $anime_data) {
         $anime_data['popularidad'] ?? 0,
         $anime_data['imagen_portada'] ?? null,
         $anime_data['trailer_url'] ?? null,
-        $anime_data['sitio_oficial'] ?? null
+        $anime_data['sitio_oficial'] ?? null,
+        $anime_data['animeflv_url_name'] ?? null
     ]);
     
     $anime_id = $conexion->lastInsertId();
@@ -128,51 +140,31 @@ function agregarAnimeALista($conexion, $usuario_id, $anime_id, $anime_data, $ree
     if ($existe && $reemplazar) {
         // Actualizar existente
         $query_actualizar = "UPDATE lista_usuario 
-                            SET episodios_vistos = ?, estado = ?, puntuacion = ?, fecha_agregado = ?, animeflv_url_name = ?
+                            SET episodios_vistos = ?, estado = ?, puntuacion = ?, fecha_agregado = ?
                             WHERE usuario_id = ? AND anime_id = ?";
         $stmt_actualizar = $conexion->prepare($query_actualizar);
         
         // Debug logging para verificar datos en actualización
-        $animeflv_url = $anime_data['animeflv_url_name'] ?? null;
-        error_log("ACTUALIZAR - Anime: " . ($anime_data['titulo'] ?? 'Sin título') . " - AnimeFlv URL: " . ($animeflv_url ?? 'NULL') . " - Tipo: " . gettype($animeflv_url));
-        
-        // Asegurar que el valor no esté vacío
-        if (empty($animeflv_url) && isset($anime_data['animeflv_url_name'])) {
-            error_log("WARNING: animeflv_url_name está presente pero vacío: '" . $anime_data['animeflv_url_name'] . "'");
-        }
+        error_log("ACTUALIZAR - Lista Usuario - Anime: " . ($anime_data['titulo'] ?? 'Sin título'));
         
         $stmt_actualizar->execute([
             $anime_data['episodios_vistos'] ?? 0,
             $anime_data['mi_estado'] ?? 'Plan de Ver',
             $anime_data['mi_puntuacion'] ?: null,
             $anime_data['fecha_agregado'] ?? date('Y-m-d H:i:s'),
-            $animeflv_url,
             $usuario_id,
             $anime_id
         ]);
         
-        // Verificar que se actualizó correctamente
-        $query_verificar = "SELECT animeflv_url_name FROM lista_usuario WHERE usuario_id = ? AND anime_id = ?";
-        $stmt_verificar = $conexion->prepare($query_verificar);
-        $stmt_verificar->execute([$usuario_id, $anime_id]);
-        $url_guardada = $stmt_verificar->fetchColumn();
-        error_log("VERIFICACIÓN UPDATE - URL guardada en BD: " . ($url_guardada ?? 'NULL'));
-        
         return 'actualizado';
     } else {
         // Crear nuevo
-        $query_crear = "INSERT INTO lista_usuario (usuario_id, anime_id, episodios_vistos, estado, puntuacion, fecha_agregado, animeflv_url_name)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $query_crear = "INSERT INTO lista_usuario (usuario_id, anime_id, episodios_vistos, estado, puntuacion, fecha_agregado)
+                        VALUES (?, ?, ?, ?, ?, ?)";
         $stmt_crear = $conexion->prepare($query_crear);
         
         // Debug logging para verificar datos
-        $animeflv_url = $anime_data['animeflv_url_name'] ?? null;
-        error_log("INSERTAR - Anime: " . ($anime_data['titulo'] ?? 'Sin título') . " - AnimeFlv URL: " . ($animeflv_url ?? 'NULL') . " - Tipo: " . gettype($animeflv_url));
-        
-        // Asegurar que el valor no esté vacío
-        if (empty($animeflv_url) && isset($anime_data['animeflv_url_name'])) {
-            error_log("WARNING: animeflv_url_name está presente pero vacío: '" . $anime_data['animeflv_url_name'] . "'");
-        }
+        error_log("INSERTAR - Lista Usuario - Anime: " . ($anime_data['titulo'] ?? 'Sin título'));
         
         $parametros_insert = [
             $usuario_id,
@@ -180,11 +172,8 @@ function agregarAnimeALista($conexion, $usuario_id, $anime_id, $anime_data, $ree
             $anime_data['episodios_vistos'] ?? 0,
             $anime_data['mi_estado'] ?? 'Plan de Ver',
             $anime_data['mi_puntuacion'] ?: null,
-            $anime_data['fecha_agregado'] ?? date('Y-m-d H:i:s'),
-            $animeflv_url
+            $anime_data['fecha_agregado'] ?? date('Y-m-d H:i:s')
         ];
-        
-        error_log("Parámetros INSERT: " . json_encode($parametros_insert));
         
         $stmt_crear->execute($parametros_insert);
         
@@ -194,13 +183,6 @@ function agregarAnimeALista($conexion, $usuario_id, $anime_id, $anime_data, $ree
             $stmt_favorito = $conexion->prepare($query_favorito);
             $stmt_favorito->execute([$usuario_id, $anime_id]);
         }
-        
-        // Verificar que se guardó correctamente
-        $query_verificar = "SELECT animeflv_url_name FROM lista_usuario WHERE usuario_id = ? AND anime_id = ?";
-        $stmt_verificar = $conexion->prepare($query_verificar);
-        $stmt_verificar->execute([$usuario_id, $anime_id]);
-        $url_guardada = $stmt_verificar->fetchColumn();
-        error_log("VERIFICACIÓN INSERT - URL guardada en BD: " . ($url_guardada ?? 'NULL'));
         
         return 'agregado';
     }

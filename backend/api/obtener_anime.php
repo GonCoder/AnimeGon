@@ -26,7 +26,7 @@ try {
     
     // Obtener datos del anime y de la lista del usuario
     $query = "SELECT a.id, a.titulo, a.titulo_original, a.titulo_ingles, a.episodios_total, a.imagen_portada, a.tipo, 
-                     a.estado as anime_estado, lu.episodios_vistos, lu.estado as lista_estado, lu.puntuacion, lu.animeflv_url_name,
+                     a.estado as anime_estado, lu.episodios_vistos, lu.estado as lista_estado, lu.puntuacion, a.animeflv_url_name,
                      (CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END) as favorito
               FROM animes a
               INNER JOIN lista_usuario lu ON a.id = lu.anime_id

@@ -645,14 +645,15 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Agregando...';
             
-            try {
+                try {
                 const formData = new FormData(this);
                 const response = await fetch('../backend/api/procesar_anime.php', {
                     method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
                     body: formData
-                });
-                
-                const result = await response.json();
+                });                const result = await response.json();
                 
                 if (result.success) {
                     // Mostrar mensaje de éxito
@@ -828,6 +829,15 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                             </select>
                             <small class="modal-form-help">Opcional: Califica del 1 al 10</small>
                         </div>
+                    </div>
+                    
+                    <!-- URL AnimeFLV -->
+                    <div class="modal-form-group">
+                        <label for="animeflv_url_name" class="modal-form-label">🌐 Nombre URL AnimeFLV (Opcional)</label>
+                        <input type="text" id="animeflv_url_name" name="animeflv_url_name" 
+                               placeholder="Ej: attack-on-titan" class="modal-form-input"
+                               pattern="[a-z0-9\-]+" title="Solo letras minúsculas, números y guiones">
+                        <small class="modal-form-help">Para seguimiento automático de episodios en AnimeFLV</small>
                     </div>
                     
                     <!-- Imagen -->
