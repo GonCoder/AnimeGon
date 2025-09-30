@@ -131,27 +131,27 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             cursor: pointer;
             padding: 8px;
             border-radius: 8px;
-            background: rgba(0, 255, 0, 0.1);
-            border: 2px solid rgba(0, 255, 0, 0.3);
+            background: rgba(255, 140, 0, 0.2);
+            border: 2px solid rgba(255, 140, 0, 0.6);
             transition: all 0.3s ease;
             position: relative;
             z-index: 1006;
         }
         
         .hamburger:hover {
-            background: rgba(0, 255, 0, 0.2);
-            border-color: rgba(0, 255, 0, 0.5);
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            background: rgba(255, 140, 0, 0.3);
+            border-color: rgba(255, 140, 0, 0.8);
+            box-shadow: 0 0 20px rgba(255, 140, 0, 0.5);
         }
         
         .hamburger span {
             width: 25px;
             height: 3px;
-            background: #00ff00;
+            background: #ff8c00;
             margin: 3px 0;
             transition: all 0.3s ease;
             border-radius: 2px;
-            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 8px rgba(255, 140, 0, 0.7);
         }
         
         .hamburger.active span:nth-child(1) {
@@ -174,15 +174,15 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             right: -100%;
             width: 280px;
             height: 100vh;
-            background: linear-gradient(135deg, rgba(0, 46, 26, 0.98), rgba(0, 62, 33, 0.98));
+            background: linear-gradient(135deg, rgba(205, 92, 0, 0.85), rgba(139, 69, 19, 0.85));
             backdrop-filter: blur(15px);
-            border-left: 2px solid rgba(0, 255, 0, 0.3);
+            border-left: 3px solid rgba(205, 92, 0, 0.7);
             padding: 80px 20px 20px;
             flex-direction: column;
             gap: 0;
             transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1005;
-            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
         }
         
         .nav-menu.mobile.show {
@@ -203,25 +203,27 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             color: #ffffff;
             text-decoration: none;
             border: 2px solid transparent;
-            background: rgba(0, 255, 0, 0.05);
+            background: rgba(255, 140, 0, 0.1);
             backdrop-filter: blur(10px);
             display: block;
             width: 100%;
             box-sizing: border-box;
+            font-weight: 600;
         }
         
         .nav-menu.mobile .nav-link:hover {
-            background: rgba(0, 255, 0, 0.15);
-            border-color: rgba(0, 255, 0, 0.3);
+            background: rgba(255, 140, 0, 0.25);
+            border-color: rgba(255, 140, 0, 0.5);
             transform: translateX(-5px);
-            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.2);
+            box-shadow: 0 5px 20px rgba(255, 140, 0, 0.4);
         }
         
         .nav-menu.mobile .nav-link.active {
-            background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(50, 205, 50, 0.2));
-            border-color: #00ff00;
-            color: #00ff00;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 140, 0, 0.3));
+            border-color: #ffb000;
+            color: #ffb000;
+            box-shadow: 0 0 25px rgba(255, 176, 0, 0.5);
+            font-weight: 700;
         }
         
         /* Overlay del menú */
@@ -253,6 +255,7 @@ $animes_favoritos = obtenerAnimesFavoritos($usuario_id);
             display: flex;
             gap: 2rem;
             align-items: center;
+            list-style: none;
         }
         
         .nav-link {
