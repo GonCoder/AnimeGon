@@ -1,40 +1,45 @@
 <?php
-session_start();
-require_once '../config/config.php';
+// recuperar_password_public.php - API pública para recuperación de contraseña por email
 
 header('Content-Type: application/json');
+require_once '../config/funciones.php';
 
-// Verificar que el usuario esté logueado
-if (!isset($_SESSION['usuario_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'No autorizado']);
+// Verificar que sea una petición POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Método no permitido']);
     exit();
 }
 
 try {
-    // Obtener y validar los datos de entrada
-    $input = json_decode(file_get_contents('php://input'), true);
+    // Obtener el email del formulario
+    $email = trim($_POST['email'] ?? '');
     
-    if (!$input || !isset($input['action']) || $input['action'] !== 'enviar_password') {
-        throw new Exception('Acción no válida');
+    if (empty($email)) {
+        throw new Exception('El email es obligatorio');
     }
     
-    $usuario_id = $_SESSION['usuario_id'];
+    if (!validarEmail($email)) {
+        throw new Exception('El formato del email no es válido');
+    }
     
-    // Obtener datos del usuario
+    // Buscar el usuario por email
     $conexion = obtenerConexion();
-    $query = "SELECT id, nombre, username, email, password FROM usuarios WHERE id = ?";
+    $query = "SELECT id, nombre, username, email FROM usuarios WHERE email = ? AND activo = TRUE";
     $stmt = $conexion->prepare($query);
-    $stmt->execute([$usuario_id]);
+    $stmt->execute([$email]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$usuario) {
-        throw new Exception('Usuario no encontrado');
+        // Por seguridad, no revelamos si el email existe o no
+        echo json_encode([
+            'success' => true,
+            'message' => '📧 Si el email existe en nuestro sistema, recibirás un enlace de recuperación en los próximos minutos. Revisa también tu carpeta de spam.'
+        ]);
+        exit();
     }
     
-    if (empty($usuario['email'])) {
-        throw new Exception('No hay email asociado a esta cuenta');
-    }
+    $usuario_id = $usuario['id'];
     
     // Generar token único y seguro
     $token = bin2hex(random_bytes(32)); // 64 caracteres hexadecimales
@@ -64,10 +69,10 @@ try {
     $to = $usuario['email'];
     $subject = '🔑 AnimeGon - Recupera tu Contraseña';
     
-    // Crear URL de recuperación para producción
+    // Crear URL de recuperación
     $reset_url = "https://animegon.alwaysdata.net/views/reset_password.php?token=" . $token;
     
-    // Cuerpo del email en HTML con enlace de recuperación
+    // Cuerpo del email en HTML
     $body = "
     <!DOCTYPE html>
     <html lang='es'>
@@ -119,51 +124,22 @@ try {
                 color: #ffffff;
                 margin-bottom: 15px;
             }
-            .password-box {
-                background-color: #2a2a2a;
-                border: 3px solid #00ff00;
-                border-radius: 12px;
-                padding: 25px;
-                text-align: center;
-                margin: 25px 0;
-                box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-            }
-            .password-label {
-                color: #ffffff;
-                font-size: 1.1rem;
-                margin-bottom: 15px;
-                font-weight: bold;
-            }
-            .password-value {
-                font-family: 'Courier New', monospace;
-                font-size: 1.8rem;
-                font-weight: bold;
-                color: #00ff00;
-                background-color: #000000;
-                padding: 15px 20px;
+            .btn-reset {
+                display: inline-block;
+                background: linear-gradient(45deg, #8a2be2, #bb86fc);
+                color: #ffffff !important;
+                padding: 15px 30px;
+                text-decoration: none;
                 border-radius: 8px;
-                border: 2px solid #00ff00;
-                letter-spacing: 3px;
-                text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
-                word-break: break-all;
-            }
-            .warning {
-                background-color: #2d1810;
-                border: 2px solid #ff6b35;
-                border-radius: 10px;
-                padding: 20px;
-                margin: 25px 0;
-            }
-            .warning-title {
-                color: #ff6b35;
                 font-weight: bold;
-                font-size: 1.1rem;
-                margin-bottom: 10px;
+                font-size: 18px;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+                transition: all 0.3s ease;
             }
-            .warning p {
-                color: #ffffff;
-                margin: 0;
-                font-size: 15px;
+            .btn-reset:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
             }
             .instructions {
                 background-color: #1a2d1a;
@@ -182,22 +158,23 @@ try {
                 color: #ffffff;
                 margin: 0;
             }
-            .btn-reset {
-                display: inline-block;
-                background: linear-gradient(45deg, #8a2be2, #bb86fc);
-                color: #ffffff !important;
-                padding: 15px 30px;
-                text-decoration: none;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 18px;
-                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-                box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
-                transition: all 0.3s ease;
+            .warning {
+                background-color: #2d1810;
+                border: 2px solid #ff6b35;
+                border-radius: 10px;
+                padding: 20px;
+                margin: 25px 0;
             }
-            .btn-reset:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+            .warning-title {
+                color: #ff6b35;
+                font-weight: bold;
+                font-size: 1.1rem;
+                margin-bottom: 10px;
+            }
+            .warning p {
+                color: #ffffff;
+                margin: 0;
+                font-size: 15px;
             }
             .footer {
                 text-align: center;
@@ -223,10 +200,10 @@ try {
             <div class='content'>
                 <p>Hola <strong style='color: #8a2be2;'>{$usuario['nombre']}</strong>,</p>
                 
-                <p>Has solicitado restablecer tu contraseña desde tu perfil de AnimeGon. Para crear una nueva contraseña, haz clic en el botón de abajo:</p>
+                <p>Has solicitado restablecer tu contraseña de AnimeGon. Para crear una nueva contraseña, haz clic en el botón de abajo:</p>
                 
                 <div style='text-align: center; margin: 30px 0;'>
-                    <a href='{$reset_url}' style='display: inline-block; background: linear-gradient(45deg, #8a2be2, #bb86fc); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4); transition: all 0.3s ease;'>
+                    <a href='{$reset_url}' class='btn-reset'>
                         🔑 Crear Nueva Contraseña
                     </a>
                 </div>
@@ -267,8 +244,8 @@ try {
     // Headers para email HTML
     $headers = "MIME-Version: 1.0" . "\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= "From: AnimeGon <noreply@animegon.com>" . "\r\n";
-    $headers .= "Reply-To: noreply@animegon.com" . "\r\n";
+    $headers .= "From: AnimeGon <noreply@animegon.alwaysdata.net>" . "\r\n";
+    $headers .= "Reply-To: noreply@animegon.alwaysdata.net" . "\r\n";
     $headers .= "X-Mailer: PHP/" . phpversion();
     
     // Verificar si mail() está disponible
@@ -295,17 +272,17 @@ try {
         ]);
     } else {
         // En desarrollo local, mostrar el enlace para poder probar
-        error_log("Email no enviado (desarrollo local). URL de recuperación: {$reset_url}");
+        error_log("Email no enviado. URL de recuperación: {$reset_url}");
         
         echo json_encode([
             'success' => true,
-            'message' => "⚠️ En desarrollo local: <br><strong>Enlace de recuperación:</strong><br><a href='{$reset_url}' target='_blank' style='color: #8a2be2; word-break: break-all;'>{$reset_url}</a><br><small>En producción se enviaría por email.</small>",
+            'message' => "✅ Enlace de recuperación generado exitosamente.<br><small>En producción se enviaría por email.</small>",
             'dev_url' => $reset_url // Solo para desarrollo
         ]);
     }
     
 } catch (Exception $e) {
-    error_log("Error en recuperar_password.php: " . $e->getMessage());
+    error_log("Error en recuperar_password_public.php: " . $e->getMessage());
     
     echo json_encode([
         'success' => false,

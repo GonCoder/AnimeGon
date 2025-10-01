@@ -485,3 +485,49 @@ CREATE TABLE IF NOT EXISTS recomendaciones (
     UNIQUE KEY unique_recomendacion (usuario_emisor_id, usuario_receptor_id, anime_id)
 ) ENGINE=InnoDB;
 
+-- ========================================
+-- TABLA TOKENS DE RECUPERACIÓN DE CONTRASEÑA
+-- Los tokens expiran en 15 minutos por seguridad
+-- ========================================
+CREATE TABLE password_reset_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    token VARCHAR(64) UNIQUE NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_expiracion TIMESTAMP NOT NULL,
+    usado BOOLEAN DEFAULT FALSE,
+    fecha_uso TIMESTAMP NULL,
+    ip_solicitud VARCHAR(45),
+    user_agent TEXT,
+    
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    
+    INDEX idx_token (token),
+    INDEX idx_usuario (usuario_id),
+    INDEX idx_expiracion (fecha_expiracion),
+    INDEX idx_usado (usado)
+) ENGINE=InnoDB;
+
+-- Crear tabla para tokens de recuperación de contraseña si no existe
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    token VARCHAR(64) UNIQUE NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_expiracion TIMESTAMP NOT NULL,
+    usado BOOLEAN DEFAULT FALSE,
+    fecha_uso TIMESTAMP NULL,
+    ip_solicitud VARCHAR(45),
+    user_agent TEXT,
+    
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    
+    INDEX idx_token (token),
+    INDEX idx_usuario (usuario_id),
+    INDEX idx_expiracion (fecha_expiracion),
+    INDEX idx_usado (usado)
+) ENGINE=InnoDB;
+
+-- Limpiar tokens expirados automáticamente (housekeeping)
+DELETE FROM password_reset_tokens WHERE fecha_expiracion < NOW();
+

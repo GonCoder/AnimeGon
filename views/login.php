@@ -9,6 +9,12 @@ redirigirSiLogueado();
 $mensaje = '';
 $tipoMensaje = '';
 
+// Verificar si viene de un cambio de contraseña exitoso
+if (isset($_GET['password_changed']) && $_GET['password_changed'] === '1') {
+    $mensaje = '✅ ¡Contraseña actualizada exitosamente! Ya puedes iniciar sesión con tu nueva contraseña.';
+    $tipoMensaje = 'success';
+}
+
 // Procesar formulario de login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
@@ -85,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="login-footer">
                 <p>¿No tienes cuenta? <a href="registro.php">Regístrate aquí</a></p>
+                <p><a href="forgot_password.php">🔑 ¿Has olvidado tu contraseña?</a></p>
                 <p><a href="index.php">Volver al inicio</a></p>
             </div>
         </div>
