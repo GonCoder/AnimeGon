@@ -1641,12 +1641,8 @@ $animes_hub = obtenerAnimesHub($usuario_id);
             }
         });
         
-        // Cerrar modal haciendo clic en el fondo
-        document.getElementById('addToListModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                cerrarModalAgregar();
-            }
-        });
+        // No cerrar modal haciendo clic fuera para evitar cierres accidentales
+        // Los usuarios pueden usar la X, Cancelar, o la tecla Escape
         
         // === FUNCIONES PARA MODAL DE PUNTUACIONES ===
         
