@@ -527,13 +527,8 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             
             document.addEventListener('keydown', handleEscape);
             
-            // Cerrar al hacer clic en el fondo
-            modal.onclick = (e) => {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-            };
+            // No cerrar al hacer clic fuera para evitar cierres accidentales
+            // Los usuarios pueden usar los botones o la tecla Escape
         });
 
         // Funciones para el modal de agregar anime
@@ -552,21 +547,16 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
             document.getElementById('animeForm').reset();
         }
 
-        // Cerrar modales al hacer click fuera de ellos
+        // Solo cerrar el modal de puntuajes al hacer click fuera (no es un formulario)
         window.addEventListener('click', function(event) {
-            const animeModal = document.getElementById('animeModal');
             const puntuajesModal = document.getElementById('puntuajesModal');
-            
-            if (event.target === animeModal) {
-                cerrarModalAgregarAnime();
-            }
             
             if (event.target === puntuajesModal) {
                 cerrarModalPuntuajes();
             }
         });
 
-        // Cerrar modales con la tecla Escape
+        // Cerrar modales con la tecla Escape (accesibilidad)
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 const animeModal = document.getElementById('animeModal');

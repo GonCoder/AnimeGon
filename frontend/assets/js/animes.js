@@ -240,7 +240,7 @@ class AnimeManager {
             modal.style.display = 'none';
         };
         
-        // Cerrar con escape
+        // Cerrar con escape (accesibilidad)
         const handleEscape = (e) => {
             if (e.key === 'Escape') {
                 modal.style.display = 'none';
@@ -249,13 +249,6 @@ class AnimeManager {
         };
         
         document.addEventListener('keydown', handleEscape);
-        
-        // Cerrar al hacer clic en el fondo
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        };
     }
 
     // Eliminar anime
@@ -455,24 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
     
-    // Cerrar modales al hacer clic fuera
-    window.onclick = function(event) {
-        const modal = document.getElementById('animeModal');
-        const editModal = document.getElementById('editAnimeModal');
-        const importModal = document.getElementById('importModal');
-        
-        if (event.target == modal) {
-            cerrarModal();
-        }
-        
-        if (event.target == editModal) {
-            cerrarModalEditar();
-        }
-        
-        if (event.target == importModal) {
-            cerrarModalImportar();
-        }
-    }
+    // Modales de formularios solo se cierran con el botón X
 });
 
 // Función para alternar favoritos
@@ -740,7 +716,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cerrar modales con tecla Escape
+    // Cerrar modales con tecla Escape (accesibilidad)
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const modales = ['animeModal', 'editAnimeModal', 'importarModal', 'exportarModal'];
@@ -754,17 +730,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Cerrar modales al hacer clic fuera de ellos
-    const modales = ['animeModal', 'editAnimeModal', 'importarModal', 'exportarModal'];
-    modales.forEach(modalId => {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-            });
-        }
-    });
+    // Los modales de formularios solo se cierran con el botón X
+    // (click-outside removido para evitar cierres accidentales)
 });
