@@ -143,18 +143,41 @@ function cerrarSesion() {
     session_destroy();
 }
 
-// Obtener datos del usuario actual
+// Obtener datos del usuario actual desde la base de datos
 function obtenerUsuarioActual() {
     if (!usuarioLogueado()) {
         return null;
     }
     
-    return [
-        'id' => $_SESSION['usuario_id'],
-        'username' => $_SESSION['username'],
-        'email' => $_SESSION['email'],
-        'nombre' => $_SESSION['nombre']
-    ];
+    try {
+        $conexion = obtenerConexion();
+        $stmt = $conexion->prepare("SELECT id, username, email, nombre FROM usuarios WHERE id = :usuario_id");
+        $stmt->bindParam(':usuario_id', $_SESSION['usuario_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($usuario) {
+            // Actualizar las variables de sesión con los datos actuales
+            $_SESSION['username'] = $usuario['username'];
+            $_SESSION['email'] = $usuario['email'];
+            $_SESSION['nombre'] = $usuario['nombre'];
+            
+            return $usuario;
+        }
+        
+        return null;
+        
+    } catch (Exception $e) {
+        error_log("Error al obtener usuario actual: " . $e->getMessage());
+        // Fallback a datos de sesión si hay error
+        return [
+            'id' => $_SESSION['usuario_id'],
+            'username' => $_SESSION['username'],
+            'email' => $_SESSION['email'],
+            'nombre' => $_SESSION['nombre']
+        ];
+    }
 }
 
 // Escapar HTML para mostrar de forma segura
