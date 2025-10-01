@@ -1805,7 +1805,7 @@ $animes_hub = obtenerAnimesHub($usuario_id);
                     
                     // Mostrar mensaje de éxito
                     const mensaje = document.createElement('div');
-                    mensaje.style.cssText = 'background: rgba(0, 255, 0, 0.2); border: 2px solid #00ff00; border-radius: 10px; padding: 15px; margin-bottom: 20px; color: #00ff00; text-align: center; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 500px;';
+                    mensaje.style.cssText = 'background: rgba(25, 76, 25, 0.83); border: 2px solid #00ff00; border-radius: 10px; padding: 15px; margin-bottom: 20px; color: #00ff00; text-align: center; position: fixed; top: 20px; left: 15%; transform: translateX(-50%); z-index: 9999; max-width: 500px;';
                     mensaje.innerHTML = '✅ ' + result.message;
                     document.body.appendChild(mensaje);
                     
@@ -1860,7 +1860,7 @@ $animes_hub = obtenerAnimesHub($usuario_id);
                 } else {
                     // Mostrar mensaje de error
                     const mensaje = document.createElement('div');
-                    mensaje.style.cssText = 'background: rgba(255, 0, 127, 0.2); border: 2px solid #ff007f; border-radius: 10px; padding: 15px; margin-bottom: 20px; color: #ff007f; text-align: center; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 500px;';
+                    mensaje.style.cssText = 'background: rgba(73, 0, 37, 0.85); border: 2px solid #ff007f; border-radius: 10px; padding: 15px; margin-bottom: 20px; color: #ff007f; text-align: center; position: fixed; top: 20px; left: 15%; transform: translateX(-50%); z-index: 9999; max-width: 500px;';
                     mensaje.innerHTML = '❌ ' + result.message;
                     document.body.appendChild(mensaje);
                     

@@ -658,7 +658,7 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                 if (result.success) {
                     // Mostrar mensaje de éxito
                     const mensaje = document.createElement('div');
-                    mensaje.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0, 255, 0, 0.2); border: 2px solid #00ff00; border-radius: 10px; padding: 15px 25px; color: #00ff00; z-index: 10000; font-weight: bold;';
+                    mensaje.style.cssText = 'position: fixed; top: 20px; left: 20%; transform: translateX(-50%); background: rgba(37, 106, 37, 0.88); border: 2px solid #00ff00; border-radius: 10px; padding: 15px 25px; color: #00ff00; z-index: 10000; font-weight: bold;';
                     mensaje.innerHTML = '✅ ' + result.message;
                     document.body.appendChild(mensaje);
                     
@@ -675,7 +675,7 @@ $todos_animes_puntuados = obtenerTodosAnimesPuntuados();
                 } else {
                     // Mostrar mensaje de error
                     const mensaje = document.createElement('div');
-                    mensaje.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(255, 71, 87, 0.2); border: 2px solid #ff4757; border-radius: 10px; padding: 15px 25px; color: #ff4757; z-index: 10000; font-weight: bold;';
+                    mensaje.style.cssText = 'position: fixed; top: 20px; left: 20%; transform: translateX(-50%); background: rgba(101, 24, 30, 0.93); border: 2px solid #ff4757; border-radius: 10px; padding: 15px 25px; color: #ff4757; z-index: 10000; font-weight: bold;';
                     mensaje.innerHTML = '❌ ' + result.message;
                     document.body.appendChild(mensaje);
                     
