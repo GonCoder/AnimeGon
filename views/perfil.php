@@ -608,6 +608,95 @@ if (!$usuario) {
             background: rgba(138, 43, 226, 0.3);
             transform: translateY(-2px);
         }
+
+        /* Estilos para recuperar contraseña */
+        .recover-password-container {
+            text-align: center;
+            padding: 20px;
+            background: rgba(138, 43, 226, 0.05);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            border-radius: 10px;
+        }
+
+        .email-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: rgba(138, 43, 226, 0.1);
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+
+        .email-label {
+            color: #bb86fc;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .email-value {
+            color: #ffffff;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .btn-recover {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-recover:hover {
+            background: linear-gradient(135deg, #f7931e, #ff6b35);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-recover:active {
+            transform: translateY(0);
+        }
+
+        .btn-recover:disabled {
+            background: rgba(108, 117, 125, 0.6);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .recover-info {
+            margin-top: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        /* Responsive para recuperar contraseña */
+        @media (max-width: 768px) {
+            .email-display {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .btn-recover {
+                width: 100%;
+                justify-content: center;
+            }
+        }
         
         /* Zona de peligro */
         .danger-zone {
@@ -741,6 +830,28 @@ if (!$usuario) {
         .btn-cancel:hover {
             transform: translateY(-2px);
             box-shadow: 0 0 25px rgba(102, 102, 102, 0.6);
+        }
+
+        /* Estilos específicos para modal de recuperación */
+        .btn-recover-confirm {
+            background: linear-gradient(135deg, #ff6b35, #f7931e) !important;
+            color: white;
+        }
+
+        .btn-recover-confirm:hover {
+            background: linear-gradient(135deg, #f7931e, #ff6b35) !important;
+            box-shadow: 0 0 25px rgba(255, 107, 53, 0.6) !important;
+        }
+
+        .modal-warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            color: rgba(255, 193, 7, 0.9);
+            font-size: 0.85rem;
+            line-height: 1.4;
         }
         
         /* Mensajes de estado */
@@ -1088,6 +1199,33 @@ if (!$usuario) {
             </div>
         </div>
 
+        <!-- 🔑 Recuperar Contraseña -->
+        <div class="profile-section">
+            <div class="section-header">
+                <h3 class="section-title">🔑 Recuperar Contraseña</h3>
+                <p class="section-description">¿Olvidaste tu contraseña? Te la enviaremos por correo electrónico</p>
+            </div>
+            
+            <div class="recover-password-container">
+                <div class="email-display">
+                    <span class="email-label">📧 Email asociado:</span>
+                    <span class="email-value"><?= htmlspecialchars($usuario['email']) ?></span>
+                </div>
+                
+                <button type="button" id="recoverPasswordBtn" class="btn-recover" onclick="enviarRecuperacion()">
+                    📧 Enviar Contraseña por Email
+                </button>
+                
+                <div class="recover-info">
+                    <small>
+                        ℹ️ Se enviará tu contraseña actual al email asociado a tu cuenta.
+                        <br>
+                        🔒 Por seguridad, considera cambiar tu contraseña después de recibirla.
+                    </small>
+                </div>
+            </div>
+        </div>
+
         <!-- Zona de peligro -->
         <div class="danger-zone">
             <h3 class="danger-title">⚠️ Zona de Peligro</h3>
@@ -1097,6 +1235,38 @@ if (!$usuario) {
             <button class="btn btn-danger" onclick="confirmarEliminacion()">
                 🗑️ Eliminar Cuenta
             </button>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para recuperar contraseña -->
+    <div id="recoverPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">🔑</div>
+                <h3 class="modal-title">Recuperar Contraseña</h3>
+            </div>
+            <div class="modal-body">
+                <div class="modal-message">
+                    ¿Estás seguro de que quieres recibir tu contraseña por email?
+                </div>
+                <div class="modal-submessage">
+                    Se enviará a tu email asociado:
+                    <br><strong>📧 <?= htmlspecialchars($usuario['email']) ?></strong>
+                    <br><br>
+                    <div class="modal-warning">
+                        ⚠️ En desarrollo local (Docker/localhost), el email no se enviará realmente.
+                        <br>En un hosting real funcionaría correctamente.
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-confirm btn-recover-confirm" onclick="confirmarRecuperacion()">
+                        📧 Sí, enviar email
+                    </button>
+                    <button class="btn-cancel" onclick="cerrarModalRecuperacion()">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1372,6 +1542,69 @@ if (!$usuario) {
             }
         });
 
+        // Función para mostrar modal de recuperación de contraseña
+        function enviarRecuperacion() {
+            const modal = document.getElementById('recoverPasswordModal');
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Función para cerrar modal de recuperación
+        function cerrarModalRecuperacion() {
+            const modal = document.getElementById('recoverPasswordModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Función para confirmar y enviar recuperación
+        async function confirmarRecuperacion() {
+            const btn = document.getElementById('recoverPasswordBtn');
+            const originalText = btn.innerHTML;
+            
+            // Cerrar modal
+            cerrarModalRecuperacion();
+            
+            // Deshabilitar botón y mostrar loading
+            btn.disabled = true;
+            btn.innerHTML = '📤 Enviando...';
+            
+            try {
+                const response = await fetch('../backend/api/recuperar_password.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'enviar_password'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    mostrarMensaje(data.message, 'success');
+                    
+                    // Mensaje adicional de seguridad
+                    setTimeout(() => {
+                        mostrarMensaje('🔒 Por seguridad, considera cambiar tu contraseña después de recibirla.', 'success');
+                    }, 2000);
+                    
+                } else {
+                    mostrarMensaje(data.error || 'Error al enviar el email', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarMensaje('Error de conexión al servidor', 'error');
+            } finally {
+                // Restaurar botón después de 3 segundos
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }, 3000);
+            }
+        }
+
         // Funciones para eliminar cuenta
         function confirmarEliminacion() {
             const modal = document.getElementById('deleteAccountModal');
@@ -1416,17 +1649,25 @@ if (!$usuario) {
             }
         }
         
-        // Cerrar modal con escape
+        // Cerrar modales con escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 cerrarModalEliminacion();
+                cerrarModalRecuperacion();
             }
         });
         
-        // Cerrar modal haciendo clic en el fondo
+        // Cerrar modal de eliminación haciendo clic en el fondo
         document.getElementById('deleteAccountModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 cerrarModalEliminacion();
+            }
+        });
+
+        // Cerrar modal de recuperación haciendo clic en el fondo
+        document.getElementById('recoverPasswordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModalRecuperacion();
             }
         });
     </script>
