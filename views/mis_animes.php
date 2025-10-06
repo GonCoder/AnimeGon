@@ -26,8 +26,8 @@ function obtenerDatosUsuario($usuario_id) {
 
 $usuario = obtenerDatosUsuario($usuario_id);
 
-// Obtener animes del usuario
-function obtenerAnimesUsuario($usuario_id) {
+// Obtener animes del usuario (solo primeros 12 para carga inicial)
+function obtenerAnimesUsuario($usuario_id, $limite = 12) {
     try {
         $conexion = obtenerConexion();
         
@@ -39,10 +39,11 @@ function obtenerAnimesUsuario($usuario_id) {
                   LEFT JOIN animes a ON lu.anime_id = a.id 
                   LEFT JOIN favoritos f ON lu.usuario_id = f.usuario_id AND lu.anime_id = f.anime_id
                   WHERE lu.usuario_id = ? 
-                  ORDER BY lu.fecha_agregado DESC";
+                  ORDER BY lu.fecha_agregado DESC
+                  LIMIT ?";
         
         $stmt = $conexion->prepare($query);
-        $stmt->execute([$usuario_id]);
+        $stmt->execute([$usuario_id, $limite]);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
@@ -50,7 +51,22 @@ function obtenerAnimesUsuario($usuario_id) {
     }
 }
 
+// Obtener el total de animes del usuario
+function obtenerTotalAnimesUsuario($usuario_id) {
+    try {
+        $conexion = obtenerConexion();
+        $query = "SELECT COUNT(*) as total FROM lista_usuario WHERE usuario_id = ?";
+        $stmt = $conexion->prepare($query);
+        $stmt->execute([$usuario_id]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'];
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+
 $animes = obtenerAnimesUsuario($usuario_id);
+$total_animes = obtenerTotalAnimesUsuario($usuario_id);
 ?>
 
 <!DOCTYPE html>
@@ -666,6 +682,12 @@ $animes = obtenerAnimesUsuario($usuario_id);
             height: 200px;
             object-fit: cover;
             background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .anime-image.loaded {
+            opacity: 1;
         }
         
         .anime-info {
@@ -1492,6 +1514,81 @@ $animes = obtenerAnimesUsuario($usuario_id);
             transform: translate(-50%, -50%);
             margin: 0;
         }
+
+        /* Estilos para cargar más animes */
+        .load-more-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+            gap: 20px;
+        }
+
+        .load-more-btn {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            min-width: 200px;
+        }
+
+        .load-more-btn:hover {
+            background: linear-gradient(135deg, #0080ff, #00ffff);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .load-more-btn:active {
+            transform: translateY(0);
+        }
+
+        .load-more-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .load-more-text {
+            font-size: 1rem;
+        }
+
+        .load-more-count {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #00ffff;
+            font-size: 1rem;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-top: 2px solid #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
         /* Responsive */
         @media (max-width: 1024px) {
@@ -1804,7 +1901,12 @@ $animes = obtenerAnimesUsuario($usuario_id);
                                 $ruta_imagen = '../' . $ruta_imagen;
                             }
                             ?>
-                            <img src="<?= htmlspecialchars($ruta_imagen) ?>" alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" class="anime-image">
+                            <img src="<?= htmlspecialchars($ruta_imagen) ?>" 
+                                 alt="<?= htmlspecialchars($anime['anime_nombre'] ?? $anime['nombre']) ?>" 
+                                 class="anime-image" 
+                                 loading="lazy"
+                                 onload="this.style.opacity='1'"
+                                 onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
                         <?php else: ?>
                             <div class="anime-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3rem;">
                                 🎭
@@ -1929,6 +2031,20 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+
+        <!-- Botón para cargar más animes -->
+        <?php if ($total_animes > 12): ?>
+        <div class="load-more-container" id="loadMoreContainer">
+            <button class="load-more-btn" id="loadMoreBtn" onclick="cargarMasAnimes()">
+                <span class="load-more-text">📄 Cargar más animes</span>
+                <span class="load-more-count">(<?= min(12, $total_animes - 12) ?> de <?= $total_animes - 12 ?> restantes)</span>
+            </button>
+            <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+                <div class="spinner"></div>
+                <span>Cargando animes...</span>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Modal para agregar anime -->
@@ -2491,6 +2607,270 @@ $animes = obtenerAnimesUsuario($usuario_id);
                 // Se podría implementar con data attributes
             }
         }
+
+        // Variables globales para paginación
+        let paginaActual = 1;
+        let totalPaginas = <?= ceil($total_animes / 12) ?>;
+        let cargandoMas = false;
+        
+        // Variables globales para filtros
+        let filtroViendoActivo = false;
+        let estadoSeleccionado = '';
+
+        // Función para crear una tarjeta de anime
+        function crearTarjetaAnime(anime) {
+            const progreso = anime.episodios_total > 0 ? (anime.episodios_vistos / anime.episodios_total) * 100 : 0;
+            
+            let estadoClass = 'estado-pendiente';
+            let estadoText = 'Plan de Ver';
+            
+            switch (anime.estado) {
+                case 'Viendo':
+                    estadoClass = 'estado-viendo';
+                    estadoText = 'Viendo';
+                    break;
+                case 'Completado':
+                    estadoClass = 'estado-completado';
+                    estadoText = 'Completado';
+                    break;
+                case 'En Pausa':
+                    estadoClass = 'estado-pausado';
+                    estadoText = 'En Pausa';
+                    break;
+                case 'Plan de Ver':
+                    estadoClass = 'estado-pendiente';
+                    estadoText = 'Plan de Ver';
+                    break;
+                case 'Abandonado':
+                    estadoClass = 'estado-abandonado';
+                    estadoText = 'Abandonado';
+                    break;
+            }
+
+            let rutaImagen = anime.imagen_portada;
+            if (rutaImagen && rutaImagen.startsWith('img/')) {
+                rutaImagen = '../' + rutaImagen;
+            }
+
+            let estadoAnimeIcon = '';
+            let estadoAnimeClass = '';
+            switch(anime.estado_anime) {
+                case 'Finalizado':
+                    estadoAnimeIcon = '✅';
+                    estadoAnimeClass = 'finalizado';
+                    break;
+                case 'Emitiendo':
+                    estadoAnimeIcon = '📡';
+                    estadoAnimeClass = 'emitiendo';
+                    break;
+                case 'Próximamente':
+                    estadoAnimeIcon = '🔜';
+                    estadoAnimeClass = 'proximamente';
+                    break;
+                case 'Cancelado':
+                    estadoAnimeIcon = '❌';
+                    estadoAnimeClass = 'cancelado';
+                    break;
+                default:
+                    estadoAnimeIcon = '❓';
+                    estadoAnimeClass = 'desconocido';
+            }
+
+            return `
+                <div class="anime-card" data-anime-name="${(anime.anime_nombre || anime.titulo || 'Sin nombre').toLowerCase()}">
+                    <button class="favorite-btn ${anime.favorito ? 'favorito' : ''}" 
+                            data-anime-id="${anime.anime_id}" 
+                            onclick="toggleFavorito(${anime.anime_id}, this)"
+                            title="${anime.favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                        ⭐
+                    </button>
+                    
+                    ${rutaImagen ? `
+                        <img src="${rutaImagen}" 
+                             alt="${anime.anime_nombre || anime.nombre || 'Sin nombre'}" 
+                             class="anime-image" 
+                             loading="lazy"
+                             onload="this.style.opacity='1'"
+                             onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
+                    ` : `
+                        <div class="anime-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3rem; opacity: 1;">
+                            🎭
+                        </div>
+                    `}
+                    
+                    <div class="anime-info">
+                        <h3 class="anime-name">
+                            ${anime.anime_nombre || anime.titulo || 'Sin nombre'}
+                            ${anime.tipo ? `<span class="tipo-badge">${anime.tipo}</span>` : ''}
+                        </h3>
+                        
+                        ${(anime.titulo_original || anime.titulo_ingles) ? `
+                            <div style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.8;">
+                                ${anime.titulo_original ? `
+                                    <div style="color: #ffd700; margin-bottom: 3px;">
+                                        🇯🇵 ${anime.titulo_original}
+                                    </div>
+                                ` : ''}
+                                ${anime.titulo_ingles ? `
+                                    <div style="color: #00ffff;">
+                                        🇺🇸 ${anime.titulo_ingles}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="anime-progress">
+                            <div class="progress-info">
+                                <span class="progress-text">
+                                    ${anime.episodios_vistos} / ${anime.episodios_total || '?'} episodios
+                                </span>
+                                ${anime.puntuacion ? `
+                                    <span class="puntuacion-badge">
+                                        ⭐ ${parseFloat(anime.puntuacion).toFixed(1)}
+                                    </span>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="episode-controls">
+                                <button class="btn-episode btn-episode-minus" 
+                                        data-anime-id="${anime.anime_id}"
+                                        data-action="decrementar"
+                                        onclick="actualizarEpisodio(${anime.anime_id}, 'decrementar')"
+                                        title="⬅️ Episodio anterior (${Math.max(0, anime.episodios_vistos - 1)})"
+                                        ${anime.episodios_vistos <= 0 ? 'disabled' : ''}>
+                                    ➖
+                                </button>
+                                
+                                <span class="episode-current" id="episodes-${anime.anime_id}">
+                                    ${anime.episodios_vistos}
+                                </span>
+                                
+                                <button class="btn-episode btn-episode-plus" 
+                                        data-anime-id="${anime.anime_id}"
+                                        data-action="incrementar"
+                                        data-animeflv-url="${anime.animeflv_url_name || ''}"
+                                        onclick="actualizarEpisodio(${anime.anime_id}, 'incrementar')"
+                                        title="➡️ Siguiente episodio (${anime.episodios_vistos + 1}${anime.animeflv_url_name ? ' + AnimeFLV' : ''})"
+                                        ${(anime.episodios_total && anime.episodios_vistos >= anime.episodios_total) ? 'disabled' : ''}>
+                                    ➕
+                                </button>
+                            </div>
+                        </div>
+                        
+                        ${anime.estado_anime ? `
+                            <div class="estado-anime">
+                                <span class="estado-anime-badge ${estadoAnimeClass}">
+                                    ${estadoAnimeIcon} ${anime.estado_anime}
+                                </span>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progreso}%"></div>
+                        </div>
+                        
+                        <div class="anime-meta">
+                            <span class="estado-badge ${estadoClass}">${estadoText}</span>
+                            <span>${new Date(anime.fecha_agregado).toLocaleDateString('es-ES')}</span>
+                        </div>
+                        
+                        <div class="anime-actions">
+                            <button class="btn-action btn-editar" data-anime-id="${anime.anime_id}">
+                                ✏️ Editar
+                            </button>
+                            <button class="btn-action btn-eliminar" data-anime-id="${anime.anime_id}" data-anime-nombre="${anime.anime_nombre || anime.titulo || 'Sin nombre'}">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Función para cargar más animes
+        async function cargarMasAnimes() {
+            if (cargandoMas || paginaActual >= totalPaginas) {
+                return;
+            }
+
+            cargandoMas = true;
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            // Mostrar indicador de carga
+            loadMoreBtn.style.display = 'none';
+            loadingIndicator.style.display = 'flex';
+
+            try {
+                const nextPage = paginaActual + 1;
+                
+                // Construir URL con parámetros actuales de filtro
+                const params = new URLSearchParams();
+                params.set('pagina', nextPage.toString());
+                params.set('limite', '12');
+                
+                const searchTerm = document.getElementById('searchInput').value.trim();
+                const estadoSeleccionado = document.getElementById('filtroEstado') ? document.getElementById('filtroEstado').value : '';
+                
+                if (searchTerm) {
+                    params.set('busqueda', searchTerm);
+                }
+                
+                if (estadoSeleccionado) {
+                    params.set('estado', estadoSeleccionado);
+                }
+                
+                if (filtroViendoActivo) {
+                    params.set('solo_viendo', 'true');
+                }
+                
+                const response = await fetch(`../backend/api/obtener_animes_paginados.php?${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.animes.length > 0) {
+                    const grid = document.getElementById('animesGrid');
+                    
+                    // Agregar nuevos animes al grid
+                    data.animes.forEach(anime => {
+                        const animeHTML = crearTarjetaAnime(anime);
+                        grid.insertAdjacentHTML('beforeend', animeHTML);
+                    });
+
+                    paginaActual = nextPage;
+
+                    // Actualizar botón o ocultarlo si no hay más páginas
+                    if (data.paginacion.hay_mas) {
+                        const restantes = data.paginacion.total_registros - (paginaActual * 12);
+                        const siguientesCarga = Math.min(12, restantes);
+                        
+                        loadMoreBtn.querySelector('.load-more-count').textContent = 
+                            `(${siguientesCarga} de ${restantes} restantes)`;
+                        loadMoreBtn.style.display = 'flex';
+                    } else {
+                        // Ocultar completamente el contenedor si no hay más animes
+                        document.getElementById('loadMoreContainer').style.display = 'none';
+                    }
+
+                    showNotification(`Se cargaron ${data.animes.length} animes más`, 'success');
+                } else {
+                    showNotification('No se encontraron más animes', 'info');
+                    document.getElementById('loadMoreContainer').style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Error al cargar más animes:', error);
+                showNotification('Error al cargar más animes', 'error');
+                loadMoreBtn.style.display = 'flex';
+            } finally {
+                loadingIndicator.style.display = 'none';
+                cargandoMas = false;
+            }
+        }
         
         // Funciones del menú hamburguesa
         function toggleMobileMenu() {
@@ -2576,12 +2956,96 @@ $animes = obtenerAnimesUsuario($usuario_id);
             }, 4000);
         }
         
-        // Funciones de filtrado mejoradas
-        let filtroViendoActivo = false;
-        let estadoSeleccionado = '';
-        
-        // Función principal de filtrado
-        function aplicarFiltros() {
+        // Función mejorada para aplicar filtros con paginación
+        async function aplicarFiltros() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const estadoSeleccionado = document.getElementById('filtroEstado') ? document.getElementById('filtroEstado').value : '';
+            
+            // Resetear paginación
+            paginaActual = 1;
+            cargandoMas = false;
+            
+            try {
+                // Construir URL con parámetros de filtro
+                const params = new URLSearchParams();
+                params.set('pagina', '1');
+                params.set('limite', '12');
+                
+                if (searchTerm) {
+                    params.set('busqueda', searchTerm);
+                }
+                
+                if (estadoSeleccionado) {
+                    params.set('estado', estadoSeleccionado);
+                }
+                
+                if (filtroViendoActivo) {
+                    params.set('solo_viendo', 'true');
+                }
+                
+                const response = await fetch(`../backend/api/obtener_animes_paginados.php?${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const grid = document.getElementById('animesGrid');
+                    const loadMoreContainer = document.getElementById('loadMoreContainer');
+                    
+                    // Limpiar grid actual
+                    grid.innerHTML = '';
+                    
+                    if (data.animes.length === 0) {
+                        // Mostrar mensaje de no resultados
+                        grid.innerHTML = `
+                            <div class="no-animes" style="grid-column: 1 / -1;">
+                                <h3>🔍 No se encontraron animes</h3>
+                                <p>Intenta ajustar tus filtros de búsqueda.</p>
+                            </div>
+                        `;
+                        loadMoreContainer.style.display = 'none';
+                    } else {
+                        // Agregar nuevos animes filtrados
+                        data.animes.forEach(anime => {
+                            const animeHTML = crearTarjetaAnime(anime);
+                            grid.insertAdjacentHTML('beforeend', animeHTML);
+                        });
+                        
+                        // Actualizar paginación
+                        totalPaginas = data.paginacion.total_paginas;
+                        
+                        // Mostrar/ocultar botón cargar más
+                        if (data.paginacion.hay_mas) {
+                            const restantes = data.paginacion.total_registros - 12;
+                            const siguientesCarga = Math.min(12, restantes);
+                            
+                            document.querySelector('.load-more-count').textContent = 
+                                `(${siguientesCarga} de ${restantes} restantes)`;
+                            loadMoreContainer.style.display = 'flex';
+                        } else {
+                            loadMoreContainer.style.display = 'none';
+                        }
+                    }
+                    
+                    actualizarContadorVisible();
+                } else {
+                    showNotification('Error al aplicar filtros', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error al aplicar filtros:', error);
+                showNotification('Error de conexión al filtrar animes', 'error');
+                
+                // Fallback: aplicar filtros localmente como antes
+                aplicarFiltrosLocalmente();
+            }
+        }
+
+        // Función de respaldo para filtros locales (método anterior)
+        function aplicarFiltrosLocalmente() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const animeCards = document.querySelectorAll('.anime-card');
             
@@ -2602,7 +3066,8 @@ $animes = obtenerAnimesUsuario($usuario_id);
                     }
                 }
                 
-                // Filtro por estado seleccionado
+                // Filtro por estado seleccionado  
+                const estadoSeleccionado = document.getElementById('filtroEstado') ? document.getElementById('filtroEstado').value : '';
                 if (estadoSeleccionado && mostrar) {
                     const estadoBadge = card.querySelector('.estado-badge');
                     if (!estadoBadge || !estadoBadge.textContent.includes(estadoSeleccionado)) {
@@ -2666,10 +3131,14 @@ $animes = obtenerAnimesUsuario($usuario_id);
             console.log('Botón Viendo:', document.getElementById('filtroViendo'));
             console.log('Select Estado:', document.getElementById('filtroEstado'));
             console.log('Input Búsqueda:', document.getElementById('searchInput'));
-            // Filtro de búsqueda existente
+            // Filtro de búsqueda con debounce para evitar demasiadas peticiones
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
-                searchInput.addEventListener('input', aplicarFiltros);
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(aplicarFiltros, 500); // 500ms de debounce
+                });
             }
             
             // Botón filtro "Viendo"
@@ -2729,4 +3198,5 @@ $animes = obtenerAnimesUsuario($usuario_id);
         document.head.appendChild(style);
     </script>
 </body>
+</html>
 </html>

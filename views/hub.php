@@ -26,8 +26,8 @@ function obtenerDatosUsuario($usuario_id) {
 
 $usuario = obtenerDatosUsuario($usuario_id);
 
-// Obtener todos los animes del hub (excluyendo los que ya tiene el usuario)
-function obtenerAnimesHub($usuario_id) {
+// Obtener animes del hub (solo primeros 12 para carga inicial)
+function obtenerAnimesHub($usuario_id, $limite = 12) {
     try {
         $conexion = obtenerConexion();
         
@@ -65,21 +65,13 @@ function obtenerAnimesHub($usuario_id) {
                       CASE WHEN usuario_actual.anime_id IS NULL THEN 0 ELSE 1 END, -- Primero los que no tiene
                       stats.usuarios_que_lo_tienen DESC, 
                       stats.puntuacion_promedio DESC, 
-                      a.titulo ASC";
+                      a.titulo ASC
+                  LIMIT ?";
         
         $stmt = $conexion->prepare($query);
-        $stmt->execute([$usuario_id]);
+        $stmt->execute([$usuario_id, $limite]);
         
-        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Debug: Log información útil
-        error_log("Hub Debug: Total animes cargados: " . count($resultados));
-        $ya_tiene = array_filter($resultados, function($anime) { return $anime['ya_lo_tiene']; });
-        $disponibles = array_filter($resultados, function($anime) { return !$anime['ya_lo_tiene']; });
-        error_log("Hub Debug: Animes que ya tiene: " . count($ya_tiene));
-        error_log("Hub Debug: Animes disponibles: " . count($disponibles));
-        
-        return $resultados;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
         
     } catch (Exception $e) {
         error_log("Error en obtenerAnimesHub: " . $e->getMessage());
@@ -90,10 +82,11 @@ function obtenerAnimesHub($usuario_id) {
                              0 as puntuacion_promedio, 0 as total_valoraciones, 0 as ya_lo_tiene, '' as mi_estado, 
                              0 as mis_episodios_vistos, 0 as mi_puntuacion
                              FROM animes a
-                             ORDER BY a.titulo ASC";
+                             ORDER BY a.titulo ASC
+                             LIMIT ?";
             
             $stmt = $conexion->prepare($query_simple);
-            $stmt->execute();
+            $stmt->execute([$limite]);
             
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e2) {
@@ -103,7 +96,22 @@ function obtenerAnimesHub($usuario_id) {
     }
 }
 
+// Obtener el total de animes en el hub
+function obtenerTotalAnimesHub($usuario_id) {
+    try {
+        $conexion = obtenerConexion();
+        $query = "SELECT COUNT(DISTINCT a.id) as total FROM animes a";
+        $stmt = $conexion->prepare($query);
+        $stmt->execute();
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'];
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+
 $animes_hub = obtenerAnimesHub($usuario_id);
+$total_animes_hub = obtenerTotalAnimesHub($usuario_id);
 ?>
 
 <!DOCTYPE html>
@@ -349,6 +357,12 @@ $animes_hub = obtenerAnimesHub($usuario_id);
             height: 200px;
             object-fit: cover;
             background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .anime-image.loaded {
+            opacity: 1;
         }
         
         .anime-info {
@@ -1113,6 +1127,81 @@ $animes_hub = obtenerAnimesHub($usuario_id);
             display: block;
             opacity: 1;
         }
+
+        /* Estilos para cargar más animes del hub */
+        .load-more-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+            gap: 20px;
+        }
+
+        .load-more-btn {
+            background: linear-gradient(135deg, #00ff00, #00aa00);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            min-width: 200px;
+        }
+
+        .load-more-btn:hover {
+            background: linear-gradient(135deg, #00aa00, #00ff00);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 0, 0.4);
+        }
+
+        .load-more-btn:active {
+            transform: translateY(0);
+        }
+
+        .load-more-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .load-more-text {
+            font-size: 1rem;
+        }
+
+        .load-more-count {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #00ff00;
+            font-size: 1rem;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            border-top: 2px solid #00ff00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
         /* Responsive */
         @media (max-width: 992px) {
@@ -1308,7 +1397,12 @@ $animes_hub = obtenerAnimesHub($usuario_id);
                                 $ruta_imagen = '../' . $ruta_imagen;
                             }
                             ?>
-                            <img src="<?= htmlspecialchars($ruta_imagen) ?>" alt="<?= htmlspecialchars($anime['titulo']) ?>" class="anime-image">
+                            <img src="<?= htmlspecialchars($ruta_imagen) ?>" 
+                                 alt="<?= htmlspecialchars($anime['titulo']) ?>" 
+                                 class="anime-image" 
+                                 loading="lazy"
+                                 onload="this.style.opacity='1'"
+                                 onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
                         <?php else: ?>
                             <div class="anime-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3rem;">
                                 🎭
@@ -1432,6 +1526,20 @@ $animes_hub = obtenerAnimesHub($usuario_id);
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+
+        <!-- Botón para cargar más animes del hub -->
+        <?php if ($total_animes_hub > 12): ?>
+        <div class="load-more-container" id="loadMoreContainer">
+            <button class="load-more-btn" id="loadMoreBtn" onclick="cargarMasAnimesHub()">
+                <span class="load-more-text">📄 Cargar más animes</span>
+                <span class="load-more-count">(<?= min(12, $total_animes_hub - 12) ?> de <?= $total_animes_hub - 12 ?> restantes)</span>
+            </button>
+            <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+                <div class="spinner"></div>
+                <span>Cargando animes...</span>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Modal para agregar anime a mi lista -->
@@ -1531,23 +1639,329 @@ $animes_hub = obtenerAnimesHub($usuario_id);
 
     <script src="../frontend/assets/js/animes.js"></script>
     <script>
-        // Filtrado específico para hub
-        document.getElementById('searchInput')?.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
+        // Variables globales para paginación del hub
+        let paginaActualHub = 1;
+        let totalPaginasHub = <?= ceil($total_animes_hub / 12) ?>;
+        let cargandoMasHub = false;
+        
+        // Variables globales para filtros del hub
+        let filtroSoloDisponibles = false;
+        let filtroSoloTengo = false;
+
+        // Función para crear una tarjeta de anime del hub
+        function crearTarjetaAnimeHub(anime) {
+            let rutaImagen = anime.imagen_portada;
+            if (rutaImagen && rutaImagen.startsWith('img/')) {
+                rutaImagen = '../' + rutaImagen;
+            }
+
+            return `
+                <div class="anime-card ${anime.ya_lo_tiene ? 'ya-tengo' : ''}" 
+                     data-anime-name="${(anime.titulo || 'Sin nombre').toLowerCase()}"
+                     data-anime-id="${anime.id}">
+                    
+                    ${rutaImagen ? `
+                        <img src="${rutaImagen}" 
+                             alt="${anime.titulo || 'Sin nombre'}" 
+                             class="anime-image" 
+                             loading="lazy"
+                             onload="this.style.opacity='1'"
+                             onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
+                    ` : `
+                        <div class="anime-image" style="display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); font-size: 3rem; opacity: 1;">
+                            🎭
+                        </div>
+                    `}
+                    
+                    <div class="anime-info">
+                        <h3 class="anime-name">
+                            ${anime.titulo || 'Sin nombre'}
+                            ${anime.tipo ? `<span class="tipo-badge">${anime.tipo}</span>` : ''}
+                        </h3>
+                        
+                        ${(anime.titulo_original || anime.titulo_ingles) ? `
+                            <div style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.8;">
+                                ${anime.titulo_original ? `
+                                    <div style="color: #ffd700; margin-bottom: 3px;">
+                                        🇯🇵 ${anime.titulo_original}
+                                    </div>
+                                ` : ''}
+                                ${anime.titulo_ingles ? `
+                                    <div style="color: #00ffff;">
+                                        🇺🇸 ${anime.titulo_ingles}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="anime-stats">
+                            ${anime.episodios_total ? `
+                                <span class="stat-badge">📺 ${anime.episodios_total} eps</span>
+                            ` : ''}
+                            ${anime.usuarios_que_lo_tienen > 0 ? `
+                                <span class="stat-badge">👥 ${anime.usuarios_que_lo_tienen}</span>
+                            ` : ''}
+                            ${anime.puntuacion_promedio > 0 ? `
+                                <span class="rating-badge ${anime.total_valoraciones > 0 ? 'clickeable' : ''}" 
+                                      data-anime-id="${anime.id}">
+                                    ⭐ ${parseFloat(anime.puntuacion_promedio).toFixed(1)}
+                                    ${anime.total_valoraciones > 0 ? ` (${anime.total_valoraciones})` : ''}
+                                </span>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="subido-por">
+                            📤 Subido por: <strong>${anime.subido_por || 'Sistema'}</strong>
+                        </div>
+                        
+                        <div class="anime-actions">
+                            ${anime.ya_lo_tiene ? `
+                                <button class="btn-ya-tengo" data-anime-id="${anime.id}">
+                                    ✅ Ya lo tengo
+                                    ${anime.mi_estado ? `<span class="mi-estado">(${anime.mi_estado})</span>` : ''}
+                                </button>
+                            ` : `
+                                <button class="btn-agregar" data-anime-id="${anime.id}" 
+                                        data-anime-titulo="${anime.titulo || 'Sin nombre'}"
+                                        data-anime-imagen="${rutaImagen || ''}"
+                                        data-anime-episodios="${anime.episodios_total || 0}">
+                                    ➕ Agregar a Mi Lista
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Función para cargar más animes del hub
+        async function cargarMasAnimesHub() {
+            if (cargandoMasHub || paginaActualHub >= totalPaginasHub) {
+                return;
+            }
+
+            cargandoMasHub = true;
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            // Mostrar indicador de carga
+            loadMoreBtn.style.display = 'none';
+            loadingIndicator.style.display = 'flex';
+
+            try {
+                const nextPage = paginaActualHub + 1;
+                
+                // Construir URL con parámetros actuales de filtro
+                const params = new URLSearchParams();
+                params.set('pagina', nextPage.toString());
+                params.set('limite', '12');
+                
+                const searchTerm = document.getElementById('searchInput')?.value?.trim() || '';
+                
+                if (searchTerm) {
+                    params.set('busqueda', searchTerm);
+                }
+                
+                if (filtroSoloDisponibles) {
+                    params.set('solo_disponibles', 'true');
+                }
+                
+                if (filtroSoloTengo) {
+                    params.set('solo_tengo', 'true');
+                }
+                
+                const response = await fetch(`../backend/api/obtener_animes_hub_paginados.php?${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.animes.length > 0) {
+                    const grid = document.getElementById('animesGrid');
+                    
+                    // Agregar nuevos animes al grid
+                    data.animes.forEach(anime => {
+                        const animeHTML = crearTarjetaAnimeHub(anime);
+                        grid.insertAdjacentHTML('beforeend', animeHTML);
+                    });
+
+                    paginaActualHub = nextPage;
+
+                    // Actualizar botón o ocultarlo si no hay más páginas
+                    if (data.paginacion.hay_mas) {
+                        const restantes = data.paginacion.total_registros - (paginaActualHub * 12);
+                        const siguientesCarga = Math.min(12, restantes);
+                        
+                        loadMoreBtn.querySelector('.load-more-count').textContent = 
+                            `(${siguientesCarga} de ${restantes} restantes)`;
+                        loadMoreBtn.style.display = 'flex';
+                    } else {
+                        // Ocultar completamente el contenedor si no hay más animes
+                        document.getElementById('loadMoreContainer').style.display = 'none';
+                    }
+
+                    // Reinicializar event listeners para los nuevos elementos
+                    inicializarEventListeners();
+
+                    showNotification(`Se cargaron ${data.animes.length} animes más`, 'success');
+                } else {
+                    showNotification('No se encontraron más animes', 'info');
+                    document.getElementById('loadMoreContainer').style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Error al cargar más animes del hub:', error);
+                showNotification('Error al cargar más animes', 'error');
+                loadMoreBtn.style.display = 'flex';
+            } finally {
+                loadingIndicator.style.display = 'none';
+                cargandoMasHub = false;
+            }
+        }
+
+        // Función para inicializar event listeners
+        function inicializarEventListeners() {
+            // Event listeners para botones "Agregar a Mi Lista"
+            document.querySelectorAll('.btn-agregar:not([data-listener])').forEach(button => {
+                button.setAttribute('data-listener', 'true');
+                button.addEventListener('click', function() {
+                    // Código existente para agregar anime
+                });
+            });
+
+            // Event listeners para botones "Ya lo tengo"
+            document.querySelectorAll('.btn-ya-tengo:not([data-listener])').forEach(button => {
+                button.setAttribute('data-listener', 'true');
+                button.addEventListener('click', function() {
+                    // Código existente para "ya lo tengo"
+                });
+            });
+
+            // Event listeners para ratings clickeables
+            document.querySelectorAll('.rating-badge.clickeable:not([data-listener])').forEach(badge => {
+                badge.setAttribute('data-listener', 'true');
+                badge.addEventListener('click', function() {
+                    // Código existente para ver puntuaciones
+                });
+            });
+        }
+
+        // Filtrado mejorado para hub con paginación
+        async function aplicarFiltrosHub() {
+            const searchTerm = document.getElementById('searchInput')?.value?.trim() || '';
+            
+            // Resetear paginación
+            paginaActualHub = 1;
+            cargandoMasHub = false;
+            
+            try {
+                // Construir URL con parámetros de filtro
+                const params = new URLSearchParams();
+                params.set('pagina', '1');
+                params.set('limite', '12');
+                
+                if (searchTerm) {
+                    params.set('busqueda', searchTerm);
+                }
+                
+                if (filtroSoloDisponibles) {
+                    params.set('solo_disponibles', 'true');
+                }
+                
+                if (filtroSoloTengo) {
+                    params.set('solo_tengo', 'true');
+                }
+                
+                const response = await fetch(`../backend/api/obtener_animes_hub_paginados.php?${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const grid = document.getElementById('animesGrid');
+                    const loadMoreContainer = document.getElementById('loadMoreContainer');
+                    
+                    // Limpiar grid actual
+                    grid.innerHTML = '';
+                    
+                    if (data.animes.length === 0) {
+                        // Mostrar mensaje de no resultados
+                        grid.innerHTML = `
+                            <div class="no-animes" style="grid-column: 1 / -1;">
+                                <h3>🔍 No se encontraron animes</h3>
+                                <p>Intenta ajustar tus filtros de búsqueda.</p>
+                            </div>
+                        `;
+                        loadMoreContainer.style.display = 'none';
+                    } else {
+                        // Agregar nuevos animes filtrados
+                        data.animes.forEach(anime => {
+                            const animeHTML = crearTarjetaAnimeHub(anime);
+                            grid.insertAdjacentHTML('beforeend', animeHTML);
+                        });
+                        
+                        // Actualizar paginación
+                        totalPaginasHub = data.paginacion.total_paginas;
+                        
+                        // Mostrar/ocultar botón cargar más
+                        if (data.paginacion.hay_mas) {
+                            const restantes = data.paginacion.total_registros - 12;
+                            const siguientesCarga = Math.min(12, restantes);
+                            
+                            document.querySelector('.load-more-count').textContent = 
+                                `(${siguientesCarga} de ${restantes} restantes)`;
+                            loadMoreContainer.style.display = 'flex';
+                        } else {
+                            loadMoreContainer.style.display = 'none';
+                        }
+
+                        // Inicializar event listeners para nuevos elementos
+                        inicializarEventListeners();
+                    }
+                } else {
+                    showNotification('Error al aplicar filtros', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error al aplicar filtros del hub:', error);
+                showNotification('Error de conexión al filtrar animes', 'error');
+                
+                // Fallback: aplicar filtros localmente
+                aplicarFiltrosLocalesHub();
+            }
+        }
+
+        // Función de respaldo para filtros locales
+        function aplicarFiltrosLocalesHub() {
+            const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase() || '';
             const animeCards = document.querySelectorAll('.anime-card');
             
             animeCards.forEach(card => {
                 const animeName = card.getAttribute('data-anime-name');
-                if (animeName.includes(searchTerm)) {
+                if (searchTerm === '' || animeName.includes(searchTerm)) {
                     card.style.display = 'block';
                 } else {
                     card.style.display = 'none';
                 }
             });
+        }
+
+        // Event listener para búsqueda con debounce
+        document.getElementById('searchInput')?.addEventListener('input', function() {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(aplicarFiltrosHub, 500); // 500ms de debounce
         });
         
         // Aplicar búsqueda automática si viene del Dashboard
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar event listeners para elementos existentes
+            inicializarEventListeners();
+            
             // Verificar si hay un término de búsqueda guardado desde el Dashboard
             const savedSearchTerm = localStorage.getItem('hubSearchTerm');
             if (savedSearchTerm) {
@@ -2004,6 +2418,52 @@ $animes_hub = obtenerAnimesHub($usuario_id);
             document.body.style.overflow = 'auto';
             currentAnimeId = null;
             currentRating = 0;
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            // Crear elemento de notificación
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            
+            // Estilos inline básicos
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                max-width: 400px;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+                ${type === 'success' ? 'background: linear-gradient(135deg, #00ff00, #00aa00);' : ''}
+                ${type === 'error' ? 'background: linear-gradient(135deg, #ff0000, #aa0000);' : ''}
+                ${type === 'info' ? 'background: linear-gradient(135deg, #00ffff, #0080ff);' : ''}
+                ${type === 'warning' ? 'background: linear-gradient(135deg, #ffaa00, #ff6600);' : ''}
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animar entrada
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Animar salida y eliminar
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 4000);
         }
         
         // Funciones del menú hamburguesa

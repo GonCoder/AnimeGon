@@ -24,8 +24,8 @@ function obtenerDatosUsuario($usuario_id) {
     }
 }
 
-// Obtener mis animes para recomendar
-function obtenerMisAnimesParaRecomendar($usuario_id) {
+// Obtener mis animes para recomendar (solo primeros 6 para carga inicial)
+function obtenerMisAnimesParaRecomendar($usuario_id, $limite = 6) {
     try {
         $conexion = obtenerConexion();
         
@@ -35,14 +35,29 @@ function obtenerMisAnimesParaRecomendar($usuario_id) {
                   FROM lista_usuario lu 
                   INNER JOIN animes a ON lu.anime_id = a.id 
                   WHERE lu.usuario_id = ? 
-                  ORDER BY lu.puntuacion DESC, lu.fecha_agregado DESC";
+                  ORDER BY lu.puntuacion DESC, lu.fecha_agregado DESC
+                  LIMIT ?";
         
         $stmt = $conexion->prepare($query);
-        $stmt->execute([$usuario_id]);
+        $stmt->execute([$usuario_id, $limite]);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         return [];
+    }
+}
+
+// Obtener el total de mis animes para recomendar
+function obtenerTotalMisAnimesParaRecomendar($usuario_id) {
+    try {
+        $conexion = obtenerConexion();
+        $query = "SELECT COUNT(*) as total FROM lista_usuario WHERE usuario_id = ?";
+        $stmt = $conexion->prepare($query);
+        $stmt->execute([$usuario_id]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'];
+    } catch (Exception $e) {
+        return 0;
     }
 }
 
@@ -65,8 +80,8 @@ function obtenerTodosUsuarios($usuario_id_actual) {
     }
 }
 
-// Obtener recomendaciones recibidas
-function obtenerRecomendacionesRecibidas($usuario_id) {
+// Obtener recomendaciones recibidas (solo primeras 6 para carga inicial)
+function obtenerRecomendacionesRecibidas($usuario_id, $limite = 6) {
     try {
         $conexion = obtenerConexion();
         
@@ -78,10 +93,11 @@ function obtenerRecomendacionesRecibidas($usuario_id) {
                   INNER JOIN usuarios u ON r.usuario_emisor_id = u.id
                   LEFT JOIN lista_usuario lu ON lu.usuario_id = ? AND lu.anime_id = r.anime_id
                   WHERE r.usuario_receptor_id = ?
-                  ORDER BY r.fecha_creacion DESC";
+                  ORDER BY r.fecha_creacion DESC
+                  LIMIT ?";
         
         $stmt = $conexion->prepare($query);
-        $stmt->execute([$usuario_id, $usuario_id]);
+        $stmt->execute([$usuario_id, $usuario_id, $limite]);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
@@ -89,10 +105,26 @@ function obtenerRecomendacionesRecibidas($usuario_id) {
     }
 }
 
+// Obtener el total de recomendaciones recibidas
+function obtenerTotalRecomendacionesRecibidas($usuario_id) {
+    try {
+        $conexion = obtenerConexion();
+        $query = "SELECT COUNT(*) as total FROM recomendaciones WHERE usuario_receptor_id = ?";
+        $stmt = $conexion->prepare($query);
+        $stmt->execute([$usuario_id]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'];
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+
 $usuario = obtenerDatosUsuario($usuario_id);
 $mis_animes = obtenerMisAnimesParaRecomendar($usuario_id);
+$total_mis_animes = obtenerTotalMisAnimesParaRecomendar($usuario_id);
 $todos_usuarios = obtenerTodosUsuarios($usuario_id);
 $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
+$total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
 ?>
 
 <!DOCTYPE html>
@@ -389,6 +421,12 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             justify-content: center;
             color: rgba(255, 255, 255, 0.5);
             font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .anime-card-image.loaded {
+            opacity: 1;
         }
         
         .anime-card-info {
@@ -881,6 +919,78 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             margin-bottom: 15px;
         }
         
+        /* Estilos para botones "Cargar más" */
+        .load-more-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+        }
+        
+        .load-more-btn {
+            background: linear-gradient(135deg, #8a2be2, #da70d6);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+            display: inline-block;
+            min-width: 200px;
+        }
+        
+        .load-more-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+            background: linear-gradient(135deg, #9932cc, #e6e6fa);
+        }
+        
+        .load-more-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .loading-indicator {
+            display: none;
+            color: #8a2be2;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .loading-indicator.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #8a2be2;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Efectos de lazy loading para imágenes */
+        .anime-card-image[loading="lazy"] {
+            opacity: 0.3;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .anime-card-image[loading="lazy"].loaded {
+            opacity: 1;
+        }
+        
         /* Responsive design */
         @media (max-width: 992px) {
             .nav-menu {
@@ -1045,6 +1155,7 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             </div>
             
             <?php if (!empty($mis_animes)): ?>
+                <div id="misAnimesContainer">
                 <?php foreach ($mis_animes as $anime): ?>
                     <div class="anime-recommendation-card">
                         <div class="anime-card-header">
@@ -1055,7 +1166,12 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                                     $ruta_imagen = '../' . $ruta_imagen;
                                 }
                                 ?>
-                                <img src="<?= htmlspecialchars($ruta_imagen) ?>" alt="<?= htmlspecialchars($anime['titulo']) ?>" class="anime-card-image">
+                                <img src="<?= htmlspecialchars($ruta_imagen) ?>" 
+                                     alt="<?= htmlspecialchars($anime['titulo']) ?>" 
+                                     class="anime-card-image" 
+                                     loading="lazy"
+                                     onload="this.style.opacity='1'"
+                                     onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
                             <?php else: ?>
                                 <div class="anime-card-image">🎭</div>
                             <?php endif; ?>
@@ -1082,11 +1198,26 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                         </button>
                     </div>
                 <?php endforeach; ?>
+                </div>
             <?php else: ?>
                 <div class="no-content">
                     <p>📺 No tienes animes en tu lista para recomendar</p>
                     <p>¡Agrega algunos animes primero!</p>
                 </div>
+            <?php endif; ?>
+            
+            <!-- Botón para cargar más mis animes -->
+            <?php if ($total_mis_animes > 6): ?>
+            <div class="load-more-container" id="loadMoreMisAnimesContainer">
+                <button class="load-more-btn" id="cargarMasMisAnimes" onclick="cargarMasMisAnimes()">
+                    <span class="load-more-text">📄 Cargar más animes</span>
+                    <span class="load-more-count">(<?= min(6, $total_mis_animes - 6) ?> de <?= $total_mis_animes - 6 ?> restantes)</span>
+                </button>
+                <div class="loading-indicator" id="loadingMisAnimes" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Cargando animes...</span>
+                </div>
+            </div>
             <?php endif; ?>
         </div>
 
@@ -1095,6 +1226,7 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             <h2 class="section-title">📥 Recomendaciones recibidas</h2>
             
             <?php if (!empty($recomendaciones_recibidas)): ?>
+                <div id="recomendacionesContainer">
                 <?php foreach ($recomendaciones_recibidas as $recomendacion): ?>
                     <div class="anime-recommendation-card received-recommendation">
                         <div class="recommendation-meta">
@@ -1111,7 +1243,12 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                                     $ruta_imagen = '../' . $ruta_imagen;
                                 }
                                 ?>
-                                <img src="<?= htmlspecialchars($ruta_imagen) ?>" alt="<?= htmlspecialchars($recomendacion['titulo']) ?>" class="anime-card-image">
+                                <img src="<?= htmlspecialchars($ruta_imagen) ?>" 
+                                     alt="<?= htmlspecialchars($recomendacion['titulo']) ?>" 
+                                     class="anime-card-image" 
+                                     loading="lazy"
+                                     onload="this.style.opacity='1'"
+                                     onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
                             <?php else: ?>
                                 <div class="anime-card-image">🎭</div>
                             <?php endif; ?>
@@ -1156,11 +1293,26 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                         </div>
                     </div>
                 <?php endforeach; ?>
+                </div>
             <?php else: ?>
                 <div class="no-content">
                     <p>📥 No tienes recomendaciones aún</p>
                     <p>¡Espera a que tus amigos te recomienden animes!</p>
                 </div>
+            <?php endif; ?>
+            
+            <!-- Botón para cargar más recomendaciones recibidas -->
+            <?php if ($total_recomendaciones > 6): ?>
+            <div class="load-more-container" id="loadMoreRecomendacionesContainer">
+                <button class="load-more-btn" id="cargarMasRecomendaciones" onclick="cargarMasRecomendaciones()">
+                    <span class="load-more-text">📄 Cargar más recomendaciones</span>
+                    <span class="load-more-count">(<?= min(6, $total_recomendaciones - 6) ?> de <?= $total_recomendaciones - 6 ?> restantes)</span>
+                </button>
+                <div class="loading-indicator" id="loadingRecomendaciones" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Cargando recomendaciones...</span>
+                </div>
+            </div>
             <?php endif; ?>
         </div>
     </div>
@@ -1552,6 +1704,188 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                 closeMobileMenu();
             }
         });
+        
+        // Variables globales para paginación
+        let paginaMisAnimes = 1;
+        let paginaRecomendaciones = 1;
+        let totalMisAnimes = <?php echo isset($total_mis_animes) ? (int)$total_mis_animes : 0; ?>;
+        let totalRecomendaciones = <?php echo isset($total_recomendaciones) ? (int)$total_recomendaciones : 0; ?>;
+        const animesPorPagina = 6;
+        
+        // Función para cargar más animes de "Mis Animes para Recomendar"
+        window.cargarMasMisAnimes = async function() {
+            const btnCargarMas = document.getElementById('cargarMasMisAnimes');
+            const loadingIndicator = document.getElementById('loadingMisAnimes');
+            const container = document.getElementById('misAnimesContainer');
+            
+            // Mostrar loading
+            btnCargarMas.disabled = true;
+            loadingIndicator.classList.add('show');
+            
+            try {
+                paginaMisAnimes++;
+                const response = await fetch(`../backend/api/obtener_mis_animes_recomendados_paginados.php?pagina=${paginaMisAnimes}&limite=${animesPorPagina}`);
+                const data = await response.json();
+                
+                if (data.success && data.animes.length > 0) {
+                    // Agregar nuevos animes al contenedor
+                    data.animes.forEach(anime => {
+                        const animeCard = crearTarjetaAnime(anime, 'mis-animes');
+                        container.appendChild(animeCard);
+                    });
+                    
+                    // Actualizar contador
+                    const animesRestantes = totalMisAnimes - (paginaMisAnimes * animesPorPagina);
+                    if (animesRestantes > 0) {
+                        btnCargarMas.innerHTML = `Cargar más (${Math.min(animesPorPagina, animesRestantes)} de ${animesRestantes} restantes)`;
+                    } else {
+                        btnCargarMas.style.display = 'none';
+                    }
+                    
+                    // Activar lazy loading para nuevas imágenes
+                    activarLazyLoading();
+                } else {
+                    btnCargarMas.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error al cargar más animes:', error);
+            } finally {
+                btnCargarMas.disabled = false;
+                loadingIndicator.classList.remove('show');
+            }
+        };
+        
+        // Función para cargar más recomendaciones recibidas
+        window.cargarMasRecomendaciones = async function() {
+            const btnCargarMas = document.getElementById('cargarMasRecomendaciones');
+            const loadingIndicator = document.getElementById('loadingRecomendaciones');
+            const container = document.getElementById('recomendacionesContainer');
+            
+            // Mostrar loading
+            btnCargarMas.disabled = true;
+            loadingIndicator.classList.add('show');
+            
+            try {
+                paginaRecomendaciones++;
+                const response = await fetch(`../backend/api/obtener_recomendaciones_paginadas.php?pagina=${paginaRecomendaciones}&limite=${animesPorPagina}`);
+                const data = await response.json();
+                
+                if (data.success && data.recomendaciones.length > 0) {
+                    // Agregar nuevas recomendaciones al contenedor
+                    data.recomendaciones.forEach(recomendacion => {
+                        const recomendacionCard = crearTarjetaAnime(recomendacion, 'recomendaciones');
+                        container.appendChild(recomendacionCard);
+                    });
+                    
+                    // Actualizar contador
+                    const recomendacionesRestantes = totalRecomendaciones - (paginaRecomendaciones * animesPorPagina);
+                    if (recomendacionesRestantes > 0) {
+                        btnCargarMas.innerHTML = `Cargar más (${Math.min(animesPorPagina, recomendacionesRestantes)} de ${recomendacionesRestantes} restantes)`;
+                    } else {
+                        btnCargarMas.style.display = 'none';
+                    }
+                    
+                    // Activar lazy loading para nuevas imágenes
+                    activarLazyLoading();
+                } else {
+                    btnCargarMas.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error al cargar más recomendaciones:', error);
+            } finally {
+                btnCargarMas.disabled = false;
+                loadingIndicator.classList.remove('show');
+            }
+        };
+        
+        // Función para crear tarjetas de anime dinámicamente
+        function crearTarjetaAnime(anime, tipo) {
+            const div = document.createElement('div');
+            
+            if (tipo === 'mis-animes') {
+                div.className = 'anime-recommendation-card';
+                div.innerHTML = `
+                    <div class="anime-card-header">
+                        <img src="${anime.imagen_portada || '../img/no-image.png'}" 
+                             alt="${anime.titulo}" 
+                             class="anime-card-image" 
+                             loading="lazy"
+                             onload="this.style.opacity='1'"
+                             onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
+                        <div class="anime-card-info">
+                            <div class="anime-title">${anime.titulo}</div>
+                            ${anime.titulo_original ? `<div class="anime-details">🇯🇵 ${anime.titulo_original}</div>` : ''}
+                            <div class="anime-details">
+                                � ${anime.tipo} | 
+                                👁️ ${anime.episodios_vistos}/${anime.episodios_total || '?'} episodios
+                                ${anime.puntuacion ? `| ⭐ ${parseFloat(anime.puntuacion).toFixed(1)}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-recommend" onclick="abrirModalRecomendacion(${anime.anime_id}, '${anime.titulo.replace(/'/g, "\\'")}')">
+                        🎯 Recomendar este anime
+                    </button>
+                `;
+            } else if (tipo === 'recomendaciones') {
+                div.className = 'anime-recommendation-card received-recommendation';
+                div.innerHTML = `
+                    <div class="recommendation-meta">
+                        👤 <strong>${anime.emisor_nombre}</strong> 
+                        (@${anime.emisor_username}) • 
+                        📅 ${new Date(anime.fecha_creacion).toLocaleDateString('es-ES')} ${new Date(anime.fecha_creacion).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
+                    </div>
+                    <div class="anime-card-header">
+                        <img src="${anime.imagen_portada || '../img/no-image.png'}" 
+                             alt="${anime.titulo}" 
+                             class="anime-card-image" 
+                             loading="lazy"
+                             onload="this.style.opacity='1'"
+                             onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
+                        <div class="anime-card-info">
+                            <div class="anime-title">${anime.titulo}</div>
+                            ${anime.titulo_original ? `<div class="anime-details">🇯🇵 ${anime.titulo_original}</div>` : ''}
+                            <div class="anime-details">
+                                📺 ${anime.tipo} | 
+                                🎬 ${anime.episodios_total || '?'} episodios | 
+                                ⭐ ${anime.puntuacion_media || 'Sin valorar'}
+                            </div>
+                            ${anime.descripcion ? `<div class="anime-description">${anime.descripcion}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="recommendation-actions">
+                        <button class="btn-add-to-list" onclick="abrirModalAgregar(${anime.anime_id}, ${anime.id}, '${anime.titulo.replace(/'/g, "\\'")}', ${anime.episodios_total || 0})">
+                            ➕ Agregar a mi lista
+                        </button>
+                        ${anime.estado === 'pendiente' ? `
+                            <button class="btn-dismiss" onclick="descartarRecomendacion(${anime.id})">
+                                🙅‍♂️ No me interesa
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            return div;
+        }
+        
+        // Función para activar lazy loading en las nuevas imágenes
+        function activarLazyLoading() {
+            const imagenes = document.querySelectorAll('.anime-card-image[loading="lazy"]:not(.loaded)');
+            
+            imagenes.forEach(img => {
+                img.addEventListener('load', function() {
+                    this.classList.add('loaded');
+                });
+                
+                // Si la imagen ya está cargada
+                if (img.complete) {
+                    img.classList.add('loaded');
+                }
+            });
+        }
+        
+        // Activar lazy loading inicial
+        activarLazyLoading();
         
         }); // Fin del DOMContentLoaded
     </script>
