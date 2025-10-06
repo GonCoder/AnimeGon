@@ -467,6 +467,7 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             display: flex;
             gap: 10px;
             justify-content: flex-end;
+            flex-wrap: wrap;
         }
         
         .btn-add-to-list {
@@ -501,6 +502,28 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
         .btn-discard:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(40, 167, 69, 0.5);
+        }
+        
+        .btn-discard-not-interested {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+            border: 2px solid rgba(108, 117, 125, 0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-discard-not-interested:hover {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+            border: 2px solid rgba(220, 53, 69, 0.3);
         }
         
         /* Estilos para el modal de agregar anime */
@@ -946,6 +969,16 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
             .anime-card-image {
                 align-self: center;
             }
+            
+            .recommendation-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-discard-not-interested {
+                margin-left: 0;
+                margin-top: 0;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1110,11 +1143,14 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
                         <div class="recommendation-actions">
                             <?php if ($recomendacion['ya_en_lista']): ?>
                                 <button class="btn-discard" onclick="descartarRecomendacion(<?= $recomendacion['id'] ?>)">
-                                    ✅ Ya tienes este anime, descartar
+                                    ✅ Ya lo tengo, descartar
                                 </button>
                             <?php else: ?>
                                 <button class="btn-add-to-list" onclick="abrirModalAgregarRecomendado(<?= $recomendacion['anime_id'] ?>, '<?= htmlspecialchars($recomendacion['titulo'], ENT_QUOTES) ?>', <?= $recomendacion['episodios_total'] ?: 'null' ?>, <?= $recomendacion['id'] ?>)">
-                                    ➕ Añadir anime a mi lista
+                                    ➕ Añadir a mi lista
+                                </button>
+                                <button class="btn-discard-not-interested" onclick="descartarRecomendacion(<?= $recomendacion['id'] ?>, true)">
+                                    🙅‍♂️ No me interesa
                                 </button>
                             <?php endif; ?>
                         </div>
@@ -1300,10 +1336,17 @@ $recomendaciones_recibidas = obtenerRecomendacionesRecibidas($usuario_id);
         }
             
             // Función para descartar recomendación
-            window.descartarRecomendacion = function(recomendacionId) {
+            window.descartarRecomendacion = function(recomendacionId, esDesinteres = false) {
+                const titulo = esDesinteres ? 
+                    '🙅‍♂️ Descartar por Falta de Interés' : 
+                    '🗑️ Descartar Recomendación';
+                const mensaje = esDesinteres ?
+                    '¿Estás seguro de que no te interesa este anime? Se descartará la recomendación y no se agregará a tu lista.' :
+                    '¿Estás seguro de que quieres descartar esta recomendación? Esta acción no se puede deshacer.';
+                    
                 mostrarModalConfirmacion(
-                    '🗑️ Descartar Recomendación',
-                    '¿Estás seguro de que quieres descartar esta recomendación? Esta acción no se puede deshacer.',
+                    titulo,
+                    mensaje,
                     async function() {
                         try {
                             const response = await fetch('../backend/api/descartar_recomendacion.php', {

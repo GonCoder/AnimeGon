@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="login-footer">
                 <p>¿No tienes cuenta? <a href="registro.php">Regístrate aquí</a></p>
                 <p><a href="forgot_password.php">🔑 ¿Has olvidado tu contraseña?</a></p>
-                <p><a href="index.php">Volver al inicio</a></p>
+                <p><a href="../index.php">Volver al inicio</a></p>
             </div>
         </div>
     </div>

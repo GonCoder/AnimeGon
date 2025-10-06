@@ -439,6 +439,115 @@ $animes = obtenerAnimesUsuario($usuario_id);
             color: rgba(255, 255, 255, 0.6);
         }
         
+        /* Estilos para controles de filtro específicos */
+        .filter-controls {
+            display: flex !important;
+            gap: 15px !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+        }
+
+        .btn-filtro-viendo {
+            background: rgba(0, 255, 255, 0.1) !important;
+            color: #00ffff !important;
+            border: 2px solid rgba(0, 255, 255, 0.3) !important;
+            border-radius: 25px !important;
+            padding: 12px 20px !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            white-space: nowrap !important;
+            position: relative !important;
+            overflow: hidden !important;
+            text-decoration: none !important;
+        }
+
+        .btn-filtro-viendo:before {
+            content: "" !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: -100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent) !important;
+            transition: left 0.5s !important;
+        }
+
+        .btn-filtro-viendo:hover:before {
+            left: 100% !important;
+        }
+
+        .btn-filtro-viendo:hover {
+            border-color: #00ffff !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .btn-filtro-viendo.active {
+            background: linear-gradient(135deg, #00ffff, #0080ff) !important;
+            color: #000 !important;
+            border-color: #00ffff !important;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.6) !important;
+            font-weight: 900 !important;
+        }
+
+        .btn-filtro-viendo.active:hover {
+            background: linear-gradient(135deg, #0080ff, #00ffff) !important;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8) !important;
+        }
+
+        .filtro-estado {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 2px solid rgba(255, 0, 127, 0.3) !important;
+            border-radius: 25px !important;
+            padding: 12px 20px !important;
+            color: white !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            transition: all 0.3s ease !important;
+            cursor: pointer !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23ff007f" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') !important;
+            background-repeat: no-repeat !important;
+            background-position: right 15px center !important;
+            background-size: 20px !important;
+            padding-right: 50px !important;
+            min-width: 200px !important;
+        }
+
+        .filtro-estado:focus {
+            outline: none !important;
+            border-color: #ff007f !important;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.4) !important;
+        }
+
+        .filtro-estado:hover {
+            border-color: rgba(255, 0, 127, 0.6) !important;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.3) !important;
+        }
+
+        .filtro-estado option {
+            background: #1a1a1a !important;
+            color: white !important;
+            padding: 10px !important;
+            border: none !important;
+        }
+
+        .filtro-estado option:checked {
+            background: #ff007f !important;
+            color: white !important;
+        }
+
+        .filtro-estado option:hover {
+            background: rgba(255, 0, 127, 0.3) !important;
+        }
+        
         .btn-agregar {
             background: linear-gradient(135deg, #ff007f, #bf00ff);
             color: white;
@@ -1491,6 +1600,25 @@ $animes = obtenerAnimesUsuario($usuario_id);
             .btn-cancel {
                 width: 100%;
             }
+            
+            /* Estilos responsive para filtros */
+            .filter-controls {
+                width: 100% !important;
+                justify-content: center !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .btn-filtro-viendo {
+                padding: 10px 16px !important;
+                font-size: 14px !important;
+            }
+            
+            .filtro-estado {
+                min-width: 180px !important;
+                padding: 10px 16px !important;
+                padding-right: 45px !important;
+                font-size: 14px !important;
+            }
         }
         
         @media (max-height: 600px) {
@@ -1506,6 +1634,24 @@ $animes = obtenerAnimesUsuario($usuario_id);
             
             .form-group {
                 margin-bottom: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .filter-controls {
+                flex-direction: column !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            
+            .btn-filtro-viendo,
+            .filtro-estado {
+                width: 100% !important;
+                max-width: 300px !important;
+            }
+            
+            .filtro-estado {
+                min-width: auto !important;
             }
         }
     </style>
@@ -1566,6 +1712,21 @@ $animes = obtenerAnimesUsuario($usuario_id);
         <div class="animes-header">
             <h1 class="animes-title">📺 Mis Animes</h1>
             <div class="filter-section">
+                <div class="filter-controls" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <button class="btn-filtro-viendo" id="filtroViendo" title="Filtrar animes que estoy viendo" 
+                            style="background: rgba(0, 255, 255, 0.1); color: #00ffff; border: 2px solid rgba(0, 255, 255, 0.3); border-radius: 25px; padding: 12px 20px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+                        👀 Viendo
+                    </button>
+                    <select class="filtro-estado" id="filtroEstado" 
+                            style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 0, 127, 0.3); border-radius: 25px; padding: 12px 20px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=\"%23ff007f\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat: no-repeat; background-position: right 15px center; background-size: 20px; padding-right: 50px; min-width: 200px;">
+                        <option value="">🎯 Todos los estados</option>
+                        <option value="Viendo">👀 Viendo</option>
+                        <option value="Completado">✅ Completado</option>
+                        <option value="En Pausa">⏸️ En Pausa</option>
+                        <option value="Plan de Ver">⏳ Plan de Ver</option>
+                        <option value="Abandonado">❌ Abandonado</option>
+                    </select>
+                </div>
                 <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar animes...">
                 <div class="action-buttons">
                     <button class="btn-exportar" onclick="exportarLista()">
@@ -2415,6 +2576,144 @@ $animes = obtenerAnimesUsuario($usuario_id);
             }, 4000);
         }
         
+        // Funciones de filtrado mejoradas
+        let filtroViendoActivo = false;
+        let estadoSeleccionado = '';
+        
+        // Función principal de filtrado
+        function aplicarFiltros() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const animeCards = document.querySelectorAll('.anime-card');
+            
+            animeCards.forEach(card => {
+                let mostrar = true;
+                
+                // Filtro por texto de búsqueda
+                const animeName = card.getAttribute('data-anime-name');
+                if (searchTerm && !animeName.includes(searchTerm)) {
+                    mostrar = false;
+                }
+                
+                // Filtro "Viendo" activo
+                if (filtroViendoActivo && mostrar) {
+                    const estadoBadge = card.querySelector('.estado-badge');
+                    if (!estadoBadge || !estadoBadge.textContent.includes('Viendo')) {
+                        mostrar = false;
+                    }
+                }
+                
+                // Filtro por estado seleccionado
+                if (estadoSeleccionado && mostrar) {
+                    const estadoBadge = card.querySelector('.estado-badge');
+                    if (!estadoBadge || !estadoBadge.textContent.includes(estadoSeleccionado)) {
+                        mostrar = false;
+                    }
+                }
+                
+                card.style.display = mostrar ? 'block' : 'none';
+            });
+            
+            // Actualizar contador si existe
+            actualizarContadorVisible();
+        }
+        
+        // Función para actualizar contador de animes visibles
+        function actualizarContadorVisible() {
+            const animesVisibles = document.querySelectorAll('.anime-card[style*="block"], .anime-card:not([style*="none"])').length;
+            const totalAnimes = document.querySelectorAll('.anime-card').length;
+            
+            // Mostrar/ocultar mensaje de "no hay resultados"
+            const grid = document.getElementById('animesGrid');
+            let noResultsMsg = document.getElementById('noResultsMessage');
+            
+            if (animesVisibles === 0 && totalAnimes > 0) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.id = 'noResultsMessage';
+                    noResultsMsg.className = 'no-animes';
+                    noResultsMsg.style.gridColumn = '1 / -1';
+                    noResultsMsg.innerHTML = `
+                        <h3>🔍 No se encontraron animes</h3>
+                        <p>No hay animes que coincidan con los filtros seleccionados.</p>
+                        <button class="btn-agregar" onclick="limpiarFiltros()">🔄 Limpiar filtros</button>
+                    `;
+                    grid.appendChild(noResultsMsg);
+                }
+                noResultsMsg.style.display = 'block';
+            } else if (noResultsMsg) {
+                noResultsMsg.style.display = 'none';
+            }
+        }
+        
+        // Función para limpiar todos los filtros
+        function limpiarFiltros() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filtroEstado').value = '';
+            filtroViendoActivo = false;
+            estadoSeleccionado = '';
+            
+            const btnViendo = document.getElementById('filtroViendo');
+            btnViendo.classList.remove('active');
+            btnViendo.textContent = '👀 Viendo';
+            
+            aplicarFiltros();
+        }
+        
+        // Event listeners para filtros
+        document.addEventListener('DOMContentLoaded', function() {
+            // Debug: Verificar que los elementos existen
+            console.log('Elementos de filtro encontrados:');
+            console.log('Botón Viendo:', document.getElementById('filtroViendo'));
+            console.log('Select Estado:', document.getElementById('filtroEstado'));
+            console.log('Input Búsqueda:', document.getElementById('searchInput'));
+            // Filtro de búsqueda existente
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', aplicarFiltros);
+            }
+            
+            // Botón filtro "Viendo"
+            const btnFiltroViendo = document.getElementById('filtroViendo');
+            if (btnFiltroViendo) {
+                btnFiltroViendo.addEventListener('click', function() {
+                    filtroViendoActivo = !filtroViendoActivo;
+                    
+                    if (filtroViendoActivo) {
+                        this.classList.add('active');
+                        this.textContent = '👀 Viendo ✓';
+                        // Limpiar filtro de estado si está activo
+                        if (estadoSeleccionado) {
+                            document.getElementById('filtroEstado').value = '';
+                            estadoSeleccionado = '';
+                        }
+                    } else {
+                        this.classList.remove('active');
+                        this.textContent = '👀 Viendo';
+                    }
+                    
+                    aplicarFiltros();
+                });
+            }
+            
+            // Select filtro por estado
+            const selectFiltroEstado = document.getElementById('filtroEstado');
+            if (selectFiltroEstado) {
+                selectFiltroEstado.addEventListener('change', function() {
+                    estadoSeleccionado = this.value;
+                    
+                    // Si se selecciona un estado, desactivar filtro "Viendo"
+                    if (estadoSeleccionado && filtroViendoActivo) {
+                        filtroViendoActivo = false;
+                        const btnViendo = document.getElementById('filtroViendo');
+                        btnViendo.classList.remove('active');
+                        btnViendo.textContent = '👀 Viendo';
+                    }
+                    
+                    aplicarFiltros();
+                });
+            }
+        });
+
         // Agregar estilos de animación
         const style = document.createElement('style');
         style.textContent = `
