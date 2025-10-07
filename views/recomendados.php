@@ -650,6 +650,7 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
             overflow-y: auto;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         
         .modal-header {
             background: linear-gradient(135deg, #ff007f, #00ffff);
@@ -663,6 +664,167 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
         
         .modal-body {
             padding: 30px;
+        }
+        
+        /* SOBRESCRIBIR para el modal de recomendación - FORZAR layout horizontal */
+        #recommendModal .modal-content {
+            max-width: 1100px !important;
+            width: 90% !important;
+        }
+        
+        /* Layout Responsivo Final - Prioridad a Contenedores Internos */
+        @media (min-width: 768px) {
+            #recommendModal .modal-dialog {
+                max-width: 1200px !important;
+                width: 95% !important;
+                height: 90vh !important;
+                max-height: 800px !important;
+            }
+            
+            #recommendModal .modal-content {
+                height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            
+            #recommendModal .modal-header {
+                padding: 15px 20px !important;
+                min-height: auto !important;
+                flex-shrink: 0 !important;
+            }
+            
+            #recommendModal .modal-body {
+                padding: 25px !important;
+                flex: 1 !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            
+            #recommendModal #recommendForm {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                grid-template-rows: auto 1fr auto !important;
+                grid-template-areas: 
+                    "title title"
+                    "left right" 
+                    "buttons buttons" !important;
+                gap: 25px !important;
+                height: 100% !important;
+                flex: 1 !important;
+            }
+            
+            #recommendModal .anime-title-section {
+                grid-area: title !important;
+                text-align: center !important;
+                padding: 15px 0 10px 0 !important;
+                border-bottom: 1px solid rgba(0, 255, 255, 0.3) !important;
+                margin-bottom: 0px !important;
+                font-size: 1.2rem !important;
+                flex-shrink: 0 !important;
+            }
+            
+            #recommendModal .left-column {
+                grid-area: left !important;
+                padding: 20px !important;
+                background: rgba(255, 255, 255, 0.05) !important;
+                border-radius: 12px !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 0 !important;
+            }
+            
+            #recommendModal .right-column {
+                grid-area: right !important;
+                padding: 20px !important;
+                background: rgba(255, 255, 255, 0.05) !important;
+                border-radius: 12px !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 0 !important;
+            }
+            
+            /* Optimización del contenedor de valoración - Se adapta al tamaño del modal */
+            #recommendModal .left-column .form-group {
+                margin-bottom: 15px !important;
+                flex-shrink: 0 !important;
+            }
+            
+            #recommendModal .left-column .form-group:last-child {
+                flex: 1 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 0 !important;
+            }
+            
+            #recommendModal .left-column textarea {
+                flex: 1 !important;
+                resize: none !important;
+                min-height: 60px !important;
+                max-height: none !important;
+                overflow-y: auto !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                background: rgba(0, 0, 0, 0.2) !important;
+            }
+            
+            /* Optimización del contenedor de usuarios - Se adapta al tamaño del modal */
+            #recommendModal .right-column h5 {
+                margin-bottom: 15px !important;
+                text-align: center !important;
+                color: #00ffff !important;
+                font-size: 1.1rem !important;
+                flex-shrink: 0 !important;
+            }
+            
+            #recommendModal .users-checkbox-container {
+                flex: 1 !important;
+                overflow: hidden !important;
+                padding: 15px !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                border-radius: 8px !important;
+                background: rgba(0, 0, 0, 0.2) !important;
+                min-height: 0 !important;
+                max-height: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            
+            #recommendModal .users-checkbox-list {
+                flex: 1 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                padding-right: 10px !important;
+                min-height: 0 !important;
+            }
+            
+            #recommendModal .users-checkbox-list .form-check {
+                margin-bottom: 8px !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                flex-shrink: 0 !important;
+            }
+            
+            #recommendModal .buttons-section {
+                grid-area: buttons !important;
+                text-align: center !important;
+                padding-top: 15px !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+                flex-shrink: 0 !important;
+            }
+        }
+        
+        /* Mobile - Mantener layout vertical */
+        @media (max-width: 767px) {
+            #recommendModal .left-column,
+            #recommendModal .right-column {
+                margin-bottom: 20px !important;
+                padding: 20px !important;
+                background: rgba(255, 255, 255, 0.05) !important;
+                border-radius: 10px !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            }
         }
         
         .form-group {
@@ -1328,52 +1490,60 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
                 <form id="recommendForm">
                     <input type="hidden" id="recommend_anime_id" name="anime_id">
                     
-                    <div class="form-group">
-                        <h3 id="anime_title" style="color: #00ffff; margin-bottom: 20px;"></h3>
+                    <!-- Título del anime - Ocupa toda la fila -->
+                    <div class="anime-title-section">
+                        <h3 id="anime_title" style="color: #00ffff; margin-bottom: 0; text-align: center; font-size: 22px;"></h3>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="valoracion">⭐ Tu valoración de este anime (1-10)</label>
-                        <select id="valoracion" name="valoracion" required>
-                            <option value="">Selecciona una puntuación</option>
-                            <option value="10">⭐ 10 - Obra Maestra</option>
-                            <option value="9">⭐ 9 - Excelente</option>
-                            <option value="8">⭐ 8 - Muy Bueno</option>
-                            <option value="7">⭐ 7 - Bueno</option>
-                            <option value="6">⭐ 6 - Decente</option>
-                            <option value="5">⭐ 5 - Promedio</option>
-                            <option value="4">⭐ 4 - Malo</option>
-                            <option value="3">⭐ 3 - Muy Malo</option>
-                            <option value="2">⭐ 2 - Horrible</option>
-                            <option value="1">⭐ 1 - Desastre</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="mensaje">💬 ¿Por qué recomiendas este anime?</label>
-                        <textarea id="mensaje" name="mensaje" placeholder="Cuéntales por qué deberían ver este anime..." maxlength="3000" required></textarea>
-                        <div class="character-count" id="charCount">0 / 3000 caracteres</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>👥 Selecciona a quién enviar la recomendación</label>
-                        <div class="users-checkbox-list">
-                            <?php foreach ($todos_usuarios as $usuario_item): ?>
-                                <div class="user-checkbox">
-                                    <input type="checkbox" name="usuarios[]" value="<?= $usuario_item['id'] ?>" id="user_<?= $usuario_item['id'] ?>">
-                                    <label for="user_<?= $usuario_item['id'] ?>">
-                                        <strong><?= htmlspecialchars($usuario_item['nombre']) ?></strong>
-                                        <?php if ($usuario_item['apellidos']): ?>
-                                            <?= htmlspecialchars($usuario_item['apellidos']) ?>
-                                        <?php endif; ?>
-                                        (@<?= htmlspecialchars($usuario_item['username']) ?>)
-                                    </label>
-                                </div>
-                            <?php endforeach; ?>
+                    <!-- Columna Izquierda: Valoración y Mensaje -->
+                    <div class="left-column">
+                        <div class="form-group">
+                            <label for="valoracion">⭐ Tu valoración de este anime (1-10)</label>
+                            <select id="valoracion" name="valoracion" required>
+                                <option value="">Selecciona una puntuación</option>
+                                <option value="10">⭐ 10 - Obra Maestra</option>
+                                <option value="9">⭐ 9 - Excelente</option>
+                                <option value="8">⭐ 8 - Muy Bueno</option>
+                                <option value="7">⭐ 7 - Bueno</option>
+                                <option value="6">⭐ 6 - Decente</option>
+                                <option value="5">⭐ 5 - Promedio</option>
+                                <option value="4">⭐ 4 - Malo</option>
+                                <option value="3">⭐ 3 - Muy Malo</option>
+                                <option value="2">⭐ 2 - Horrible</option>
+                                <option value="1">⭐ 1 - Desastre</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="mensaje">💬 ¿Por qué recomiendas este anime?</label>
+                            <textarea id="mensaje" name="mensaje" placeholder="Cuéntales por qué deberían ver este anime..." maxlength="3000" required></textarea>
+                            <div class="character-count" id="charCount">0 / 3000 caracteres</div>
                         </div>
                     </div>
                     
-                    <div style="text-align: center; margin-top: 30px;">
+                    <!-- Columna Derecha: Lista de Usuarios -->
+                    <div class="right-column">
+                        <div class="form-group">
+                            <label>👥 Selecciona a quién enviar la recomendación</label>
+                            <div class="users-checkbox-list">
+                                <?php foreach ($todos_usuarios as $usuario_item): ?>
+                                    <div class="user-checkbox">
+                                        <input type="checkbox" name="usuarios[]" value="<?= $usuario_item['id'] ?>" id="user_<?= $usuario_item['id'] ?>">
+                                        <label for="user_<?= $usuario_item['id'] ?>">
+                                            <strong><?= htmlspecialchars($usuario_item['nombre']) ?></strong>
+                                            <?php if ($usuario_item['apellidos']): ?>
+                                                <?= htmlspecialchars($usuario_item['apellidos']) ?>
+                                            <?php endif; ?>
+                                            (@<?= htmlspecialchars($usuario_item['username']) ?>)
+                                        </label>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botones - Ocupan toda la fila -->
+                    <div class="buttons-section">
                         <button type="submit" class="btn-submit">🚀 Enviar recomendación</button>
                         <button type="button" class="btn-cancel" onclick="cerrarModalRecomendacion()">❌ Cancelar</button>
                     </div>
@@ -1403,6 +1573,8 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
             document.getElementById('recommendForm').reset();
             document.getElementById('recommend_anime_id').value = animeId;
             updateCharCount();
+            
+
         }
 
             // Función para cerrar modal

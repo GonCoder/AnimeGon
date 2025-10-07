@@ -2600,6 +2600,85 @@ $total_ya_tengo_hub = obtenerTotalYaTiengoHub($usuario_id);
                     closeMobileMenu();
                 }
             });
+            
+            // Detectar parámetro 'anime' en la URL y abrir modal de puntuaciones
+            const urlParams = new URLSearchParams(window.location.search);
+            const animeId = urlParams.get('anime');
+            
+            if (animeId) {
+                console.log(`Detectado anime ID: ${animeId}`);
+                
+                // Función para limpiar la URL después de abrir el modal
+                const limpiarURL = () => {
+                    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                };
+                
+                // Buscar el anime en la página cargada
+                const animeCard = document.querySelector(`[data-anime-id="${animeId}"]`);
+                console.log(`Tarjeta del anime encontrada:`, !!animeCard);
+                
+                if (animeCard) {
+                    // Buscar el rating badge clickeable dentro de la tarjeta del anime
+                    const ratingBadge = animeCard.querySelector('.rating-badge.clickeable');
+                    console.log(`Rating badge encontrado:`, !!ratingBadge);
+                    
+                    if (ratingBadge) {
+                        // Simular click en el rating badge para abrir el modal
+                        setTimeout(() => {
+                            console.log(`Haciendo click en rating badge para anime ${animeId}`);
+                            ratingBadge.click();
+                            // Limpiar URL después de abrir el modal
+                            setTimeout(limpiarURL, 100);
+                        }, 1000); // Aumentar tiempo de espera
+                    } else {
+                        // Si no hay rating badge clickeable, intentar abrir el modal directamente
+                        const animeTitulo = animeCard.querySelector('.anime-name')?.textContent || 'Anime';
+                        console.log(`Abriendo modal directamente para: ${animeTitulo}`);
+                        setTimeout(() => {
+                            if (typeof abrirModalPuntuaciones === 'function') {
+                                abrirModalPuntuaciones(animeId, animeTitulo);
+                                // Limpiar URL después de abrir el modal
+                                setTimeout(limpiarURL, 100);
+                            } else {
+                                console.error('Función abrirModalPuntuaciones no disponible');
+                            }
+                        }, 1000);
+                    }
+                } else {
+                    // Si el anime no está en la página actual, buscarlo en la base de datos
+                    console.log(`Anime con ID ${animeId} no encontrado en la página actual, buscando en base de datos...`);
+                    
+                    // Hacer una petición para obtener información del anime específico
+                    fetch(`../backend/api/obtener_anime.php?anime_id=${animeId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Respuesta de la API:', data);
+                            if (data.exito && data.anime) {
+                                console.log(`Anime encontrado en BD:`, data.anime.titulo);
+                                // Abrir modal directamente con los datos obtenidos
+                                setTimeout(() => {
+                                    if (typeof abrirModalPuntuaciones === 'function') {
+                                        abrirModalPuntuaciones(animeId, data.anime.titulo);
+                                        setTimeout(limpiarURL, 100);
+                                    } else {
+                                        console.error('Función abrirModalPuntuaciones no disponible');
+                                        limpiarURL();
+                                    }
+                                }, 500);
+                            } else {
+                                console.log(`Anime con ID ${animeId} no existe en la base de datos`);
+                                alert(`El anime solicitado no se encontró en la base de datos.`);
+                                limpiarURL();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error al buscar el anime:', error);
+                            alert(`Error al buscar el anime. Por favor, intenta de nuevo.`);
+                            limpiarURL();
+                        });
+                }
+            }
         });
     </script>
 </body>
