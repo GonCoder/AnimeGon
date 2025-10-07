@@ -523,6 +523,16 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
             transition: width 0.3s ease;
         }
         
+        /* Estilos para imagen (compatible con HTML estático y JS) */
+        .anime-card .anime-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: block;
+        }
+        
         .anime-meta {
             display: flex;
             justify-content: space-between;
@@ -1671,19 +1681,103 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
             configurarEventListenersFavoritos();
         });
         
-        // Filtrado específico para favoritos
-        document.getElementById('searchInput')?.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const animeCards = document.querySelectorAll('.anime-card');
+        // Variable para timeout de búsqueda y término actual
+        let timeoutBusquedaFavoritos = null;
+        let busquedaActualFavoritos = '';
+        
+        // Función para buscar favoritos en la base de datos
+        async function buscarFavoritos(termino = '') {
+            const container = document.getElementById('favoritosContainer');
+            const btnCargarMas = document.getElementById('cargarMasFavoritos');
+            const loadingIndicator = document.getElementById('loadingFavoritos');
             
-            animeCards.forEach(card => {
-                const animeName = card.getAttribute('data-anime-name');
-                if (animeName.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
+            // Actualizar búsqueda actual
+            busquedaActualFavoritos = termino.trim();
+            
+            // Mostrar loading
+            if (loadingIndicator) loadingIndicator.classList.add('show');
+            if (btnCargarMas) btnCargarMas.disabled = true;
+            
+            try {
+                // Resetear paginación
+                paginaFavoritos = 1;
+                
+                // Construir URL con parámetros
+                let url = `../backend/api/obtener_favoritos_paginados.php?pagina=1&limite=${favoritosPorPagina}`;
+                if (busquedaActualFavoritos) {
+                    url += `&busqueda=${encodeURIComponent(busquedaActualFavoritos)}`;
                 }
-            });
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Limpiar contenedor
+                    container.innerHTML = '';
+                    
+                    if (data.animes.length > 0) {
+                        // Agregar favoritos encontrados
+                        data.animes.forEach(anime => {
+                            const animeCard = crearTarjetaFavorito(anime);
+                            container.appendChild(animeCard);
+                        });
+                        
+                        // Actualizar botón "Cargar más"
+                        if (data.paginacion.hay_mas) {
+                            btnCargarMas.style.display = 'block';
+                            const favoritosRestantes = data.paginacion.total_registros - data.animes.length;
+                            btnCargarMas.innerHTML = `
+                                <span class="load-more-text">📄 Cargar más favoritos</span>
+                                <span class="load-more-count">(${Math.min(favoritosPorPagina, favoritosRestantes)} de ${favoritosRestantes} restantes)</span>
+                            `;
+                        } else {
+                            btnCargarMas.style.display = 'none';
+                        }
+                        
+                        // Activar lazy loading y event listeners
+                        activarLazyLoading();
+                        configurarEventListenersFavoritos();
+                    } else {
+                        // Mostrar mensaje "no encontrado"
+                        const noResultsMsg = document.createElement('div');
+                        noResultsMsg.className = 'no-results-message';
+                        noResultsMsg.innerHTML = `
+                            <div style="text-align: center; padding: 50px 20px; color: rgba(255, 255, 255, 0.7);">
+                                <h3 style="color: #ffd700; margin-bottom: 15px;">🔍 No se encontraron favoritos</h3>
+                                <p>${busquedaActualFavoritos ? `No hay favoritos que coincidan con "${busquedaActualFavoritos}"` : 'No tienes animes favoritos'}</p>
+                            </div>
+                        `;
+                        container.appendChild(noResultsMsg);
+                        btnCargarMas.style.display = 'none';
+                    }
+                } else {
+                    throw new Error(data.error || 'Error al buscar favoritos');
+                }
+            } catch (error) {
+                console.error('Error en búsqueda de favoritos:', error);
+                container.innerHTML = `
+                    <div class="error-message" style="text-align: center; padding: 50px 20px; color: rgba(255, 255, 255, 0.7);">
+                        <h3 style="color: #ff6b6b; margin-bottom: 15px;">❌ Error de búsqueda</h3>
+                        <p>No se pudieron cargar los favoritos. Intenta de nuevo.</p>
+                    </div>
+                `;
+            } finally {
+                if (loadingIndicator) loadingIndicator.classList.remove('show');
+                if (btnCargarMas) btnCargarMas.disabled = false;
+            }
+        }
+        
+        // Event listener para búsqueda con debounce
+        document.getElementById('searchInput')?.addEventListener('input', function() {
+            const searchTerm = this.value;
+            
+            // Limpiar timeout anterior
+            if (timeoutBusquedaFavoritos) clearTimeout(timeoutBusquedaFavoritos);
+            
+            // Establecer nuevo timeout para evitar demasiadas peticiones
+            timeoutBusquedaFavoritos = setTimeout(() => {
+                buscarFavoritos(searchTerm);
+            }, 500); // 500ms de debounce
         });
         
         // Función específica para quitar de favoritos con modal personalizado
@@ -1816,7 +1910,14 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
             
             try {
                 paginaFavoritos++;
-                const response = await fetch(`../backend/api/obtener_favoritos_paginados.php?pagina=${paginaFavoritos}&limite=${favoritosPorPagina}`);
+                
+                // Construir URL con búsqueda actual
+                let url = `../backend/api/obtener_favoritos_paginados.php?pagina=${paginaFavoritos}&limite=${favoritosPorPagina}`;
+                if (busquedaActualFavoritos) {
+                    url += `&busqueda=${encodeURIComponent(busquedaActualFavoritos)}`;
+                }
+                
+                const response = await fetch(url);
                 const data = await response.json();
                 
                 if (data.success && data.animes.length > 0) {
@@ -1854,43 +1955,116 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
         function crearTarjetaFavorito(anime) {
             const div = document.createElement('div');
             div.className = 'anime-card';
+            div.setAttribute('data-anime-name', (anime.anime_nombre || anime.titulo || 'Sin nombre').toLowerCase());
             
             const progreso = anime.episodios_total > 0 ? (anime.episodios_vistos / anime.episodios_total) * 100 : 0;
             const imagenSrc = anime.imagen_portada ? (anime.imagen_portada.startsWith('img/') ? '../' + anime.imagen_portada : anime.imagen_portada) : '../img/no-image.png';
             
+            // Determinar estado del usuario
+            let estadoClass = 'estado-pendiente';
+            let estadoText = 'Plan de Ver';
+            if (anime.estado) {
+                switch (anime.estado) {
+                    case 'Viendo':
+                        estadoClass = 'estado-viendo';
+                        estadoText = 'Viendo';
+                        break;
+                    case 'Completado':
+                        estadoClass = 'estado-completado';
+                        estadoText = 'Completado';
+                        break;
+                    case 'En Pausa':
+                        estadoClass = 'estado-pausado';
+                        estadoText = 'En Pausa';
+                        break;
+                    case 'Abandonado':
+                        estadoClass = 'estado-abandonado';
+                        estadoText = 'Abandonado';
+                        break;
+                }
+            }
+            
+            // Determinar estado del anime
+            let estadoAnimeIcon = '❓';
+            let estadoAnimeClass = 'desconocido';
+            if (anime.estado_anime) {
+                switch (anime.estado_anime) {
+                    case 'Finalizado':
+                        estadoAnimeIcon = '✅';
+                        estadoAnimeClass = 'finalizado';
+                        break;
+                    case 'Emitiendo':
+                        estadoAnimeIcon = '📡';
+                        estadoAnimeClass = 'emitiendo';
+                        break;
+                    case 'Próximamente':
+                        estadoAnimeIcon = '🔜';
+                        estadoAnimeClass = 'proximamente';
+                        break;
+                    case 'Cancelado':
+                        estadoAnimeIcon = '❌';
+                        estadoAnimeClass = 'cancelado';
+                        break;
+                }
+            }
+            
             div.innerHTML = `
-                <div class="anime-image-container">
-                    <img src="${imagenSrc}" 
-                         alt="${anime.anime_nombre || anime.nombre || 'Sin nombre'}" 
-                         class="anime-image" 
-                         loading="lazy"
-                         onload="this.style.opacity='1'"
-                         onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
-                    
-                    <div class="anime-progress-overlay">
-                        <div class="anime-progress-bar">
-                            <div class="anime-progress-fill" style="width: ${progreso}%"></div>
-                        </div>
-                        <div class="anime-progress-text">${Math.round(progreso)}%</div>
-                    </div>
-                </div>
+                <button class="favorite-btn favorito" 
+                        data-anime-id="${anime.anime_id}" 
+                        onclick="toggleFavorito(${anime.anime_id}, this)"
+                        title="Quitar de favoritos">
+                    ⭐
+                </button>
+                
+                <img src="${imagenSrc}" 
+                     alt="${anime.anime_nombre || anime.titulo || 'Sin nombre'}" 
+                     class="anime-image" 
+                     loading="lazy"
+                     onload="this.style.opacity='1'"
+                     onerror="this.src='../img/no-image.png'; this.style.opacity='1'">
                 
                 <div class="anime-info">
                     <h3 class="anime-name">
                         ${anime.anime_nombre || anime.titulo || 'Sin nombre'}
+                        ${anime.tipo ? `<span class="tipo-badge">${anime.tipo}</span>` : ''}
                     </h3>
-                    <div class="anime-details">
-                        <span class="anime-type">${anime.tipo || 'N/A'}</span>
-                        <span class="anime-episodes">${anime.episodios_vistos}/${anime.episodios_total || '?'}</span>
-                        <span class="anime-status ${anime.estado?.toLowerCase() || 'sin-definir'}">${anime.estado || 'Sin definir'}</span>
-                        ${anime.puntuacion ? `<span class="anime-rating">⭐ ${anime.puntuacion}</span>` : ''}
+                    
+                    ${anime.titulo_original || anime.titulo_ingles ? `
+                        <div style="margin-bottom: 12px; font-size: 0.85rem; opacity: 0.8;">
+                            ${anime.titulo_original ? `<div style="color: #ffd700; margin-bottom: 3px;">🇯🇵 ${anime.titulo_original}</div>` : ''}
+                            ${anime.titulo_ingles ? `<div style="color: #00ffff;">🇺🇸 ${anime.titulo_ingles}</div>` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="anime-progress">
+                        <span class="progress-text">
+                            ${anime.episodios_vistos} / ${anime.episodios_total || '?'} episodios
+                        </span>
+                        ${anime.puntuacion ? `<span class="puntuacion-badge">⭐ ${parseFloat(anime.puntuacion).toFixed(1)}</span>` : ''}
+                    </div>
+                    
+                    ${anime.estado_anime ? `
+                        <div class="estado-anime">
+                            <span class="estado-anime-badge ${estadoAnimeClass}">
+                                ${estadoAnimeIcon} ${anime.estado_anime}
+                            </span>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progreso}%"></div>
+                    </div>
+                    
+                    <div class="anime-meta">
+                        <span class="estado-badge ${estadoClass}">${estadoText}</span>
+                        <span>${anime.fecha_agregado ? new Date(anime.fecha_agregado).toLocaleDateString('es-ES') : 'Fecha desconocida'}</span>
                     </div>
                     
                     <div class="anime-actions">
                         <button class="btn-action btn-editar" data-anime-id="${anime.anime_id}">
                             ✏️ Editar
                         </button>
-                        <button class="btn-action btn-quitar-favorito" data-anime-id="${anime.anime_id}" data-anime-nombre="${anime.anime_nombre || anime.titulo}">
+                        <button class="btn-action btn-quitar-favorito" data-anime-id="${anime.anime_id}" data-anime-nombre="${anime.anime_nombre || anime.titulo || 'Sin nombre'}">
                             💔 Quitar de Favoritos
                         </button>
                     </div>
@@ -1952,7 +2126,14 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
                 
                 try {
                     paginaFavoritos++;
-                    const response = await fetch(`../backend/api/obtener_favoritos_paginados.php?pagina=${paginaFavoritos}&limite=${favoritosPorPagina}`);
+                    
+                    // Construir URL con búsqueda actual
+                    let url = `../backend/api/obtener_favoritos_paginados.php?pagina=${paginaFavoritos}&limite=${favoritosPorPagina}`;
+                    if (busquedaActualFavoritos) {
+                        url += `&busqueda=${encodeURIComponent(busquedaActualFavoritos)}`;
+                    }
+                    
+                    const response = await fetch(url);
                     const data = await response.json();
                     
                     if (data.success && data.animes.length > 0) {

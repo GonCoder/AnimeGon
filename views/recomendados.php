@@ -1734,26 +1734,100 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
             }
         });
 
-        // Filtrado para animes para recomendar
-        document.getElementById('searchInputRecommend')?.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const animeCards = document.querySelectorAll('.recommendations-section:first-child .anime-recommendation-card');
+        // Variable para timeout de búsqueda
+        let timeoutBusqueda = null;
+        let busquedaActual = '';
+        
+        // Función para buscar animes en la base de datos
+        async function buscarMisAnimes(termino = '') {
+            const container = document.getElementById('misAnimesContainer');
+            const btnCargarMas = document.getElementById('cargarMasMisAnimes');
+            const loadingIndicator = document.getElementById('loadingMisAnimes');
             
-            animeCards.forEach(card => {
-                const animeTitle = card.querySelector('.anime-title');
-                const animeDetails = card.querySelector('.anime-details');
+            // Actualizar búsqueda actual
+            busquedaActual = termino.trim();
+            
+            // Mostrar loading
+            if (loadingIndicator) loadingIndicator.classList.add('show');
+            if (btnCargarMas) btnCargarMas.disabled = true;
+            
+            try {
+                // Resetear paginación
+                paginaMisAnimes = 1;
                 
-                if (animeTitle && animeDetails) {
-                    const titleText = animeTitle.textContent.toLowerCase();
-                    const detailsText = animeDetails.textContent.toLowerCase();
-                    
-                    if (titleText.includes(searchTerm) || detailsText.includes(searchTerm)) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
+                // Construir URL con parámetros
+                let url = `../backend/api/obtener_mis_animes_recomendados_paginados.php?pagina=1&limite=${animesPorPagina}`;
+                if (busquedaActual) {
+                    url += `&busqueda=${encodeURIComponent(busquedaActual)}`;
                 }
-            });
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Limpiar contenedor
+                    container.innerHTML = '';
+                    
+                    if (data.animes.length > 0) {
+                        // Agregar animes encontrados
+                        data.animes.forEach(anime => {
+                            const animeCard = crearTarjetaAnime(anime, 'mis-animes');
+                            container.appendChild(animeCard);
+                        });
+                        
+                        // Actualizar botón "Cargar más"
+                        if (data.paginacion.hay_mas) {
+                            btnCargarMas.style.display = 'block';
+                            const animesRestantes = data.paginacion.total_registros - data.animes.length;
+                            btnCargarMas.innerHTML = `
+                                <span class="load-more-text">📄 Cargar más animes (${Math.min(animesPorPagina, animesRestantes)} de ${animesRestantes} restantes)</span>
+                                <div class="load-more-spinner"></div>
+                            `;
+                        } else {
+                            btnCargarMas.style.display = 'none';
+                        }
+                        
+                        // Activar lazy loading
+                        activarLazyLoading();
+                    } else {
+                        // Mostrar mensaje "no encontrado"
+                        const noResultsMsg = document.createElement('div');
+                        noResultsMsg.className = 'no-results-message';
+                        noResultsMsg.innerHTML = `
+                            <h3>🔍 No se encontraron animes</h3>
+                            <p>${busquedaActual ? `No hay animes que coincidan con "${busquedaActual}"` : 'No tienes animes en tu lista'}</p>
+                        `;
+                        container.appendChild(noResultsMsg);
+                        btnCargarMas.style.display = 'none';
+                    }
+                } else {
+                    throw new Error(data.error || 'Error al buscar animes');
+                }
+            } catch (error) {
+                console.error('Error en búsqueda:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Error de búsqueda</h3>
+                        <p>No se pudieron cargar los animes. Intenta de nuevo.</p>
+                    </div>
+                `;
+            } finally {
+                if (loadingIndicator) loadingIndicator.classList.remove('show');
+                if (btnCargarMas) btnCargarMas.disabled = false;
+            }
+        }
+        
+        // Event listener para búsqueda con debounce
+        document.getElementById('searchInputRecommend')?.addEventListener('input', function() {
+            const searchTerm = this.value;
+            
+            // Limpiar timeout anterior
+            if (timeoutBusqueda) clearTimeout(timeoutBusqueda);
+            
+            // Establecer nuevo timeout para evitar demasiadas peticiones
+            timeoutBusqueda = setTimeout(() => {
+                buscarMisAnimes(searchTerm);
+            }, 500); // 500ms de debounce
         });
         
         // Funciones para modales de confirmación y mensaje
@@ -1896,7 +1970,14 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
             
             try {
                 paginaMisAnimes++;
-                const response = await fetch(`../backend/api/obtener_mis_animes_recomendados_paginados.php?pagina=${paginaMisAnimes}&limite=${animesPorPagina}`);
+                
+                // Construir URL con búsqueda actual
+                let url = `../backend/api/obtener_mis_animes_recomendados_paginados.php?pagina=${paginaMisAnimes}&limite=${animesPorPagina}`;
+                if (busquedaActual) {
+                    url += `&busqueda=${encodeURIComponent(busquedaActual)}`;
+                }
+                
+                const response = await fetch(url);
                 const data = await response.json();
                 
                 if (data.success && data.animes.length > 0) {

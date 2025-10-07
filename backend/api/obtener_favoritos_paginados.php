@@ -16,12 +16,29 @@ header('Content-Type: application/json; charset=utf-8');
 try {
     $usuario_id = $_SESSION['usuario_id'];
     
-    // Obtener parámetros de paginación
+    // Obtener parámetros de paginación y búsqueda
     $pagina = isset($_GET['pagina']) ? max(1, intval($_GET['pagina'])) : 1;
     $limite = isset($_GET['limite']) ? max(1, min(20, intval($_GET['limite']))) : 12;
     $offset = ($pagina - 1) * $limite;
+    $busqueda = isset($_GET['busqueda']) ? trim($_GET['busqueda']) : '';
     
     $conexion = obtenerConexion();
+    
+    // Construir consulta con filtro de búsqueda
+    $where_busqueda = "";
+    $parametros = [$usuario_id];
+    
+    if (!empty($busqueda)) {
+        $where_busqueda = " AND (
+            a.titulo LIKE ? OR 
+            a.titulo_original LIKE ? OR 
+            a.titulo_ingles LIKE ?
+        )";
+        $busqueda_param = '%' . $busqueda . '%';
+        $parametros[] = $busqueda_param;
+        $parametros[] = $busqueda_param;
+        $parametros[] = $busqueda_param;
+    }
     
     // Consulta para obtener animes favoritos del usuario
     $query = "SELECT 
@@ -42,21 +59,35 @@ try {
               FROM favoritos f
               INNER JOIN lista_usuario lu ON f.usuario_id = lu.usuario_id AND f.anime_id = lu.anime_id
               LEFT JOIN animes a ON f.anime_id = a.id 
-              WHERE f.usuario_id = ?
+              WHERE f.usuario_id = ? $where_busqueda
               ORDER BY a.titulo ASC
               LIMIT ? OFFSET ?";
     
+    // Agregar límite y offset a los parámetros
+    $parametros[] = $limite;
+    $parametros[] = $offset;
+    
     $stmt = $conexion->prepare($query);
-    $stmt->execute([$usuario_id, $limite, $offset]);
+    $stmt->execute($parametros);
     $animes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Obtener total de registros para paginación
+    // Obtener total de registros para paginación (con el mismo filtro)
     $query_count = "SELECT COUNT(*) as total 
                     FROM favoritos f
-                    WHERE f.usuario_id = ?";
+                    INNER JOIN lista_usuario lu ON f.usuario_id = lu.usuario_id AND f.anime_id = lu.anime_id
+                    LEFT JOIN animes a ON f.anime_id = a.id
+                    WHERE f.usuario_id = ? $where_busqueda";
+    
+    // Usar los mismos parámetros de búsqueda (sin límite y offset)
+    $parametros_count = [$usuario_id];
+    if (!empty($busqueda)) {
+        $parametros_count[] = $busqueda_param;
+        $parametros_count[] = $busqueda_param;
+        $parametros_count[] = $busqueda_param;
+    }
     
     $stmt_count = $conexion->prepare($query_count);
-    $stmt_count->execute([$usuario_id]);
+    $stmt_count->execute($parametros_count);
     $total_registros = $stmt_count->fetch(PDO::FETCH_ASSOC)['total'];
     $total_paginas = ceil($total_registros / $limite);
     
