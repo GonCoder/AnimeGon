@@ -2856,6 +2856,11 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
                         document.getElementById('loadMoreContainer').style.display = 'none';
                     }
 
+                    // Reinicializar event listeners para los nuevos elementos
+                    if (window.animeManager && window.animeManager.initializeActionButtons) {
+                        window.animeManager.initializeActionButtons();
+                    }
+
                     showNotification(`Se cargaron ${data.animes.length} animes más`, 'success');
                 } else {
                     showNotification('No se encontraron más animes', 'info');

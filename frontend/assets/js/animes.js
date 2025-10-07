@@ -34,16 +34,18 @@ class AnimeManager {
     }
 
     initializeActionButtons() {
-        // Botones de editar
-        document.querySelectorAll('.btn-editar').forEach(btn => {
+        // Botones de editar (solo los que no han sido configurados)
+        document.querySelectorAll('.btn-editar:not(.configured)').forEach(btn => {
+            btn.classList.add('configured');
             btn.addEventListener('click', (e) => {
                 const animeId = e.target.getAttribute('data-anime-id');
                 this.abrirModalEditar(animeId);
             });
         });
 
-        // Botones de eliminar
-        document.querySelectorAll('.btn-eliminar').forEach(btn => {
+        // Botones de eliminar (solo los que no han sido configurados)
+        document.querySelectorAll('.btn-eliminar:not(.configured)').forEach(btn => {
+            btn.classList.add('configured');
             btn.addEventListener('click', (e) => {
                 const animeId = e.target.getAttribute('data-anime-id');
                 const animeNombre = e.target.getAttribute('data-anime-nombre');

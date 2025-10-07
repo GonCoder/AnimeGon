@@ -540,16 +540,51 @@ $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
         }
         
         .btn-ya-tengo {
-            background: rgba(0, 255, 0, 0.3);
-            color: #00ff00;
-            border: 2px solid rgba(0, 255, 0, 0.5);
-            cursor: not-allowed;
-            opacity: 0.8;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 0, 0.25));
+            color: #00ff88;
+            border: 2px solid rgba(0, 255, 136, 0.6);
+            border-radius: 12px;
+            cursor: default;
+            opacity: 0.9;
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            margin-top: 12px;
+        }
+        
+        .btn-ya-tengo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
         }
         
         .btn-ya-tengo:hover {
-            transform: none;
-            box-shadow: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 20px rgba(0, 255, 136, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            border-color: rgba(0, 255, 136, 0.8);
+        }
+        
+        .btn-ya-tengo:hover::before {
+            left: 100%;
+        }
+        
+        .mi-estado {
+            display: block;
+            font-size: 0.75rem;
+            color: rgba(0, 255, 136, 0.8);
+            font-weight: normal;
+            margin-top: 3px;
+            font-style: italic;
+            text-shadow: none;
+            letter-spacing: normal;
         }
         
         .mi-info-rapida {
@@ -1357,7 +1392,7 @@ $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
                     $ya_tengo = array_filter($animes_hub, function($anime) { return $anime['ya_lo_tiene']; });
                     ?>
                     <div style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                        <span>📺 Total: <?= count($animes_hub) ?> anime<?= count($animes_hub) != 1 ? 's' : '' ?></span>
+                        <span>📺 Total: <?= $total_animes_hub ?> anime<?= $total_animes_hub != 1 ? 's' : '' ?></span>
                         <span style="color: #00ff88;">🆕 Disponibles: <?= count($disponibles) ?></span>
                         <span style="color: #00ff00;">✅ Ya tienes: <?= count($ya_tengo) ?></span>
                     </div>
@@ -1660,6 +1695,16 @@ $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
                      data-anime-name="${(anime.titulo || 'Sin nombre').toLowerCase()}"
                      data-anime-id="${anime.id}">
                     
+                    ${anime.ya_lo_tiene ? `
+                        <div class="my-anime-badge" title="Ya tienes este anime">
+                            ✅
+                        </div>
+                    ` : `
+                        <div class="community-badge" title="Anime de la comunidad">
+                            🌐
+                        </div>
+                    `}
+                    
                     ${rutaImagen ? `
                         <img src="${rutaImagen}" 
                              alt="${anime.titulo || 'Sin nombre'}" 
@@ -1703,7 +1748,8 @@ $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
                             ` : ''}
                             ${anime.puntuacion_promedio > 0 ? `
                                 <span class="rating-badge ${anime.total_valoraciones > 0 ? 'clickeable' : ''}" 
-                                      data-anime-id="${anime.id}">
+                                      data-anime-id="${anime.id}"
+                                      data-anime-titulo="${anime.titulo || 'Sin nombre'}">
                                     ⭐ ${parseFloat(anime.puntuacion_promedio).toFixed(1)}
                                     ${anime.total_valoraciones > 0 ? ` (${anime.total_valoraciones})` : ''}
                                 </span>
@@ -1721,7 +1767,7 @@ $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
                                     ${anime.mi_estado ? `<span class="mi-estado">(${anime.mi_estado})</span>` : ''}
                                 </button>
                             ` : `
-                                <button class="btn-agregar" data-anime-id="${anime.id}" 
+                                <button class="btn-action btn-agregar" data-anime-id="${anime.id}" 
                                         data-anime-titulo="${anime.titulo || 'Sin nombre'}"
                                         data-anime-imagen="${rutaImagen || ''}"
                                         data-anime-episodios="${anime.episodios_total || 0}">
@@ -1824,18 +1870,28 @@ $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
         // Función para inicializar event listeners
         function inicializarEventListeners() {
             // Event listeners para botones "Agregar a Mi Lista"
-            document.querySelectorAll('.btn-agregar:not([data-listener])').forEach(button => {
+            document.querySelectorAll('.btn-agregar:not([data-listener]):not([disabled])').forEach(button => {
                 button.setAttribute('data-listener', 'true');
                 button.addEventListener('click', function() {
-                    // Código existente para agregar anime
+                    const animeId = this.getAttribute('data-anime-id');
+                    const animeTitulo = this.getAttribute('data-anime-titulo');
+                    const animeEpisodios = this.getAttribute('data-anime-episodios');
+                    
+                    abrirModalAgregar(animeId, animeTitulo, animeEpisodios);
                 });
             });
 
             // Event listeners para botones "Ya lo tengo"
             document.querySelectorAll('.btn-ya-tengo:not([data-listener])').forEach(button => {
                 button.setAttribute('data-listener', 'true');
-                button.addEventListener('click', function() {
-                    // Código existente para "ya lo tengo"
+                button.addEventListener('mouseenter', function() {
+                    this.style.cursor = 'help';
+                });
+                
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Opcional: mostrar más información o redirigir a "Mis Animes"
+                    console.log('Este anime ya está en tu lista');
                 });
             });
 
@@ -1843,7 +1899,10 @@ $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
             document.querySelectorAll('.rating-badge.clickeable:not([data-listener])').forEach(badge => {
                 badge.setAttribute('data-listener', 'true');
                 badge.addEventListener('click', function() {
-                    // Código existente para ver puntuaciones
+                    const animeId = this.getAttribute('data-anime-id');
+                    const animeTitulo = this.getAttribute('data-anime-titulo');
+                    
+                    abrirModalPuntuaciones(animeId, animeTitulo);
                 });
             });
         }

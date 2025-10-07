@@ -1242,7 +1242,7 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
                 <div class="filter-section">
                     <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar en favoritos...">
                     <span style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem;">
-                        <?= count($animes_favoritos) ?> anime<?= count($animes_favoritos) != 1 ? 's' : '' ?> favorito<?= count($animes_favoritos) != 1 ? 's' : '' ?>
+                        <?= $total_favoritos ?> anime<?= $total_favoritos != 1 ? 's' : '' ?> favorito<?= $total_favoritos != 1 ? 's' : '' ?>
                     </span>
                 </div>
             <?php endif; ?>
@@ -1558,6 +1558,15 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
                         </div>
                     </div>
                     
+                    <!-- URL de AnimeFLV -->
+                    <h4 class="form-section-title">🔗 Enlace Externo (opcional)</h4>
+                    
+                    <div class="form-group form-full-width">
+                        <label for="edit_animeflv_url_name">🔗 URL de AnimeFLV</label>
+                        <input type="text" id="edit_animeflv_url_name" name="animeflv_url_name" placeholder="Ej: shingeki-no-kyojin">
+                        <div class="file-info">Opcional: Nombre del anime en la URL de AnimeFLV</div>
+                    </div>
+
                     <!-- Imagen -->
                     <h4 class="form-section-title">🖼️ Nueva Imagen (opcional)</h4>
                     
@@ -1601,25 +1610,46 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
 
     <script src="../frontend/assets/js/animes.js"></script>
     <script>
-        // Inicializar el AnimeManager cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
-            // Crear instancia del AnimeManager si no existe
-            if (typeof animeManager === 'undefined') {
+        // Función para configurar event listeners en nuevos elementos
+        function configurarEventListenersFavoritos() {
+            // Asegurar que AnimeManager esté disponible
+            if (!window.animeManager && typeof AnimeManager !== 'undefined') {
                 window.animeManager = new AnimeManager();
             }
             
-            // Configurar event listeners para los botones de editar
-            document.querySelectorAll('.btn-editar').forEach(button => {
+            // Event listeners para botones de editar (usar la clase correcta)
+            const editButtons = document.querySelectorAll('.btn-action.btn-editar:not(.configured)');
+            console.log('Configurando event listeners para', editButtons.length, 'botones de editar');
+            
+            editButtons.forEach(button => {
+                button.classList.add('configured');
                 button.addEventListener('click', function() {
+                    console.log('Botón editar clickeado');
                     const animeId = this.getAttribute('data-anime-id');
-                    if (animeId && window.animeManager) {
-                        window.animeManager.abrirModalEdicion(animeId);
+                    console.log('Anime ID:', animeId);
+                    console.log('AnimeManager disponible:', !!window.animeManager);
+                    
+                    if (animeId) {
+                        // Asegurar que AnimeManager esté disponible en el momento del click
+                        if (!window.animeManager && typeof AnimeManager !== 'undefined') {
+                            window.animeManager = new AnimeManager();
+                        }
+                        
+                        if (window.animeManager) {
+                            console.log('Llamando abrirModalEditar para anime', animeId);
+                            window.animeManager.abrirModalEditar(animeId);
+                        } else {
+                            console.error('AnimeManager no está disponible');
+                        }
+                    } else {
+                        console.error('No se encontró anime ID');
                     }
                 });
             });
             
-            // Configurar event listeners para los botones de quitar de favoritos
-            document.querySelectorAll('.btn-quitar-favorito').forEach(button => {
+            // Event listeners para botones de quitar favoritos (usar la clase correcta)
+            document.querySelectorAll('.btn-action.btn-quitar-favorito:not(.configured)').forEach(button => {
+                button.classList.add('configured');
                 button.addEventListener('click', function() {
                     const animeId = this.getAttribute('data-anime-id');
                     const animeNombre = this.getAttribute('data-anime-nombre');
@@ -1628,6 +1658,17 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
                     }
                 });
             });
+        }
+
+        // Inicializar el AnimeManager cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Crear instancia del AnimeManager si no existe
+            if (typeof animeManager === 'undefined') {
+                window.animeManager = new AnimeManager();
+            }
+            
+            // Configurar event listeners iniciales
+            configurarEventListenersFavoritos();
         });
         
         // Filtrado específico para favoritos
@@ -1795,6 +1836,9 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
                     
                     // Activar lazy loading para nuevas imágenes
                     activarLazyLoading();
+                    
+                    // Configurar event listeners para los nuevos elementos
+                    configurarEventListenersFavoritos();
                 } else {
                     btnCargarMas.style.display = 'none';
                 }
@@ -1843,34 +1887,15 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
                     </div>
                     
                     <div class="anime-actions">
-                        <button class="btn-editar" data-anime-id="${anime.anime_id}">
+                        <button class="btn-action btn-editar" data-anime-id="${anime.anime_id}">
                             ✏️ Editar
                         </button>
-                        <button class="btn-quitar-favorito" data-anime-id="${anime.anime_id}" data-anime-nombre="${anime.anime_nombre || anime.titulo}">
+                        <button class="btn-action btn-quitar-favorito" data-anime-id="${anime.anime_id}" data-anime-nombre="${anime.anime_nombre || anime.titulo}">
                             💔 Quitar de Favoritos
                         </button>
                     </div>
                 </div>
             `;
-            
-            // Configurar event listeners para los nuevos botones
-            const btnEditar = div.querySelector('.btn-editar');
-            const btnQuitarFavorito = div.querySelector('.btn-quitar-favorito');
-            
-            btnEditar.addEventListener('click', function() {
-                const animeId = this.getAttribute('data-anime-id');
-                if (animeId && window.animeManager) {
-                    window.animeManager.abrirModalEdicion(animeId);
-                }
-            });
-            
-            btnQuitarFavorito.addEventListener('click', function() {
-                const animeId = this.getAttribute('data-anime-id');
-                const animeNombre = this.getAttribute('data-anime-nombre');
-                if (animeId && animeNombre) {
-                    confirmarQuitarDeFavoritos(animeId, animeNombre, this);
-                }
-            });
             
             return div;
         }
@@ -2128,31 +2153,7 @@ $total_favoritos = obtenerTotalAnimesFavoritos($usuario_id);
                 });
             }
             
-            // Función para configurar event listeners en nuevos elementos
-            function configurarEventListenersFavoritos() {
-                // Event listeners para botones de editar (usar la clase correcta)
-                document.querySelectorAll('.btn-action.btn-editar:not(.configured)').forEach(button => {
-                    button.classList.add('configured');
-                    button.addEventListener('click', function() {
-                        const animeId = this.getAttribute('data-anime-id');
-                        if (animeId && window.animeManager) {
-                            window.animeManager.abrirModalEdicion(animeId);
-                        }
-                    });
-                });
-                
-                // Event listeners para botones de quitar favoritos (usar la clase correcta)
-                document.querySelectorAll('.btn-action.btn-quitar-favorito:not(.configured)').forEach(button => {
-                    button.classList.add('configured');
-                    button.addEventListener('click', function() {
-                        const animeId = this.getAttribute('data-anime-id');
-                        const animeNombre = this.getAttribute('data-anime-nombre');
-                        if (animeId && animeNombre) {
-                            confirmarQuitarDeFavoritos(animeId, animeNombre, this);
-                        }
-                    });
-                });
-            }
+
             
             // Activar lazy loading inicial
             activarLazyLoading();
