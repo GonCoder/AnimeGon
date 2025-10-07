@@ -16,6 +16,12 @@ $mostrarMensajeLogout = isset($_GET['logout']) && $_GET['logout'] == '1';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnimeGon - Tu plataforma de anime favorita</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.ico">
+    
     <link rel="stylesheet" href="frontend/assets/css/style.css">
 </head>
 <body>
