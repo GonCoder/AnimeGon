@@ -73,7 +73,7 @@ try {
                             a.tipo, a.estado as estado_anime,
                             (CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END) as favorito
                      " . $query_base . "
-                     ORDER BY lu.fecha_agregado DESC
+                     ORDER BY a.titulo ASC
                      LIMIT ? OFFSET ?";
     
     $parametros[] = $limite;

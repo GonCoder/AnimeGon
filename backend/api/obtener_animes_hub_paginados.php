@@ -89,11 +89,7 @@ try {
                             usuario_actual.episodios_vistos as mis_episodios_vistos,
                             usuario_actual.puntuacion as mi_puntuacion
                      " . $query_base . "
-                     ORDER BY 
-                         CASE WHEN usuario_actual.anime_id IS NULL THEN 0 ELSE 1 END, -- Primero los que no tiene
-                         stats.usuarios_que_lo_tienen DESC, 
-                         stats.puntuacion_promedio DESC, 
-                         a.titulo ASC
+                     ORDER BY a.titulo ASC
                      LIMIT ? OFFSET ?";
     
     $parametros[] = $limite;

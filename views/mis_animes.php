@@ -39,7 +39,7 @@ function obtenerAnimesUsuario($usuario_id, $limite = 12) {
                   LEFT JOIN animes a ON lu.anime_id = a.id 
                   LEFT JOIN favoritos f ON lu.usuario_id = f.usuario_id AND lu.anime_id = f.anime_id
                   WHERE lu.usuario_id = ? 
-                  ORDER BY lu.fecha_agregado DESC
+                  ORDER BY a.titulo ASC
                   LIMIT ?";
         
         $stmt = $conexion->prepare($query);

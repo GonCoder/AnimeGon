@@ -61,11 +61,7 @@ function obtenerAnimesHub($usuario_id, $limite = 12) {
                   ) stats ON a.id = stats.anime_id
                   -- Verificar si el usuario actual ya tiene este anime
                   LEFT JOIN lista_usuario usuario_actual ON a.id = usuario_actual.anime_id AND usuario_actual.usuario_id = ?
-                  ORDER BY 
-                      CASE WHEN usuario_actual.anime_id IS NULL THEN 0 ELSE 1 END, -- Primero los que no tiene
-                      stats.usuarios_que_lo_tienen DESC, 
-                      stats.puntuacion_promedio DESC, 
-                      a.titulo ASC
+                  ORDER BY a.titulo ASC
                   LIMIT ?";
         
         $stmt = $conexion->prepare($query);
@@ -110,8 +106,43 @@ function obtenerTotalAnimesHub($usuario_id) {
     }
 }
 
+function obtenerTotalDisponiblesHub($usuario_id) {
+    try {
+        $conexion = obtenerConexion();
+        $query = "SELECT COUNT(*) as total
+                  FROM animes a
+                  LEFT JOIN lista_usuario lu ON a.id = lu.anime_id AND lu.usuario_id = ?
+                  WHERE lu.anime_id IS NULL";
+        
+        $stmt = $conexion->prepare($query);
+        $stmt->execute([$usuario_id]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'];
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+
+function obtenerTotalYaTiengoHub($usuario_id) {
+    try {
+        $conexion = obtenerConexion();
+        $query = "SELECT COUNT(*) as total
+                  FROM animes a
+                  INNER JOIN lista_usuario lu ON a.id = lu.anime_id AND lu.usuario_id = ?";
+        
+        $stmt = $conexion->prepare($query);
+        $stmt->execute([$usuario_id]);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $resultado['total'];
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+
 $animes_hub = obtenerAnimesHub($usuario_id);
 $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
+$total_disponibles_hub = obtenerTotalDisponiblesHub($usuario_id);
+$total_ya_tengo_hub = obtenerTotalYaTiengoHub($usuario_id);
 ?>
 
 <!DOCTYPE html>
@@ -1387,14 +1418,10 @@ $total_animes_hub = obtenerTotalAnimesHub($usuario_id);
             <?php if (!empty($animes_hub)): ?>
                 <div class="filter-section">
                     <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar animes en el hub...">
-                    <?php 
-                    $disponibles = array_filter($animes_hub, function($anime) { return !$anime['ya_lo_tiene']; });
-                    $ya_tengo = array_filter($animes_hub, function($anime) { return $anime['ya_lo_tiene']; });
-                    ?>
                     <div style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                         <span>📺 Total: <?= $total_animes_hub ?> anime<?= $total_animes_hub != 1 ? 's' : '' ?></span>
-                        <span style="color: #00ff88;">🆕 Disponibles: <?= count($disponibles) ?></span>
-                        <span style="color: #00ff00;">✅ Ya tienes: <?= count($ya_tengo) ?></span>
+                        <span style="color: #00ff88;">🆕 Disponibles: <?= $total_disponibles_hub ?></span>
+                        <span style="color: #00ff00;">✅ Ya tienes: <?= $total_ya_tengo_hub ?></span>
                     </div>
                 </div>
             <?php else: ?>

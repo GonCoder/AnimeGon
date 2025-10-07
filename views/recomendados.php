@@ -35,7 +35,7 @@ function obtenerMisAnimesParaRecomendar($usuario_id, $limite = 6) {
                   FROM lista_usuario lu 
                   INNER JOIN animes a ON lu.anime_id = a.id 
                   WHERE lu.usuario_id = ? 
-                  ORDER BY lu.puntuacion DESC, lu.fecha_agregado DESC
+                  ORDER BY a.titulo ASC
                   LIMIT ?";
         
         $stmt = $conexion->prepare($query);
@@ -93,7 +93,7 @@ function obtenerRecomendacionesRecibidas($usuario_id, $limite = 6) {
                   INNER JOIN usuarios u ON r.usuario_emisor_id = u.id
                   LEFT JOIN lista_usuario lu ON lu.usuario_id = ? AND lu.anime_id = r.anime_id
                   WHERE r.usuario_receptor_id = ?
-                  ORDER BY r.fecha_creacion DESC
+                  ORDER BY a.titulo ASC
                   LIMIT ?";
         
         $stmt = $conexion->prepare($query);

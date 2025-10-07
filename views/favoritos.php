@@ -38,7 +38,7 @@ function obtenerAnimesFavoritos($usuario_id, $limite = 12) {
                   INNER JOIN lista_usuario lu ON f.usuario_id = lu.usuario_id AND f.anime_id = lu.anime_id
                   LEFT JOIN animes a ON f.anime_id = a.id 
                   WHERE f.usuario_id = ?
-                  ORDER BY f.fecha_agregado DESC
+                  ORDER BY a.titulo ASC
                   LIMIT ?";
         
         $stmt = $conexion->prepare($query);

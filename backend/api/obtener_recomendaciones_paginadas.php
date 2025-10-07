@@ -47,7 +47,7 @@ try {
               INNER JOIN animes a ON r.anime_id = a.id
               INNER JOIN usuarios u ON r.usuario_emisor_id = u.id
               WHERE r.usuario_receptor_id = ?
-              ORDER BY r.fecha_creacion DESC
+              ORDER BY a.titulo ASC
               LIMIT ? OFFSET ?";
     
     $stmt = $conexion->prepare($query);
