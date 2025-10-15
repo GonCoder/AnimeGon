@@ -42,16 +42,18 @@ try {
                 a.sinopsis as descripcion,
                 a.puntuacion_promedio as puntuacion_media,
                 u.nombre as emisor_nombre,
-                u.username as emisor_username
+                u.username as emisor_username,
+                CASE WHEN lu.id IS NOT NULL THEN 1 ELSE 0 END as ya_en_lista
               FROM recomendaciones r
               INNER JOIN animes a ON r.anime_id = a.id
               INNER JOIN usuarios u ON r.usuario_emisor_id = u.id
+              LEFT JOIN lista_usuario lu ON lu.usuario_id = ? AND lu.anime_id = r.anime_id
               WHERE r.usuario_receptor_id = ?
               ORDER BY a.titulo ASC
               LIMIT ? OFFSET ?";
     
     $stmt = $conexion->prepare($query);
-    $stmt->execute([$usuario_id, $limite, $offset]);
+    $stmt->execute([$usuario_id, $usuario_id, $limite, $offset]);
     $recomendaciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Obtener total de registros para paginación

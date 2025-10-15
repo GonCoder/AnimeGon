@@ -1579,9 +1579,9 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
 
             // Función para cerrar modal
             window.cerrarModalRecomendacion = function() {
-            document.getElementById('recommendModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
+                document.getElementById('recommendModal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
 
             // Contador de caracteres
             function updateCharCount() {
@@ -1656,8 +1656,9 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
         }
             
             window.cerrarModalAgregar = function() {
-            document.getElementById('addToListModal').style.display = 'none';
-        }
+                document.getElementById('addToListModal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
             
             // Función para descartar recomendación
             window.descartarRecomendacion = function(recomendacionId, esDesinteres = false) {
@@ -1835,15 +1836,24 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
             document.getElementById('confirmModalTitle').textContent = titulo;
             document.getElementById('confirmModalMessage').textContent = mensaje;
             document.getElementById('confirmModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
             
             document.getElementById('btnConfirm').onclick = function() {
-                document.getElementById('confirmModal').style.display = 'none';
+                cerrarModalConfirmacion();
                 if (onConfirm) onConfirm();
             };
         }
         
         function cerrarModalConfirmacion() {
-            document.getElementById('confirmModal').style.display = 'none';
+            console.log('cerrarModalConfirmacion llamada');
+            const modal = document.getElementById('confirmModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                console.log('Modal confirmación cerrado');
+            } else {
+                console.error('Modal confirmModal no encontrado');
+            }
         }
         
         function mostrarModalMensaje(tipo, titulo, mensaje, callback) {
@@ -1860,36 +1870,83 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
             }
             
             document.getElementById('messageModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
             
             document.getElementById('btnOk').onclick = function() {
-                document.getElementById('messageModal').style.display = 'none';
+                cerrarModalMensaje();
                 if (callback) callback();
             };
         }
         
         function cerrarModalMensaje() {
-            document.getElementById('messageModal').style.display = 'none';
+            console.log('cerrarModalMensaje llamada');
+            const modal = document.getElementById('messageModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                console.log('Modal mensaje cerrado');
+            } else {
+                console.error('Modal messageModal no encontrado');
+            }
         }
         
-        // Cerrar modal con clic fuera
-        window.onclick = function(event) {
-            const recommendModal = document.getElementById('recommendModal');
-            const addModal = document.getElementById('addToListModal');
-            const confirmModal = document.getElementById('confirmModal');
-            const messageModal = document.getElementById('messageModal');
+        // Asegurar que las funciones estén disponibles globalmente
+        window.cerrarModalConfirmacion = cerrarModalConfirmacion;
+        window.cerrarModalMensaje = cerrarModalMensaje;
+        
+        // Configurar event listeners para los modales
+        function configurarEventListenersModales() {
+            console.log('Configurando event listeners para modales...');
             
-            if (event.target === recommendModal) {
-                cerrarModalRecomendacion();
+            // Event listeners para botones específicos como backup
+            const btnCancelConfirm = document.querySelector('.btn-cancel-confirm');
+            const closeConfirm = document.querySelector('#confirmModal .close');
+            
+            if (btnCancelConfirm) {
+                btnCancelConfirm.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Cancelar confirmación clicked via addEventListener');
+                    cerrarModalConfirmacion();
+                });
             }
-            if (event.target === addModal) {
-                cerrarModalAgregar();
+            
+            if (closeConfirm) {
+                closeConfirm.addEventListener('click', function(e) {
+                    e.preventDefault(); 
+                    e.stopPropagation();
+                    console.log('Close X confirmación clicked via addEventListener');
+                    cerrarModalConfirmacion();
+                });
             }
-            if (event.target === confirmModal) {
-                cerrarModalConfirmacion();
-            }
-            if (event.target === messageModal) {
-                cerrarModalMensaje();
-            }
+            
+            // Cerrar modal con clic fuera
+            document.addEventListener('click', function(event) {
+                const recommendModal = document.getElementById('recommendModal');
+                const addModal = document.getElementById('addToListModal');
+                const confirmModal = document.getElementById('confirmModal');
+                const messageModal = document.getElementById('messageModal');
+                
+                if (event.target === recommendModal) {
+                    cerrarModalRecomendacion();
+                }
+                if (event.target === addModal) {
+                    cerrarModalAgregar();
+                }
+                if (event.target === confirmModal) {
+                    cerrarModalConfirmacion();
+                }
+                if (event.target === messageModal) {
+                    cerrarModalMensaje();
+                }
+            });
+        }
+        
+        // Ejecutar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', configurarEventListenersModales);
+        } else {
+            configurarEventListenersModales();
         }
 
         // Funciones para el menú hamburguesa
@@ -2106,14 +2163,18 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
                         </div>
                     </div>
                     <div class="recommendation-actions">
-                        <button class="btn-add-to-list" onclick="abrirModalAgregar(${anime.anime_id}, ${anime.id}, '${anime.titulo.replace(/'/g, "\\'")}', ${anime.episodios_total || 0})">
-                            ➕ Agregar a mi lista
-                        </button>
-                        ${anime.estado === 'pendiente' ? `
-                            <button class="btn-dismiss" onclick="descartarRecomendacion(${anime.id})">
+                        ${anime.ya_en_lista ? `
+                            <button class="btn-discard" onclick="descartarRecomendacion(${anime.id})">
+                                ✅ Ya lo tengo, descartar
+                            </button>
+                        ` : `
+                            <button class="btn-add-to-list" onclick="abrirModalAgregarRecomendado(${anime.anime_id}, '${anime.titulo.replace(/'/g, "\\'")}', ${anime.episodios_total || 0}, ${anime.id})">
+                                ➕ Agregar a mi lista
+                            </button>
+                            <button class="btn-discard-not-interested" onclick="descartarRecomendacion(${anime.id}, true)">
                                 🙅‍♂️ No me interesa
                             </button>
-                        ` : ''}
+                        `}
                     </div>
                 `;
             }
@@ -2220,13 +2281,13 @@ $total_recomendaciones = obtenerTotalRecomendacionesRecibidas($usuario_id);
         <div class="confirm-modal-content">
             <div class="confirm-modal-header">
                 <h2 id="confirmModalTitle">Confirmar Acción</h2>
-                <span class="close" onclick="cerrarModalConfirmacion()">&times;</span>
+                <span class="close" onclick="window.cerrarModalConfirmacion ? window.cerrarModalConfirmacion() : alert('cerrarModalConfirmacion no definida')">&times;</span>
             </div>
             <div class="confirm-modal-body">
                 <p id="confirmModalMessage">¿Estás seguro de que quieres realizar esta acción?</p>
                 <div class="confirm-buttons">
                     <button id="btnConfirm" class="btn-confirm">✅ Confirmar</button>
-                    <button class="btn-cancel-confirm" onclick="cerrarModalConfirmacion()">❌ Cancelar</button>
+                    <button class="btn-cancel-confirm" onclick="window.cerrarModalConfirmacion ? window.cerrarModalConfirmacion() : alert('cerrarModalConfirmacion no definida')">❌ Cancelar</button>
                 </div>
             </div>
         </div>
