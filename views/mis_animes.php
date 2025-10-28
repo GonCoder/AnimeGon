@@ -1249,7 +1249,7 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
         
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
         }
         
         .btn-cancel {
@@ -2035,16 +2035,24 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
         <!-- Botón para cargar más animes -->
         <?php if ($total_animes > 12): ?>
         <div class="load-more-container" id="loadMoreContainer">
-            <button class="load-more-btn" id="loadMoreBtn" onclick="cargarMasAnimes()">
-                <span class="load-more-text">📄 Cargar más animes</span>
-                <span class="load-more-count">(<?= min(12, $total_animes - 12) ?> de <?= $total_animes - 12 ?> restantes)</span>
-            </button>
-            <div class="loading-indicator" id="loadingIndicator" style="display: none;">
-                <div class="spinner"></div>
-                <span>Cargando animes...</span>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button class="load-more-btn" id="loadMoreBtn" onclick="cargarMasAnimes()">
+                    <span class="load-more-text">📄 Cargar más animes</span>
+                    <span class="load-more-count">(<?= min(12, $total_animes - 12) ?> de <?= $total_animes - 12 ?> restantes)</span>
+                </button>
+
+                <!-- Nuevo botón: Cargar todos los animes -->
+                <button id="loadAllBtn" class="load-all-btn" onclick="cargarTodosAnimes()" title="Cargar todos los animes restantes"
+                        style="background: linear-gradient(135deg,#ff007f,#bf00ff); color:white; border:none; padding:12px 18px; border-radius:25px; font-size:1rem; font-weight:700; cursor:pointer; box-shadow: 0 6px 20px rgba(255,0,127,0.15);">
+                    📥 Cargar todos los animes
+                </button>
             </div>
-        </div>
-        <?php endif; ?>
+             <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+                 <div class="spinner"></div>
+                 <span>Cargando animes...</span>
+             </div>
+         </div>
+         <?php endif; ?>
     </div>
 
     <!-- Modal para agregar anime -->
@@ -2876,6 +2884,64 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
                 cargandoMas = false;
             }
         }
+
+        // Función para cargar todos los animes
+        async function cargarTodosAnimes() {
+            if (cargandoMas) {
+                return;
+            }
+
+            cargandoMas = true;
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const loadAllBtn = document.getElementById('loadAllBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            // Mostrar indicador de carga
+            loadMoreBtn.style.display = 'none';
+            loadingIndicator.style.display = 'flex';
+
+            try {
+                // Construir URL para cargar todos los animes sin paginación
+                // Usar el endpoint paginado existente pasando un limite grande
+                const response = await fetch(`../backend/api/obtener_animes_paginados.php?pagina=1&limite=9999`, {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.animes.length > 0) {
+                    const grid = document.getElementById('animesGrid');
+                    
+                    // Limpiar grid actual
+                    grid.innerHTML = '';
+                    
+                    // Agregar todos los animes
+                    data.animes.forEach(anime => {
+                        const animeHTML = crearTarjetaAnime(anime);
+                        grid.insertAdjacentHTML('beforeend', animeHTML);
+                    });
+
+                    // Ocultar botón de cargar más
+                    document.getElementById('loadMoreContainer').style.display = 'none';
+
+                    showNotification(`Se cargaron todos tus animes`, 'success');
+                } else {
+                    showNotification('No se encontraron animes para cargar', 'info');
+                }
+
+            } catch (error) {
+                console.error('Error al cargar todos los animes:', error);
+                showNotification('Error al cargar todos los animes', 'error');
+            } finally {
+                loadingIndicator.style.display = 'none';
+                cargandoMas = false;
+            }
+        }
         
         // Funciones del menú hamburguesa
         function toggleMobileMenu() {
@@ -3008,7 +3074,7 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
                         grid.innerHTML = `
                             <div class="no-animes" style="grid-column: 1 / -1;">
                                 <h3>🔍 No se encontraron animes</h3>
-                                <p>Intenta ajustar tus filtros de búsqueda.</p>
+                                <p>No hay animes que coincidan con los filtros seleccionados.</p>
                             </div>
                         `;
                         loadMoreContainer.style.display = 'none';
@@ -3203,5 +3269,4 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
         document.head.appendChild(style);
     </script>
 </body>
-</html>
 </html>
