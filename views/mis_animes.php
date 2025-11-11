@@ -2926,6 +2926,11 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
                         grid.insertAdjacentHTML('beforeend', animeHTML);
                     });
 
+                    // Reinicializar event listeners para los nuevos elementos
+                    if (window.animeManager && window.animeManager.initializeActionButtons) {
+                        window.animeManager.initializeActionButtons();
+                    }
+
                     // Ocultar botón de cargar más
                     document.getElementById('loadMoreContainer').style.display = 'none';
 
@@ -3084,6 +3089,11 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
                             const animeHTML = crearTarjetaAnime(anime);
                             grid.insertAdjacentHTML('beforeend', animeHTML);
                         });
+                        
+                        // Reinicializar event listeners para los nuevos elementos
+                        if (window.animeManager && window.animeManager.initializeActionButtons) {
+                            window.animeManager.initializeActionButtons();
+                        }
                         
                         // Actualizar paginación
                         totalPaginas = data.paginacion.total_paginas;
@@ -3251,6 +3261,11 @@ $total_animes = obtenerTotalAnimesUsuario($usuario_id);
                     
                     aplicarFiltros();
                 });
+            }
+
+            // Inicializar AnimeManager
+            if (typeof AnimeManager !== 'undefined') {
+                window.animeManager = new AnimeManager();
             }
         });
 
